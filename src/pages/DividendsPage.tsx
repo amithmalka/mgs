@@ -85,8 +85,6 @@ export function DividendsPage() {
                 <th className="text-end py-2 text-text-muted text-xs">S&P</th>
                 <th className="text-end py-2 text-text-muted text-xs">Nasdaq</th>
                 <th className="text-end py-2 text-text-muted text-xs">BTC</th>
-                <th className="text-end py-2 text-text-muted text-xs">Int'l</th>
-                <th className="text-end py-2 text-text-muted text-xs">{t('gold', lang)}</th>
                 <th className="text-end py-2 text-gold text-xs">{t('dividendEtf', lang)}</th>
               </tr>
             </thead>
@@ -99,9 +97,7 @@ export function DividendsPage() {
                     <td className="text-end py-2 text-text-muted">{Math.round(30 * r)}%</td>
                     <td className="text-end py-2 text-text-muted">{Math.round(30 * r)}%</td>
                     <td className="text-end py-2 text-text-muted">{Math.round(15 * r)}%</td>
-                    <td className="text-end py-2 text-text-muted">{Math.round(15 * r)}%</td>
-                    <td className="text-end py-2 text-text-muted">{Math.round(10 * r)}%</td>
-                    <td className="text-end py-2 text-gold font-bold">{step.pct}%</td>
+                    <td className="text-end py-2 text-gold font-bold">{step.pct + Math.round(25 * r)}%</td>
                   </tr>
                 );
               })}

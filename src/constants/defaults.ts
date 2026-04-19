@@ -4,9 +4,7 @@ export const DEFAULT_ALLOCATIONS: AllocationTarget[] = [
   { assetClass: 'sp500', label: 'S&P 500', targetPercent: 30, currentValue: 0, color: '#3b82f6' },
   { assetClass: 'nasdaq', label: 'Nasdaq', targetPercent: 30, currentValue: 0, color: '#8b5cf6' },
   { assetClass: 'bitcoin', label: 'Bitcoin', targetPercent: 15, currentValue: 0, color: '#f59e0b' },
-  { assetClass: 'international', label: 'International', targetPercent: 15, currentValue: 0, color: '#10b981' },
-  { assetClass: 'gold', label: 'Gold', targetPercent: 10, currentValue: 0, color: '#eab308' },
-  { assetClass: 'dividend', label: 'Dividend ETF', targetPercent: 0, currentValue: 0, color: '#ec4899' },
+  { assetClass: 'dividend', label: 'SCHD', targetPercent: 25, currentValue: 0, color: '#ec4899' },
 ];
 
 export const DEFAULT_SIMULATION: SimulationParams = {
@@ -50,7 +48,7 @@ export const DEFAULT_GOAL: Goal = {
  *   Aggressive    = continued adoption cycle, volatile but high compounding
  */
 /**
- * Weighted returns with default 30/30/15/15/10 allocation:
+ * Weighted returns with default 30/30/15/25 allocation (S&P/Nasdaq/BTC/SCHD):
  *   Conservative ≈  7.2%   Moderate ≈ 13.5%   Aggressive ≈ 18.9%
  *
  * Bitcoin note: rates are below its historical CAGR (~70%+) intentionally.
@@ -63,8 +61,6 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     sp500: 7,          // Lost-decade scenario (2000–2009)
     nasdaq: 9,         // Tech correction years
     bitcoin: 8,        // Sideways / crypto winter, some adoption residual
-    international: 4,  // Weak global growth
-    gold: 6,           // Safe-haven demand
     dividend: 7,       // Dividend income + modest appreciation
   },
   // ── Moderate: realistic long-term historical averages ────────────────────
@@ -72,8 +68,6 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     sp500: 11,         // S&P 500 historical avg 1957–2024 ≈ 10.5%
     nasdaq: 17,        // QQQ 20-year CAGR ≈ 17%
     bitcoin: 22,       // BTC as a maturing growth asset — well below historical CAGR
-    international: 7,  // VXUS/VEU historical average
-    gold: 7,           // Gold 20-year annualised return
     dividend: 10,      // SCHD total return (~4% yield + ~6% appreciation)
   },
   // ── Aggressive: bull cycle, above-average growth ──────────────────────────
@@ -81,8 +75,6 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     sp500: 15,         // Bull run (2010–2020 avg ≈ 13.6%)
     nasdaq: 22,        // High-growth tech cycle
     bitcoin: 35,       // Continued adoption with institutional inflows
-    international: 11, // Emerging-market outperformance
-    gold: 9,           // Geopolitical / inflation premium
     dividend: 13,      // High-yield + strong price appreciation
   },
 };

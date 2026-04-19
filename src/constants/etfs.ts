@@ -14,15 +14,6 @@ export const ETF_RECOMMENDATIONS: ETFMap = {
     { ticker: 'IBIT', name: 'iShares Bitcoin Trust', expenseRatio: 0.25 },
     { ticker: 'FBTC', name: 'Fidelity Wise Origin Bitcoin', expenseRatio: 0.25 },
   ],
-  international: [
-    { ticker: 'VXUS', name: 'Vanguard Total International Stock', expenseRatio: 0.07 },
-    { ticker: 'VEU', name: 'Vanguard FTSE All-World ex-US', expenseRatio: 0.07 },
-    { ticker: 'IXUS', name: 'iShares Core MSCI Total International', expenseRatio: 0.07 },
-  ],
-  gold: [
-    { ticker: 'GLD', name: 'SPDR Gold Shares', expenseRatio: 0.40 },
-    { ticker: 'IAU', name: 'iShares Gold Trust', expenseRatio: 0.25 },
-  ],
   dividend: [
     { ticker: 'SCHD', name: 'Schwab US Dividend Equity', expenseRatio: 0.06, dividendYield: 3.5 },
     { ticker: 'VYM', name: 'Vanguard High Dividend Yield', expenseRatio: 0.06, dividendYield: 3.0 },

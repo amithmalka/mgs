@@ -11,14 +11,12 @@ import type { AssetClass, AllocationTarget } from '../types';
 
 const ASSET_LABELS: Record<AssetClass, string> = {
   sp500: 'S&P 500', nasdaq: 'Nasdaq 100', bitcoin: 'Bitcoin',
-  international: 'International', gold: 'Gold', dividend: 'Dividend ETF',
+  dividend: 'SCHD',
 };
 const ASSET_SOURCE: Record<AssetClass, string> = {
   sp500:         'SPY/VOO · CAGR ~10.5% since 1957',
   nasdaq:        'QQQ · CAGR ~16% since 1985',
   bitcoin:       'BTC · Modelled as maturing store-of-value',
-  international: 'VXUS/VEU · ~6-7% historical avg',
-  gold:          'GLD/IAU · ~7-8% 20yr avg',
   dividend:      'SCHD · ~10-12% total return',
 };
 

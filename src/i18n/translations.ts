@@ -150,8 +150,6 @@ export const translations = {
   sp500: { en: 'S&P 500', he: 'S&P 500' },
   nasdaq: { en: 'Nasdaq', he: 'נאסד״ק' },
   bitcoin: { en: 'Bitcoin', he: 'ביטקוין' },
-  international: { en: 'International', he: 'בינלאומי' },
-  gold: { en: 'Gold', he: 'זהב' },
   dividendEtf: { en: 'Dividend ETF', he: 'תעודת דיבידנד' },
 } as const;
 

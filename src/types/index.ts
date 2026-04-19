@@ -1,4 +1,4 @@
-export type AssetClass = 'sp500' | 'nasdaq' | 'bitcoin' | 'international' | 'gold' | 'dividend';
+export type AssetClass = 'sp500' | 'nasdaq' | 'bitcoin' | 'dividend';
 
 export type InvestmentPhase = 'growth' | 'transition' | 'income';
 
