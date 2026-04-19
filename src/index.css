@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #D4AF37;
+  --color-gold-light: #F5E6A3;
+  --color-gold-dark: #B8941F;
+  --color-gold-muted: rgba(212, 175, 55, 0.12);
+  --color-gold-border: rgba(212, 175, 55, 0.2);
+
+  --color-surface: #080808;
+  --color-surface-2: #0F0F0F;
+  --color-surface-3: #171717;
+  --color-surface-4: #1F1F1F;
+  --color-surface-5: #282828;
+
+  --color-text: #F0F0F0;
+  --color-text-muted: #8A8A8A;
+  --color-text-dim: #4A4A4A;
+
+  --color-success: #34D399;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
+  --color-info: #60A5FA;
+
+  --color-sp500: #D4AF37;
+  --color-nasdaq: #A78BFA;
+  --color-bitcoin: #F59E0B;
+  --color-international: #34D399;
+  --color-gold-asset: #FFD700;
+  --color-dividend: #F472B6;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #222 #0a0a0a;
+}
+
+body {
+  font-family: 'Rubik', system-ui, -apple-system, sans-serif;
+  background-color: #050505;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(212, 175, 55, 0.02) 0%, transparent 50%);
+  color: #F0F0F0;
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-family: 'Rubik', system-ui, sans-serif;
+  font-weight: 700;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+/* === Gold Gradient Text === */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #B8941F 0%, #D4AF37 30%, #F5E6A3 50%, #D4AF37 70%, #B8941F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === Gold Shimmer Animation === */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.gold-shimmer {
+  background: linear-gradient(90deg, #B8941F 0%, #D4AF37 20%, #F5E6A3 40%, #D4AF37 60%, #B8941F 80%, #D4AF37 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+/* === Glassmorphism Card === */
+.glass-card {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.08);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card:hover {
+  border-color: rgba(212, 175, 55, 0.15);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(212, 175, 55, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transform: translateY(-1px);
+}
+
+/* === Gold Glow === */
+.gold-glow {
+  box-shadow:
+    0 0 20px rgba(212, 175, 55, 0.08),
+    0 0 60px rgba(212, 175, 55, 0.04),
+    0 4px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+/* === Floating Animation === */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-delay {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+/* === Fade In === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* === Gold Pulse === */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+}
+.pulse-gold { animation: pulse-gold 2s infinite; }
+
+/* === Button Glow Hover === */
+.btn-gold {
+  background: linear-gradient(135deg, #B8941F 0%, #D4AF37 50%, #F5E6A3 100%);
+  color: #0A0A0A;
+  font-weight: 600;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+.btn-gold:hover::before {
+  transform: translateX(100%);
+}
+.btn-gold:hover {
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3), 0 0 60px rgba(212, 175, 55, 0.1);
+  transform: translateY(-1px);
+}
+
+/* === Inputs === */
+input[type="number"], input[type="text"], input[type="date"], input[type="password"] {
+  background: rgba(23, 23, 23, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #F0F0F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: 'Rubik', system-ui, sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+}
+input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08), 0 0 20px rgba(212, 175, 55, 0.05);
+}
+input::placeholder { color: #3a3a3a; }
+input[type="checkbox"] { accent-color: #D4AF37; }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+
+table { border-collapse: collapse; }
+th { color: #6a6a6a; font-weight: 500; font-family: 'Heebo', 'Inter', sans-serif; }
+
+/* === Progress Bar Shine === */
+@keyframes progress-shine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.progress-gold {
+  background: linear-gradient(90deg, #B8941F, #D4AF37, #F5E6A3, #D4AF37, #B8941F);
+  background-size: 200% auto;
+  animation: progress-shine 3s linear infinite;
+}
+
+/* === Subtle Noise Texture === */
+.noise-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
