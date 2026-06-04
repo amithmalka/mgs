@@ -1,6 +1,34 @@
-export type AssetClass = 'sp500' | 'nasdaq' | 'bitcoin' | 'dividend';
+export type AssetClass = 'sp500' | 'nasdaq' | 'bitcoin' | 'dividend' | 'msci' | 'bonds';
 
 export type InvestmentPhase = 'growth' | 'transition' | 'income';
+
+/**
+ * The "traffic light" (רמזור) phase model — time-based, measured in years
+ * from the start of investing:
+ *   red    (0–15yr): monthly deposits split across the track allocation
+ *   yellow (15–20yr): monthly deposits go entirely into SCHD; dividends reinvested
+ *   green  (20yr+):   no new deposits; only SCHD dividends reinvested; 4% withdrawals
+ */
+export type TrafficLight = 'red' | 'yellow' | 'green';
+
+export type TrackId = 'aggressive' | 'stable' | 'mature' | 'defensive' | 'security';
+
+export interface Track {
+  id: TrackId;
+  nameHe: string;
+  nameEn: string;
+  ageMin: number;
+  ageMax: number;
+  icon: string;
+  taglineHe: string;
+  taglineEn: string;
+  /** target allocation per asset class, must sum to 100 */
+  allocations: Partial<Record<AssetClass, number>>;
+  /** year at which the yellow phase begins (deposits → SCHD only) */
+  yellowStartYear: number;
+  /** year at which the green phase begins (stop deposits, start 4% withdrawals) */
+  greenStartYear: number;
+}
 
 export interface AllocationTarget {
   assetClass: AssetClass;
@@ -42,6 +70,12 @@ export interface AssetSimRow {
   totalDeposited: number;
   totalGrowth: number;
   assets: Record<AssetClass, { value: number; deposited: number; growth: number; returnRate: number }>;
+  /** traffic-light phase this year belongs to (only set by simulateTrack) */
+  phase?: TrafficLight;
+  /** income withdrawn this year via the 4% rule (green phase only) */
+  income?: number;
+  /** cumulative income withdrawn up to and including this year */
+  cumulativeIncome?: number;
 }
 
 export interface Goal {

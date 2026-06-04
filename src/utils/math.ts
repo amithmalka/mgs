@@ -156,6 +156,131 @@ export function simulateByAsset(
   return results;
 }
 
+/**
+ * Phase-aware "traffic light" (רמזור) simulation for an MGS track.
+ *
+ * Three phases, measured in years from the start of investing:
+ *   🔴 red    (year ≤ yellowStartYear):  monthly deposit split across the track
+ *                                        allocation; every asset grows.
+ *   🟡 yellow (yellowStartYear < y ≤ greenStartYear): the entire monthly deposit
+ *                                        flows into SCHD only; other assets keep
+ *                                        growing but receive no new money.
+ *   🟢 green  (year > greenStartYear):   no new deposits. SCHD dividends are
+ *                                        reinvested (already modelled via SCHD's
+ *                                        total return), and a 4% withdrawal is
+ *                                        taken at the end of each year as income.
+ *
+ * Withdrawals are removed proportionally from each asset. Growth is reported net
+ * of withdrawals, so totalGrowth = totalValue − totalDeposited + cumulativeIncome.
+ */
+export function simulateTrack(
+  initialDeposit: number,
+  monthlyDeposit: number,
+  years: number,
+  allocations: AllocationTarget[],
+  assetReturns: Record<AssetClass, number>,
+  opts: { yellowStartYear: number; greenStartYear: number; withdrawRate: number },
+): AssetSimRow[] {
+  const active = allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0);
+  const results: AssetSimRow[] = [];
+
+  const totalCurrentValue = allocations.reduce((s, a) => s + a.currentValue, 0);
+  const useActualHoldings = totalCurrentValue > 0;
+  const totalTargetPct = active.reduce((s, a) => s + a.targetPercent, 0) || 100;
+
+  const rates: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+  const balances: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+  const deposited: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+
+  for (const a of active) {
+    rates[a.assetClass] = toMonthlyRate(assetReturns[a.assetClass]);
+    if (useActualHoldings) {
+      balances[a.assetClass] = a.currentValue;
+      deposited[a.assetClass] = a.currentValue;
+    } else {
+      const pct = a.targetPercent / 100;
+      balances[a.assetClass] = initialDeposit * pct;
+      deposited[a.assetClass] = initialDeposit * pct;
+    }
+  }
+
+  // SCHD destination for the yellow phase (and dividend reinvestment in green).
+  const schd = active.find(a => a.assetClass === 'dividend')?.assetClass;
+
+  let cumulativeIncome = 0;
+
+  const phaseForYear = (year: number): 'red' | 'yellow' | 'green' => {
+    if (year <= opts.yellowStartYear) return 'red';
+    if (year <= opts.greenStartYear) return 'yellow';
+    return 'green';
+  };
+
+  const makeRow = (year: number, income: number): AssetSimRow => {
+    let totalValue = 0;
+    let totalDep = 0;
+    const assets = {} as AssetSimRow['assets'];
+    for (const a of active) {
+      const ac = a.assetClass;
+      totalValue += balances[ac];
+      totalDep += deposited[ac];
+      assets[ac] = {
+        value: Math.round(balances[ac]),
+        deposited: Math.round(deposited[ac]),
+        growth: Math.round(balances[ac] - deposited[ac]),
+        returnRate: assetReturns[ac],
+      };
+    }
+    return {
+      year,
+      totalValue: Math.round(totalValue),
+      totalDeposited: Math.round(totalDep),
+      totalGrowth: Math.round(totalValue - totalDep + cumulativeIncome),
+      assets,
+      phase: phaseForYear(year),
+      income: Math.round(income),
+      cumulativeIncome: Math.round(cumulativeIncome),
+    };
+  };
+
+  results.push(makeRow(0, 0));
+
+  for (let year = 1; year <= years; year++) {
+    const phase = phaseForYear(year);
+    for (let month = 1; month <= 12; month++) {
+      for (const a of active) {
+        const ac = a.assetClass;
+        let depositSlice = 0;
+        if (phase === 'red') {
+          depositSlice = monthlyDeposit * (a.targetPercent / totalTargetPct);
+        } else if (phase === 'yellow' && schd && ac === schd) {
+          depositSlice = monthlyDeposit; // entire deposit → SCHD
+        }
+        // Deposit first, then compound (deposit earns interest the same month)
+        balances[ac] = (balances[ac] + depositSlice) * (1 + rates[ac]);
+        deposited[ac] += depositSlice;
+      }
+    }
+
+    // Green phase: take the 4% annual withdrawal as income.
+    let income = 0;
+    if (phase === 'green') {
+      const total = active.reduce((s, a) => s + balances[a.assetClass], 0);
+      income = total * opts.withdrawRate;
+      if (total > 0) {
+        for (const a of active) {
+          const ac = a.assetClass;
+          balances[ac] -= income * (balances[ac] / total); // proportional drawdown
+        }
+      }
+      cumulativeIncome += income;
+    }
+
+    results.push(makeRow(year, income));
+  }
+
+  return results;
+}
+
 export function calcRequiredMonthly(
   targetAmount: number,
   currentValue: number,

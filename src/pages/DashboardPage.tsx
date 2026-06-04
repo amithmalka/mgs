@@ -2,6 +2,7 @@ import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
+import { TrackBanner } from '../components/layout/TrackBanner';
 import { AllocationPie } from '../components/charts/AllocationPie';
 import { formatCurrency, formatPercent } from '../utils/format';
 
@@ -19,6 +20,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
+      <TrackBanner />
       <div className="flex items-center justify-between">
         <span className="px-4 py-1.5 rounded-full text-xs font-medium bg-gold-muted text-gold border border-gold-border">
           {t(phaseKey[phase], lang)}

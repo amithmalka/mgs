@@ -151,6 +151,75 @@ export const translations = {
   nasdaq: { en: 'Nasdaq', he: 'נאסד״ק' },
   bitcoin: { en: 'Bitcoin', he: 'ביטקוין' },
   dividendEtf: { en: 'Dividend ETF', he: 'תעודת דיבידנד' },
+  msci: { en: 'MSCI World', he: 'MSCI עולמי' },
+  bonds: { en: 'Medium-Term Bonds (IEF)', he: 'אג״ח טווח בינוני (IEF)' },
+
+  // Tracks tab + page
+  tabTracks: { en: 'Tracks', he: 'מסלולים' },
+  tracksTitle: { en: 'Your Investment Track', he: 'מסלול ההשקעה שלך' },
+  tracksSubtitle: { en: 'A long-term plan tailored to your age — replacing a property purchase with investments that build strong growth and high passive income within 20 years.', he: 'תוכנית ארוכת-טווח המותאמת לגיל שלך — מחליפה את קניית הדירה בהשקעות שבונות צמיחה חזקה והכנסה פאסיבית גבוהה תוך 20 שנה.' },
+  yourAge: { en: 'Your Age', he: 'הגיל שלך' },
+  recommendedForYou: { en: 'Recommended for you', he: 'מומלץ עבורך' },
+  recommendedTrack: { en: 'Recommended track', he: 'מסלול מומלץ' },
+  selectTrack: { en: 'Select this track', he: 'בחר מסלול זה' },
+  selected: { en: 'Selected', he: 'נבחר' },
+  ages: { en: 'Ages', he: 'גילאים' },
+  chooseTrack: { en: 'Choose a Track', he: 'בחירת מסלול' },
+  chooseTrackSub: { en: 'All tracks share the same traffic-light process — only the asset split differs by age.', he: 'כל המסלולים חולקים את אותו תהליך רמזור — רק חלוקת הנכסים משתנה לפי גיל.' },
+
+  // Traffic light (רמזור)
+  trafficLightTitle: { en: 'The Traffic Light Method', he: 'שיטת הרמזור' },
+  trafficLightSub: { en: 'Three stages over the years — the discipline that builds the wealth.', he: 'שלושה שלבים לאורך השנים — המשמעת שבונה את ההון.' },
+  redPhase: { en: 'Red', he: 'אדום' },
+  yellowPhase: { en: 'Yellow', he: 'צהוב' },
+  greenPhase2: { en: 'Green', he: 'ירוק' },
+  redTitle: { en: 'Years 0–15 · Build', he: 'שנים 0–15 · בנייה' },
+  yellowTitle: { en: 'Years 15–20 · Consolidate', he: 'שנים 15–20 · גיבוש' },
+  greenTitle: { en: 'Year 20+ · Harvest', he: 'שנה 20+ · קציר' },
+  redDesc: { en: 'Invest every month per your ability (₪4,000–5,000) across the full track allocation. You barely feel it moving — that is normal.', he: 'משקיעים כל חודש לפי היכולת (4,000–5,000 ₪) על פני כל הקצאת המסלול. כמעט לא מרגישים שזה זז — וזה בדיוק כמו שצריך.' },
+  yellowDesc: { en: 'All new monthly deposits now flow into SCHD only. Dividends are reinvested — the income engine is being built.', he: 'כל ההפקדות החודשיות החדשות הולכות ל-SCHD בלבד. הדיבידנדים מושקעים מחדש — מנוע ההכנסה נבנה.' },
+  greenDesc: { en: 'Stop depositing. SCHD dividends keep reinvesting for continued growth, and you withdraw income each year using the 4% rule.', he: 'מפסיקים להפקיד. דיבידנדי ה-SCHD ממשיכים להיות מושקעים מחדש לצמיחה, ומושכים הכנסה כל שנה לפי כלל ה-4%.' },
+  trackEarlyHarvest: { en: 'This track may begin 4% withdrawals already after 15 years.', he: 'מסלול זה יכול להתחיל משיכות 4% כבר אחרי 15 שנה.' },
+
+  // Track projection
+  trackProjection: { en: 'Track Projection (Moderate Scenario)', he: 'תחזית המסלול (תרחיש מתון)' },
+  atYear: { en: 'At year {n}', he: 'בשנה {n}' },
+  annualIncome: { en: 'Annual income (4%)', he: 'הכנסה שנתית (4%)' },
+  monthlyIncome: { en: 'Monthly income', he: 'הכנסה חודשית' },
+  portfolioAtYear: { en: 'Portfolio value', he: 'שווי תיק' },
+
+  // Apartment vs investment
+  apartmentTitle: { en: 'Apartment vs. Investment', he: 'דירה מול השקעות' },
+  apartmentSub: { en: 'What if you invested the down payment and monthly mortgage instead of buying a property?', he: 'מה היה קורה אם היית משקיע את ההון העצמי והמשכנתא החודשית במקום לקנות דירה?' },
+  apartmentPrice: { en: 'Apartment Price', he: 'מחיר דירה' },
+  downPayment: { en: 'Initial Equity (down payment)', he: 'הון עצמי התחלתי' },
+  apartmentAppreciation: { en: 'Annual Appreciation', he: 'עליית ערך שנתית' },
+  rentYield: { en: 'Net Rental Yield', he: 'תשואת שכירות נטו' },
+  horizonYears: { en: 'Horizon', he: 'אופק' },
+  buyApartment: { en: 'Buy an Apartment', he: 'קניית דירה' },
+  investInstead: { en: 'Invest Instead (MGS)', he: 'להשקיע במקום (MGS)' },
+  afterYears: { en: 'After {n} years', he: 'אחרי {n} שנים' },
+  passiveIncome: { en: 'Passive income', he: 'הכנסה פאסיבית' },
+  apartmentNote: { en: 'Educational comparison only. Assumes the same equity + monthly amount, no leverage risk modelled. Not financial advice.', he: 'השוואה חינוכית בלבד. בהנחת אותו הון עצמי + סכום חודשי, ללא מידול סיכוני מינוף. אין זו המלצת השקעה.' },
+  difference: { en: 'Difference', he: 'הפרש' },
+
+  // Track banner (shown across the system)
+  currentTrack: { en: 'Your Track', he: 'המסלול שלך' },
+  changeTrackHint: { en: 'Change in the Tracks tab', he: 'שינוי בטאב מסלולים' },
+  trafficPlan: { en: 'Traffic-light plan', he: 'תוכנית הרמזור' },
+  phaseDepositSplit: { en: 'Split deposits', he: 'הפקדה מפוצלת' },
+  phaseSchdOnly: { en: 'SCHD only', he: 'SCHD בלבד' },
+  phaseHarvest: { en: '4% income', he: 'הכנסה 4%' },
+  simUsesTrack: { en: 'Projection follows your track’s traffic-light plan (red → yellow → green).', he: 'התחזית עוקבת אחר תוכנית הרמזור של המסלול שלך (אדום → צהוב → ירוק).' },
+  incomeCol: { en: 'Income (4%)', he: 'הכנסה (4%)' },
+
+  // Dividends — track income plan
+  incomePlanTitle: { en: 'Your Track’s Income Plan', he: 'תוכנית ההכנסה של המסלול שלך' },
+  incomePlanSub: { en: 'How the traffic light turns your savings into income — for the selected track.', he: 'איך הרמזור הופך את החיסכון להכנסה — עבור המסלול הנבחר.' },
+  schdValue: { en: 'SCHD value', he: 'שווי SCHD' },
+  dividendFromSchd: { en: 'SCHD dividend', he: 'דיבידנד SCHD' },
+  totalIncome: { en: 'Total income/yr', he: 'הכנסה כוללת/שנה' },
+  phaseLabel: { en: 'Phase', he: 'שלב' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

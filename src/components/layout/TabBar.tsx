@@ -1,10 +1,11 @@
 import { useLangStore } from '../../store/langStore';
 import { t } from '../../i18n/translations';
 
-export type Tab = 'dashboard' | 'portfolio' | 'transactions' | 'simulation' | 'dividends' | 'goals';
+export type Tab = 'dashboard' | 'tracks' | 'portfolio' | 'transactions' | 'simulation' | 'dividends' | 'goals';
 
 const tabKeys = [
   { id: 'dashboard' as Tab, key: 'tabDashboard' as const, icon: '◈' },
+  { id: 'tracks' as Tab, key: 'tabTracks' as const, icon: '🚦' },
   { id: 'portfolio' as Tab, key: 'tabPortfolio' as const, icon: '◆' },
   { id: 'transactions' as Tab, key: 'tabTransactions' as const, icon: '⟐' },
   { id: 'simulation' as Tab, key: 'tabSimulation' as const, icon: '⟁' },

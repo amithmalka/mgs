@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
+import { TrackBanner } from '../components/layout/TrackBanner';
 import { AllocationPie } from '../components/charts/AllocationPie';
 import { calcRebalance } from '../utils/rebalance';
 import { simulateByAsset } from '../utils/math';
@@ -71,6 +72,7 @@ export function PortfolioPage() {
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
+      <TrackBanner />
 
       {/* Live Projection Card */}
       <Card glow title={lang === 'he' ? 'תחזית תיק — מתעדכנת בזמן אמת' : 'Portfolio Projection — Live Update'}>

@@ -10,8 +10,13 @@ import type {
   ActivityEntry,
   Notification,
   AssetClass,
+  TrackId,
 } from '../types';
-import { DEFAULT_ALLOCATIONS, DEFAULT_SIMULATION, DEFAULT_GOAL, TRANSITION_THRESHOLD } from '../constants/defaults';
+import { DEFAULT_SIMULATION, DEFAULT_GOAL, TRANSITION_THRESHOLD } from '../constants/defaults';
+import { DEFAULT_TRACK_ID, getTrackById, recommendTrackByAge, trackToAllocations } from '../constants/tracks';
+
+const DEFAULT_AGE = 30;
+const DEFAULT_TRACK_ALLOCATIONS = trackToAllocations(getTrackById(DEFAULT_TRACK_ID));
 
 export interface StoreState {
   // Portfolio
@@ -20,6 +25,10 @@ export interface StoreState {
   monthlyDeposit: number;
   phase: InvestmentPhase;
   transitionThreshold: number;
+
+  // Track (מסלול) selection
+  userAge: number;
+  selectedTrackId: TrackId;
 
   // Transactions
   transactions: Transaction[];
@@ -44,6 +53,9 @@ export interface StoreState {
   setPhase: (phase: InvestmentPhase) => void;
   setTransitionThreshold: (amount: number) => void;
 
+  setUserAge: (age: number) => void;
+  setSelectedTrack: (id: TrackId) => void;
+
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
 
@@ -66,11 +78,14 @@ export interface StoreState {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      allocations: DEFAULT_ALLOCATIONS,
+      allocations: DEFAULT_TRACK_ALLOCATIONS,
       currentPortfolioValue: 0,
       monthlyDeposit: DEFAULT_SIMULATION.monthlyDeposit,
       phase: 'growth',
       transitionThreshold: TRANSITION_THRESHOLD,
+
+      userAge: DEFAULT_AGE,
+      selectedTrackId: DEFAULT_TRACK_ID,
 
       transactions: [],
       simulationParams: DEFAULT_SIMULATION,
@@ -110,6 +125,38 @@ export const useStore = create<StoreState>()(
 
       setPhase: (phase) => set({ phase }),
       setTransitionThreshold: (amount) => set({ transitionThreshold: amount }),
+
+      // Setting the age auto-selects the recommended track for that age band.
+      setUserAge: (age) => {
+        const trackId = recommendTrackByAge(age);
+        const track = getTrackById(trackId);
+        const allocations = trackToAllocations(track, get().allocations);
+        set({
+          userAge: age,
+          selectedTrackId: trackId,
+          allocations,
+          currentPortfolioValue: allocations.reduce((s, a) => s + a.currentValue, 0),
+        });
+        get().addActivity({
+          action: `Age set to ${age} → track "${track.nameEn}"`,
+          type: 'system',
+        });
+      },
+
+      // Manual track override — keeps the user's age but switches allocations.
+      setSelectedTrack: (id) => {
+        const track = getTrackById(id);
+        const allocations = trackToAllocations(track, get().allocations);
+        set({
+          selectedTrackId: id,
+          allocations,
+          currentPortfolioValue: allocations.reduce((s, a) => s + a.currentValue, 0),
+        });
+        get().addActivity({
+          action: `Track changed to "${track.nameEn}"`,
+          type: 'system',
+        });
+      },
 
       setSimulationParams: (params) => {
         const current = get();
@@ -249,14 +296,14 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'wealth-simulator',
-      version: 3,
+      version: 4,
       migrate: (persistedState: unknown, version: number) => {
-        const s = persistedState as Record<string, unknown>;
+        let s = persistedState as Record<string, unknown>;
         if (version < 3) {
           // v3: reset simulation params — zero out yearlyDepositIncrease,
           // preserve portfolio value and monthly deposit the user set intentionally
           const simParams = s.simulationParams as Record<string, unknown> | undefined;
-          return {
+          s = {
             ...s,
             simulationParams: {
               ...DEFAULT_SIMULATION,
@@ -264,6 +311,18 @@ export const useStore = create<StoreState>()(
               initialDeposit: (s.currentPortfolioValue as number) || DEFAULT_SIMULATION.initialDeposit,
               monthlyDeposit: simParams?.monthlyDeposit ?? DEFAULT_SIMULATION.monthlyDeposit,
             },
+          };
+        }
+        if (version < 4) {
+          // v4: introduce age-based tracks + traffic-light model.
+          // Adopt the default track's allocation (preserving any holdings the
+          // user already entered for matching asset classes).
+          const prev = (s.allocations as AllocationTarget[]) ?? [];
+          s = {
+            ...s,
+            userAge: DEFAULT_AGE,
+            selectedTrackId: DEFAULT_TRACK_ID,
+            allocations: trackToAllocations(getTrackById(DEFAULT_TRACK_ID), prev),
           };
         }
         return s;

@@ -1,11 +1,26 @@
 import type { AllocationTarget, SimulationParams, Goal, AssetClass } from '../types';
 
+/** Display label + chart color for every asset class (single source of truth). */
+export const ASSET_META: Record<AssetClass, { label: string; color: string }> = {
+  sp500:    { label: 'S&P 500', color: '#3b82f6' },
+  nasdaq:   { label: 'Nasdaq',  color: '#8b5cf6' },
+  bitcoin:  { label: 'Bitcoin', color: '#f59e0b' },
+  dividend: { label: 'SCHD',    color: '#ec4899' },
+  msci:     { label: 'MSCI World', color: '#14b8a6' },
+  bonds:    { label: 'IEF Bonds',  color: '#64748b' },
+};
+
 export const DEFAULT_ALLOCATIONS: AllocationTarget[] = [
   { assetClass: 'sp500', label: 'S&P 500', targetPercent: 30, currentValue: 0, color: '#3b82f6' },
   { assetClass: 'nasdaq', label: 'Nasdaq', targetPercent: 30, currentValue: 0, color: '#8b5cf6' },
   { assetClass: 'bitcoin', label: 'Bitcoin', targetPercent: 15, currentValue: 0, color: '#f59e0b' },
   { assetClass: 'dividend', label: 'SCHD', targetPercent: 25, currentValue: 0, color: '#ec4899' },
 ];
+
+/** Traffic-light (רמזור) phase boundaries, in years from the start of investing. */
+export const PHASE_RED_END = 15;    // 0–15yr: red — diversified monthly deposits
+export const PHASE_YELLOW_END = 20; // 15–20yr: yellow — deposits to SCHD only
+export const WITHDRAW_RATE = 0.04;  // green phase: annual 4% rule withdrawal
 
 export const DEFAULT_SIMULATION: SimulationParams = {
   initialDeposit: 10000,
@@ -62,6 +77,8 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     nasdaq: 9,         // Tech correction years
     bitcoin: 8,        // Sideways / crypto winter, some adoption residual
     dividend: 7,       // Dividend income + modest appreciation
+    msci: 5,           // MSCI World — developed markets, lagging decade
+    bonds: 2,          // IEF (7-10yr Treasuries) — low-rate environment
   },
   // ── Moderate: realistic long-term historical averages ────────────────────
   moderate: {
@@ -69,6 +86,8 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     nasdaq: 17,        // QQQ 20-year CAGR ≈ 17%
     bitcoin: 22,       // BTC as a maturing growth asset — well below historical CAGR
     dividend: 10,      // SCHD total return (~4% yield + ~6% appreciation)
+    msci: 8,           // MSCI World — long-term developed-markets average ≈ 7-8%
+    bonds: 3.5,        // IEF — medium-term Treasury total return ≈ 3-4%
   },
   // ── Aggressive: bull cycle, above-average growth ──────────────────────────
   aggressive: {
@@ -76,6 +95,8 @@ export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
     nasdaq: 22,        // High-growth tech cycle
     bitcoin: 35,       // Continued adoption with institutional inflows
     dividend: 13,      // High-yield + strong price appreciation
+    msci: 11,          // MSCI World — strong global bull cycle
+    bonds: 5,          // IEF — falling-rate / flight-to-safety tailwind
   },
 };
 

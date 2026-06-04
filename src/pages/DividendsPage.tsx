@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
+import { TrackBanner } from '../components/layout/TrackBanner';
 import { DividendChart } from '../components/charts/DividendChart';
-import { fourPercentRule, futureValue } from '../utils/math';
+import { fourPercentRule, futureValue, simulateTrack } from '../utils/math';
 import { formatCurrency } from '../utils/format';
+import { ASSET_RETURNS, WITHDRAW_RATE } from '../constants/defaults';
+import { getTrackById, trackToAllocations } from '../constants/tracks';
 
 export function DividendsPage() {
-  const { currentPortfolioValue, transitionThreshold, setTransitionThreshold } = useStore();
+  const { currentPortfolioValue, selectedTrackId, simulationParams } = useStore();
   const { lang } = useLangStore();
   const isRtl = lang === 'he';
   const [portfolioForCalc, setPortfolioForCalc] = useState(currentPortfolioValue || 2000000);
@@ -23,16 +26,24 @@ export function DividendsPage() {
     return { year, income: Math.round(futurePortfolio * (dividendYield / 100)), portfolioValue: futurePortfolio };
   });
 
-  const transitionSteps = [
-    { pct: 0, label: t('currentGrowth', lang) },
-    { pct: 10, label: `${t('phase', lang)} 1` },
-    { pct: 20, label: `${t('phase', lang)} 2` },
-    { pct: 30, label: `${t('phase', lang)} 3` },
-    { pct: 50, label: `${t('phase', lang)} 4` },
-  ];
+  // ── Track-aware income plan (traffic light) ────────────────────────────────
+  const track = getTrackById(selectedTrackId);
+  const trackProjection = useMemo(
+    () => simulateTrack(
+      simulationParams.initialDeposit,
+      simulationParams.monthlyDeposit,
+      30,
+      trackToAllocations(track),
+      ASSET_RETURNS.moderate,
+      { yellowStartYear: track.yellowStartYear, greenStartYear: track.greenStartYear, withdrawRate: WITHDRAW_RATE },
+    ),
+    [track, simulationParams.initialDeposit, simulationParams.monthlyDeposit],
+  );
+  const planYears = [15, 20, 30];
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
+      <TrackBanner />
       <Card title={t('fourPercentRule', lang)} subtitle={t('fourPercentSubtitle', lang)}>
         <div className="flex items-center gap-3 mt-2 mb-4">
           <label className="text-xs text-text-muted">{t('portfolioValue', lang)}:</label>
@@ -71,41 +82,64 @@ export function DividendsPage() {
         </div>
       </Card>
 
-      <Card title={t('transitionTitle', lang)} subtitle={t('transitionSubtitle', lang)}>
-        <div className="flex items-center gap-3 mt-2 mb-4">
-          <label className="text-xs text-text-muted">{t('transitionAt', lang)}:</label>
-          <input type="number" value={transitionThreshold} onChange={e => setTransitionThreshold(Number(e.target.value))} className="w-40" />
-          <span className="text-xs text-text-dim">₪</span>
+      <Card title={t('incomePlanTitle', lang)} subtitle={t('incomePlanSub', lang)}>
+        {/* Phase legend for the selected track */}
+        <div className="grid gap-2 sm:grid-cols-3 mt-2 mb-4">
+          {[
+            { dot: '🔴', color: '#ef4444', titleKey: 'redTitle', descKey: 'redDesc' },
+            { dot: '🟡', color: '#eab308', titleKey: 'yellowTitle', descKey: 'yellowDesc', hide: track.greenStartYear === track.yellowStartYear },
+            { dot: '🟢', color: '#22c55e', titleKey: 'greenTitle', descKey: 'greenDesc' },
+          ].filter(p => !p.hide).map(p => (
+            <div key={p.titleKey} className="rounded-xl p-3 border" style={{ borderColor: p.color + '44', background: p.color + '12' }}>
+              <p className="text-[11px] font-bold flex items-center gap-1" style={{ color: p.color }}>{p.dot} {t(p.titleKey as 'redTitle', lang)}</p>
+              <p className="text-[10px] text-text-muted mt-1 leading-snug">{t(p.descKey as 'redDesc', lang)}</p>
+            </div>
+          ))}
         </div>
+
+        {/* Milestone income table driven by the track simulation */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-4">
-                <th className="text-start py-2 text-text-muted text-xs">{t('phase', lang)}</th>
-                <th className="text-end py-2 text-text-muted text-xs">S&P</th>
-                <th className="text-end py-2 text-text-muted text-xs">Nasdaq</th>
-                <th className="text-end py-2 text-text-muted text-xs">BTC</th>
-                <th className="text-end py-2 text-gold text-xs">{t('dividendEtf', lang)}</th>
+                <th className="text-start py-2 text-text-muted text-xs">{t('year', lang)}</th>
+                <th className="text-center py-2 text-text-muted text-xs">{t('phaseLabel', lang)}</th>
+                <th className="text-end py-2 text-text-muted text-xs">{t('portfolioAtYear', lang)}</th>
+                <th className="text-end py-2 text-gold text-xs">{t('schdValue', lang)}</th>
+                <th className="text-end py-2 text-success text-xs">{t('totalIncome', lang)}</th>
               </tr>
             </thead>
             <tbody>
-              {transitionSteps.map(step => {
-                const r = (100 - step.pct) / 100;
+              {planYears.map(yr => {
+                const row = trackProjection[yr];
+                if (!row) return null;
+                const schdVal = row.assets.dividend?.value ?? 0;
+                const dividendIncome = schdVal * (dividendYield / 100);
+                const ruleIncome = row.phase === 'green' ? row.totalValue * WITHDRAW_RATE : 0;
+                // In green the 4% rule already captures income; before it, show
+                // the SCHD dividend stream that is being reinvested.
+                const totalInc = row.phase === 'green' ? ruleIncome : dividendIncome;
+                const dot = row.phase === 'red' ? '🔴' : row.phase === 'yellow' ? '🟡' : '🟢';
                 return (
-                  <tr key={step.pct} className="border-b border-surface-3/50">
-                    <td className="py-2 font-medium text-text">{step.label}</td>
-                    <td className="text-end py-2 text-text-muted">{Math.round(30 * r)}%</td>
-                    <td className="text-end py-2 text-text-muted">{Math.round(30 * r)}%</td>
-                    <td className="text-end py-2 text-text-muted">{Math.round(15 * r)}%</td>
-                    <td className="text-end py-2 text-gold font-bold">{step.pct + Math.round(25 * r)}%</td>
+                  <tr key={yr} className="border-b border-surface-3/50">
+                    <td className="py-2.5 font-medium text-text">{yr}</td>
+                    <td className="text-center py-2.5">{dot}</td>
+                    <td className="text-end py-2.5 text-text-muted">{formatCurrency(row.totalValue)}</td>
+                    <td className="text-end py-2.5 text-gold font-medium">{formatCurrency(schdVal)}</td>
+                    <td className="text-end py-2.5 text-success font-bold">
+                      {formatCurrency(totalInc)}
+                      <span className="block text-[9px] text-text-dim font-normal">{formatCurrency(Math.round(totalInc / 12))}{t('mo', lang)}</span>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        <div className="mt-4 p-3 bg-gold-muted rounded-xl text-xs text-gold border border-gold-border">
-          {t('transitionNote', lang, { amount: formatCurrency(transitionThreshold) })}
+        <div className="mt-4 p-3 bg-gold-muted rounded-xl text-[11px] text-gold border border-gold-border">
+          {lang === 'he'
+            ? `במסלול "${track.nameHe}" — עד שנה ${track.yellowStartYear} ההפקדות מפוצלות, ואז ${track.greenStartYear === track.yellowStartYear ? 'מתחילים משיכות 4%' : 'הכל ל-SCHD ואז משיכות 4% משנה ' + track.greenStartYear}.`
+            : `In the "${track.nameEn}" track — deposits are split until year ${track.yellowStartYear}, then ${track.greenStartYear === track.yellowStartYear ? '4% withdrawals begin' : 'everything goes to SCHD, with 4% withdrawals from year ' + track.greenStartYear}.`}
         </div>
       </Card>
     </div>

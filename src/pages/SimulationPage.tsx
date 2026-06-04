@@ -3,21 +3,25 @@ import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
+import { TrackBanner } from '../components/layout/TrackBanner';
 import { ScenarioChart } from '../components/charts/ScenarioChart';
-import { simulateByAsset } from '../utils/math';
+import { simulateTrack } from '../utils/math';
 import { formatCurrency } from '../utils/format';
-import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn } from '../constants/defaults';
+import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, WITHDRAW_RATE } from '../constants/defaults';
+import { getTrackById } from '../constants/tracks';
 import type { AssetClass, AllocationTarget } from '../types';
 
 const ASSET_LABELS: Record<AssetClass, string> = {
   sp500: 'S&P 500', nasdaq: 'Nasdaq 100', bitcoin: 'Bitcoin',
-  dividend: 'SCHD',
+  dividend: 'SCHD', msci: 'MSCI World', bonds: 'IEF Bonds',
 };
 const ASSET_SOURCE: Record<AssetClass, string> = {
   sp500:         'SPY/VOO · CAGR ~10.5% since 1957',
   nasdaq:        'QQQ · CAGR ~16% since 1985',
   bitcoin:       'BTC · Modelled as maturing store-of-value',
   dividend:      'SCHD · ~10-12% total return',
+  msci:          'URTH/IEFA · Developed markets ~7-8%',
+  bonds:         'IEF · 7-10yr Treasuries ~3-4%',
 };
 
 const MILESTONES = [5, 10, 20, 30] as const;
@@ -25,10 +29,16 @@ type MilestoneYear = typeof MILESTONES[number];
 type ScenarioKey = 'conservative' | 'moderate' | 'aggressive';
 
 export function SimulationPage() {
-  const { simulationParams, setSimulationParams, allocations, setAllocations } = useStore();
+  const { simulationParams, setSimulationParams, allocations, setAllocations, selectedTrackId } = useStore();
   const { lang } = useLangStore();
   const isRtl = lang === 'he';
   const p = simulationParams;
+  const track = getTrackById(selectedTrackId);
+  const phaseOpts = {
+    yellowStartYear: track.yellowStartYear,
+    greenStartYear: track.greenStartYear,
+    withdrawRate: WITHDRAW_RATE,
+  };
 
   const [activeScenario, setActiveScenario] = useState<ScenarioKey>('moderate');
   const [selectedYear, setSelectedYear] = useState<MilestoneYear>(30);
@@ -46,12 +56,14 @@ export function SimulationPage() {
   const totalPct = Object.values(localTargets).reduce((s, v) => s + v, 0);
   const pctOk = Math.abs(totalPct - 100) < 0.5;
 
-  // Single simulation dataset — always 30 years, used everywhere
+  // Single simulation dataset — always 30 years, phase-aware (traffic light)
+  // per the selected track, used everywhere on this page.
   const simData = useMemo(() => ({
-    conservative: simulateByAsset(p.initialDeposit, p.monthlyDeposit, 30, 0, liveAllocations, ASSET_RETURNS.conservative),
-    moderate:     simulateByAsset(p.initialDeposit, p.monthlyDeposit, 30, 0, liveAllocations, ASSET_RETURNS.moderate),
-    aggressive:   simulateByAsset(p.initialDeposit, p.monthlyDeposit, 30, 0, liveAllocations, ASSET_RETURNS.aggressive),
-  }), [p.initialDeposit, p.monthlyDeposit, liveAllocations]);
+    conservative: simulateTrack(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS.conservative, phaseOpts),
+    moderate:     simulateTrack(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS.moderate, phaseOpts),
+    aggressive:   simulateTrack(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS.aggressive, phaseOpts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [p.initialDeposit, p.monthlyDeposit, liveAllocations, track.yellowStartYear, track.greenStartYear]);
 
   const toChartData = (rows: typeof simData.moderate) =>
     rows.map(r => ({ year: r.year, value: r.totalValue, totalDeposited: r.totalDeposited, growth: r.totalGrowth }));
@@ -74,6 +86,7 @@ export function SimulationPage() {
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
+      <TrackBanner />
 
       {/* ── 1. Parameters ────────────────────────────────────────────── */}
       <Card title={t('simulationParams', lang)}>
@@ -101,6 +114,7 @@ export function SimulationPage() {
             ? 'הסימולציה מחשבת תמיד 30 שנה קדימה — עם נקודות ציון ב-5, 10, 20, 30 שנה'
             : 'Simulation always projects 30 years — with milestones at 5, 10, 20 & 30 years'}
         </p>
+        <p className="text-[10px] text-gold/70 mt-1">🚦 {t('simUsesTrack', lang)}</p>
       </Card>
 
       {/* ── 2. Asset allocation + per-scenario return rates ──────────── */}
@@ -352,6 +366,7 @@ export function SimulationPage() {
                 <th className="text-end py-2 text-text-muted text-xs">{t('portfolioValue', lang)}</th>
                 <th className="text-end py-2 text-text-muted text-xs">{t('totalDeposits', lang)}</th>
                 <th className="text-end py-2 text-text-muted text-xs">{t('growth', lang)}</th>
+                <th className="text-end py-2 text-xs" style={{ color: '#22c55e' }}>{t('incomeCol', lang)}</th>
                 {activeAssets.map(a => (
                   <th key={a.assetClass} className="text-end py-2 text-xs" style={{ color: a.color }}>
                     {lang === 'he' ? t(a.assetClass === 'dividend' ? 'dividendEtf' : a.assetClass as any, lang) : ASSET_LABELS[a.assetClass]}
@@ -362,18 +377,25 @@ export function SimulationPage() {
             <tbody>
               {simData[activeScenario].slice(1).map(row => {
                 const isMilestone = (MILESTONES as readonly number[]).includes(row.year);
+                const phaseColor = row.phase === 'red' ? '#ef4444' : row.phase === 'yellow' ? '#eab308' : '#22c55e';
+                const phaseDot = row.phase === 'red' ? '🔴' : row.phase === 'yellow' ? '🟡' : '🟢';
                 return (
                   <tr
                     key={row.year}
                     className={`border-b border-surface-3/50 ${isMilestone ? 'bg-gold/[0.03]' : ''}`}
+                    style={{ boxShadow: `inset 2px 0 0 ${phaseColor}66` }}
                   >
                     <td className={`py-2 ${isMilestone ? 'text-gold font-semibold' : 'text-text-muted'}`}>
+                      <span className="text-[9px] mr-1 ml-1">{phaseDot}</span>
                       {row.year}
                       {isMilestone && <span className="text-[9px] text-gold/50 mr-1 ml-1">★</span>}
                     </td>
                     <td className="text-end py-2 font-medium text-gold">{formatCurrency(row.totalValue)}</td>
                     <td className="text-end py-2 text-text-muted">{formatCurrency(row.totalDeposited)}</td>
                     <td className="text-end py-2 text-success">{formatCurrency(row.totalGrowth)}</td>
+                    <td className="text-end py-2 text-xs" style={{ color: row.income ? '#22c55e' : '#444' }}>
+                      {row.income ? formatCurrency(row.income) : '—'}
+                    </td>
                     {activeAssets.map(a => (
                       <td key={a.assetClass} className="text-end py-2 text-text-dim text-xs">
                         {row.assets[a.assetClass] ? formatCurrency(row.assets[a.assetClass].value) : '—'}
