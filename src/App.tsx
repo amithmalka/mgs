@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { TabBar } from './components/layout/TabBar';
 import type { Tab } from './components/layout/TabBar';
-import { DashboardPage } from './pages/DashboardPage';
+import { HomePage } from './pages/HomePage';
 import { TracksPage } from './pages/TracksPage';
+import { AcademyPage } from './pages/AcademyPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { SimulationPage } from './pages/SimulationPage';
@@ -13,8 +14,9 @@ import { useLangStore } from './store/langStore';
 import { t } from './i18n/translations';
 
 const pages: Record<Tab, React.FC> = {
-  dashboard: DashboardPage,
+  dashboard: HomePage,
   tracks: TracksPage,
+  academy: AcademyPage,
   portfolio: PortfolioPage,
   transactions: TransactionsPage,
   simulation: SimulationPage,

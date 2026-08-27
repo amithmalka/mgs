@@ -5,24 +5,11 @@ import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
 import { TrackBanner } from '../components/layout/TrackBanner';
 import { ScenarioChart } from '../components/charts/ScenarioChart';
-import { simulateTrack } from '../utils/math';
+import { simulateTrack, simulateTrackMonthly } from '../utils/math';
 import { formatCurrency } from '../utils/format';
-import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, WITHDRAW_RATE } from '../constants/defaults';
-import { getTrackById } from '../constants/tracks';
-import type { AssetClass, AllocationTarget } from '../types';
-
-const ASSET_LABELS: Record<AssetClass, string> = {
-  sp500: 'S&P 500', nasdaq: 'Nasdaq 100', bitcoin: 'Bitcoin',
-  dividend: 'SCHD', msci: 'MSCI World', bonds: 'IEF Bonds',
-};
-const ASSET_SOURCE: Record<AssetClass, string> = {
-  sp500:         'SPY/VOO · CAGR ~10.5% since 1957',
-  nasdaq:        'QQQ · CAGR ~16% since 1985',
-  bitcoin:       'BTC · Modelled as maturing store-of-value',
-  dividend:      'SCHD · ~10-12% total return',
-  msci:          'URTH/IEFA · Developed markets ~7-8%',
-  bonds:         'IEF · 7-10yr Treasuries ~3-4%',
-};
+import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META } from '../constants/defaults';
+import { getTrackById, trackPhaseOpts } from '../constants/tracks';
+import type { AllocationTarget, AssetClass } from '../types';
 
 const MILESTONES = [5, 10, 20, 30] as const;
 type MilestoneYear = typeof MILESTONES[number];
@@ -34,14 +21,11 @@ export function SimulationPage() {
   const isRtl = lang === 'he';
   const p = simulationParams;
   const track = getTrackById(selectedTrackId);
-  const phaseOpts = {
-    yellowStartYear: track.yellowStartYear,
-    greenStartYear: track.greenStartYear,
-    withdrawRate: WITHDRAW_RATE,
-  };
+  const phaseOpts = trackPhaseOpts(track);
 
   const [activeScenario, setActiveScenario] = useState<ScenarioKey>('moderate');
   const [selectedYear, setSelectedYear] = useState<MilestoneYear>(30);
+  const [monthlyYear, setMonthlyYear] = useState(1);
 
   // Local allocation % — live editing without touching the store until Save
   const [localTargets, setLocalTargets] = useState<Record<AssetClass, number>>(
@@ -63,7 +47,7 @@ export function SimulationPage() {
     moderate:     simulateTrack(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS.moderate, phaseOpts),
     aggressive:   simulateTrack(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS.aggressive, phaseOpts),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [p.initialDeposit, p.monthlyDeposit, liveAllocations, track.yellowStartYear, track.greenStartYear]);
+  }), [p.initialDeposit, p.monthlyDeposit, liveAllocations, track.id]);
 
   const toChartData = (rows: typeof simData.moderate) =>
     rows.map(r => ({ year: r.year, value: r.totalValue, totalDeposited: r.totalDeposited, growth: r.totalGrowth }));
@@ -83,6 +67,16 @@ export function SimulationPage() {
   const activeAssets = liveAllocations.filter(a => (localTargets[a.assetClass] ?? 0) > 0);
   // Row for the selected milestone year in the active scenario
   const selectedRow = simData[activeScenario][selectedYear];
+
+  // Month-by-month simulation for the active scenario
+  const monthlyData = useMemo(
+    () => simulateTrackMonthly(p.initialDeposit, p.monthlyDeposit, 30, liveAllocations, ASSET_RETURNS[activeScenario], phaseOpts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [p.initialDeposit, p.monthlyDeposit, liveAllocations, activeScenario, track.id],
+  );
+  const monthlyReturnPct = (Math.pow(1 + weightedReturns[activeScenario] / 100, 1 / 12) - 1) * 100;
+  const monthsOfYear = monthlyData.filter(r => r.year === monthlyYear);
+  const MONTH_NAMES_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -145,9 +139,9 @@ export function SimulationPage() {
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: a.color }} />
                         <div>
                           <div style={{ color: a.color }}>
-                            {lang === 'he' ? t(a.assetClass === 'dividend' ? 'dividendEtf' : a.assetClass as any, lang) : ASSET_LABELS[a.assetClass]}
+                            {ASSET_META[a.assetClass].label}
                           </div>
-                          <div className="text-[9px] text-text-dim font-normal">{ASSET_SOURCE[a.assetClass]}</div>
+                          <div className="text-[9px] text-text-dim font-normal">{ASSET_META[a.assetClass].index}</div>
                         </div>
                       </div>
                     </td>
@@ -277,6 +271,67 @@ export function SimulationPage() {
         />
       </Card>
 
+      {/* ── 4b. Monthly simulation (month-by-month) ─────────────────────── */}
+      <Card title={lang === 'he' ? 'סימולציה חודשית — חודש אחר חודש' : 'Monthly Simulation — Month by Month'}>
+        <div className="flex flex-wrap items-center gap-3 mt-2 mb-4">
+          <div className="flex gap-1 bg-surface-3 rounded-xl p-1">
+            {scenarioCards.map(s => (
+              <button key={s.key} onClick={() => setActiveScenario(s.key)}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium ${activeScenario === s.key ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}
+                style={activeScenario === s.key ? { color: s.color } : {}}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-text-muted">{lang === 'he' ? 'שנה:' : 'Year:'}</span>
+            <input type="number" min={1} max={30} value={monthlyYear}
+              onChange={e => setMonthlyYear(Math.max(1, Math.min(30, Number(e.target.value) || 1)))}
+              className="w-16 text-center py-1" />
+          </div>
+          <span className="text-[11px] text-text-dim">
+            {lang === 'he' ? 'תשואה חודשית ממוצעת:' : 'Avg monthly return:'}{' '}
+            <span className="text-gold font-semibold">{monthlyReturnPct.toFixed(2)}%</span>
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-surface-4 text-text-muted text-xs">
+                <th className="text-start py-2">{lang === 'he' ? 'חודש' : 'Month'}</th>
+                <th className="text-end py-2">{lang === 'he' ? 'שווי תיק' : 'Value'}</th>
+                <th className="text-end py-2">{lang === 'he' ? 'הופקד' : 'Deposited'}</th>
+                <th className="text-end py-2">{lang === 'he' ? 'רווח' : 'Growth'}</th>
+                <th className="text-end py-2">{lang === 'he' ? 'שינוי חודשי' : 'Monthly Δ'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthsOfYear.map((r, i) => {
+                const prev = i === 0
+                  ? (monthlyData[(monthlyYear - 1) * 12 - 1]?.value ?? p.initialDeposit)
+                  : monthsOfYear[i - 1].value;
+                const delta = r.value - prev;
+                return (
+                  <tr key={r.m} className="border-b border-surface-3/50">
+                    <td className="py-2 text-text-muted">{lang === 'he' ? MONTH_NAMES_HE[r.monthOfYear - 1] : r.monthOfYear}</td>
+                    <td className="text-end py-2 font-medium text-gold">{formatCurrency(r.value)}</td>
+                    <td className="text-end py-2 text-text-muted">{formatCurrency(r.deposited)}</td>
+                    <td className="text-end py-2 text-success">{formatCurrency(r.growth)}</td>
+                    <td className={`text-end py-2 ${delta >= 0 ? 'text-success' : 'text-danger'}`}>{delta >= 0 ? '+' : ''}{formatCurrency(delta)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[10px] text-text-dim mt-3">
+          {lang === 'he'
+            ? `מציג את 12 החודשים של שנה ${monthlyYear} (${scenarioCards.find(s => s.key === activeScenario)?.label}). ריבית דריבית חודשית — כל הפקדה מרוויחה כבר באותו חודש.`
+            : `Showing the 12 months of year ${monthlyYear}. Monthly compounding — each deposit earns from its own month.`}
+        </p>
+      </Card>
+
       {/* ── 5. Per-asset breakdown — scenario + milestone year selector ── */}
       <Card title={lang === 'he' ? 'פירוט פר-נכס' : 'Per-Asset Breakdown'}>
         {/* Selectors */}
@@ -324,7 +379,7 @@ export function SimulationPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: a.color }} />
                       <span className="text-xs font-medium" style={{ color: a.color }}>
-                        {lang === 'he' ? t(a.assetClass === 'dividend' ? 'dividendEtf' : a.assetClass as any, lang) : ASSET_LABELS[a.assetClass]}
+                        {ASSET_META[a.assetClass].label}
                       </span>
                       <span className="text-[10px] text-text-dim mr-auto">{d.returnRate}% · {localTargets[a.assetClass]}%</span>
                     </div>
@@ -369,7 +424,7 @@ export function SimulationPage() {
                 <th className="text-end py-2 text-xs" style={{ color: '#22c55e' }}>{t('incomeCol', lang)}</th>
                 {activeAssets.map(a => (
                   <th key={a.assetClass} className="text-end py-2 text-xs" style={{ color: a.color }}>
-                    {lang === 'he' ? t(a.assetClass === 'dividend' ? 'dividendEtf' : a.assetClass as any, lang) : ASSET_LABELS[a.assetClass]}
+                    {ASSET_META[a.assetClass].label}
                   </th>
                 ))}
               </tr>

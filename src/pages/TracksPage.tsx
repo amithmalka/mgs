@@ -2,21 +2,16 @@ import { useState, useMemo } from 'react';
 import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
-import type { Lang, TranslationKey } from '../i18n/translations';
+import type { TranslationKey } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
 import { simulateTrack, simulateByAsset } from '../utils/math';
 import { formatCurrency } from '../utils/format';
 import { ASSET_RETURNS, ASSET_META, WITHDRAW_RATE } from '../constants/defaults';
-import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations } from '../constants/tracks';
+import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations, trackPhaseOpts } from '../constants/tracks';
 import type { AssetClass, Track } from '../types';
 
-const ASSET_LABEL_KEY: Record<AssetClass, TranslationKey> = {
-  sp500: 'sp500', nasdaq: 'nasdaq', bitcoin: 'bitcoin',
-  dividend: 'dividendEtf', msci: 'msci', bonds: 'bonds',
-};
-
-function assetLabel(ac: AssetClass, lang: Lang): string {
-  return lang === 'he' ? t(ASSET_LABEL_KEY[ac], lang) : ASSET_META[ac].label;
+function assetLabel(ac: AssetClass): string {
+  return ASSET_META[ac].label;
 }
 
 /** Stacked horizontal bar showing a track's allocation split. */
@@ -49,12 +44,12 @@ export function TracksPage() {
       30,
       allocations,
       ASSET_RETURNS.moderate,
-      { yellowStartYear: track.yellowStartYear, greenStartYear: track.greenStartYear, withdrawRate: WITHDRAW_RATE },
+      trackPhaseOpts(track),
     );
   }, [track, simulationParams.initialDeposit, simulationParams.monthlyDeposit]);
 
   const milestoneYears = [15, 20, 30];
-  const hasYellow = track.greenStartYear > track.yellowStartYear;
+  const hasYellow = true;
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -125,7 +120,7 @@ export function TracksPage() {
                       .map(([ac, pct]) => (
                         <span key={ac} className="text-[9px] text-text-muted flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full" style={{ background: ASSET_META[ac].color }} />
-                          {assetLabel(ac, lang)} {pct}%
+                          {assetLabel(ac)} {pct}%
                         </span>
                       ))}
                   </div>

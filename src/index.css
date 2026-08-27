@@ -162,7 +162,8 @@ h1, h2, h3 {
 }
 
 /* === Inputs === */
-input[type="number"], input[type="text"], input[type="date"], input[type="password"] {
+input[type="number"], input[type="text"], input[type="date"], input[type="password"],
+input:not([type]), textarea, select {
   background: rgba(23, 23, 23, 0.8);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -174,11 +175,15 @@ input[type="number"], input[type="text"], input[type="date"], input[type="passwo
   outline: none;
   transition: all 0.3s ease;
 }
-input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus {
+input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus,
+input:not([type]):focus, textarea:focus, select:focus {
   border-color: rgba(212, 175, 55, 0.4);
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08), 0 0 20px rgba(212, 175, 55, 0.05);
 }
-input::placeholder { color: #3a3a3a; }
+input::placeholder, textarea::placeholder { color: #3a3a3a; }
+textarea { resize: vertical; }
+select { appearance: none; cursor: pointer; }
+select option { background: #171717; color: #F0F0F0; }
 input[type="checkbox"] { accent-color: #D4AF37; }
 input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 
@@ -206,3 +211,16 @@ th { color: #6a6a6a; font-weight: 500; font-family: 'Heebo', 'Inter', sans-serif
   pointer-events: none;
   z-index: 0;
 }
+
+/* === Academy: horizontal module carousel === */
+.academy-scroller {
+  scroll-padding-inline-start: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.academy-scroller::-webkit-scrollbar { height: 5px; }
+.academy-scroller::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.25);
+  border-radius: 3px;
+}
+.academy-scroller::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.45); }

@@ -1,4 +1,10 @@
-export type AssetClass = 'sp500' | 'nasdaq' | 'bitcoin' | 'dividend' | 'msci' | 'bonds';
+// ── MJS asset universe (each bucket = synthetic Primary + physical Fallback) ─
+//   dbxb S&P 500 ×2 leveraged · eqqs NASDAQ 100          → 🔴 turbo/leverage
+//   p500 S&P 500 · xmwo MSCI World (Phase-B target)      → 🟢 vanilla/green
+export type AssetClass = 'dbxb' | 'eqqs' | 'p500' | 'xmwo';
+
+/** Role: green = vanilla anchor (Phase-B target); red = turbo/leveraged. */
+export type ColorRole = 'green' | 'red';
 
 export type InvestmentPhase = 'growth' | 'transition' | 'income';
 
@@ -22,12 +28,16 @@ export interface Track {
   icon: string;
   taglineHe: string;
   taglineEn: string;
-  /** target allocation per asset class, must sum to 100 */
+  /** Phase A target allocation, must sum to 100 */
   allocations: Partial<Record<AssetClass, number>>;
-  /** year at which the yellow phase begins (deposits → SCHD only) */
-  yellowStartYear: number;
-  /** year at which the green phase begins (stop deposits, start 4% withdrawals) */
-  greenStartYear: number;
+  /** Phase A (accumulation) length in years */
+  phaseADuration: number;
+  /** Phase B (consolidation into phaseBTarget) length in years */
+  phaseBDuration: number;
+  /** the single asset Phase B migrates + routes deposits into (MSCI World) */
+  phaseBTarget: AssetClass;
+  /** leverage % headline shown on the track card */
+  leverage: number;
 }
 
 export interface AllocationTarget {
@@ -121,6 +131,26 @@ export interface PortfolioState {
   activities: ActivityEntry[];
   notifications: Notification[];
   transitionThreshold: number;
+}
+
+// ── Academy (learning system) ──────────────────────────────────────────────
+export interface Module {
+  id: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  created_at?: string;
+}
+
+export interface Lesson {
+  id: string;
+  module_id: string;
+  title: string;
+  description: string;
+  video_url: string;
+  duration: string;
+  sort_order: number;
+  created_at?: string;
 }
 
 export interface ETFRecommendation {

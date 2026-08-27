@@ -9,7 +9,7 @@ import { calcRebalance } from '../utils/rebalance';
 import { simulateByAsset } from '../utils/math';
 import { formatCurrency, formatPercent } from '../utils/format';
 import { ETF_RECOMMENDATIONS } from '../constants/etfs';
-import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn } from '../constants/defaults';
+import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, GREEN_ASSETS } from '../constants/defaults';
 import type { AssetClass } from '../types';
 
 const PROJECTION_YEARS = [5, 10, 20, 30];
@@ -24,8 +24,12 @@ export function PortfolioPage() {
   const [editMode, setEditMode] = useState(false);
   const [tempTargets, setTempTargets] = useState<Record<string, number>>({});
   const [depositAmount, setDepositAmount] = useState(simulationParams.monthlyDeposit);
+  const [deLeverage, setDeLeverage] = useState(false);
 
-  const rebalanceSuggestions = calcRebalance(depositAmount, allocations, currentPortfolioValue);
+  const rebalanceSuggestions = calcRebalance(
+    depositAmount, allocations, currentPortfolioValue,
+    deLeverage ? { restrictTo: GREEN_ASSETS } : undefined,
+  );
 
   // Live projection using moderate scenario, recalculates on every change
   const projectionData = useMemo(() => {
@@ -235,29 +239,48 @@ export function PortfolioPage() {
         )}
       </Card>
 
-      {/* Rebalance */}
-      <Card title={t('rebalanceSuggestions', lang)} subtitle={t('howToDistribute', lang)}>
-        <div className="flex items-center gap-3 mb-4 mt-2">
+      {/* Rebalance — Dynamic DCA engine */}
+      <Card title={lang === 'he' ? 'מנוע ניתוב הפקדה (DCA דינמי)' : 'Deposit Routing Engine (Dynamic DCA)'}
+            subtitle={lang === 'he' ? 'ניתוב ההפקדה לנכסים שמתחת ליעד — איזון בלי מכירה ובלי מס' : 'Routes your deposit to under-weighted assets — rebalance without selling (no tax)'}>
+        <div className="flex items-center gap-3 mb-3 mt-2 flex-wrap">
           <label className="text-xs text-text-muted">{t('depositAmount', lang)}:</label>
-          <input
-            type="number"
-            value={depositAmount}
-            onChange={e => handleDepositChange(Number(e.target.value))}
-            className="w-32"
-          />
+          <input type="number" value={depositAmount} onChange={e => handleDepositChange(Number(e.target.value))} className="w-32" />
           <span className="text-xs text-text-dim">₪</span>
         </div>
+        {/* Phase toggle */}
+        <div className="flex gap-1 bg-surface-3 rounded-xl p-1 mb-4 w-fit">
+          <button onClick={() => setDeLeverage(false)}
+            className={`text-[11px] px-3 py-1.5 rounded-lg transition-colors ${!deLeverage ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}>
+            🔴 {lang === 'he' ? 'צבירה (איזון ליעד)' : 'Accumulation'}
+          </button>
+          <button onClick={() => setDeLeverage(true)}
+            className={`text-[11px] px-3 py-1.5 rounded-lg transition-colors ${deLeverage ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}>
+            🟡 {lang === 'he' ? 'ייצוב (שנים 16-20)' : 'De-leverage'}
+          </button>
+        </div>
+        {deLeverage && (
+          <p className="text-[11px] text-warning mb-3">
+            {lang === 'he' ? '🟡 שלב ייצוב: 100% מההפקדה מנותב לנכסים הירוקים בלבד; נכסי הסיכון מוקפאים (מחזיקים, בלי מכירה).' : '🟡 De-leverage: 100% of the deposit routes to green assets only; risk assets are frozen.'}
+          </p>
+        )}
         <div className="space-y-2">
           {rebalanceSuggestions.map(s => (
-            <div key={s.assetClass} className="flex items-center justify-between p-3 bg-surface-3 rounded-xl border border-surface-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="text-sm font-medium text-text">{s.label}</span>
+            <div key={s.assetClass}
+              className={`flex items-center justify-between p-3 rounded-xl border ${s.underweight && s.amount > 0 ? 'bg-success/[0.06] border-success/25' : 'bg-surface-3 border-surface-4'}`}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                <span className="text-sm font-medium text-text truncate">{s.label}</span>
+                {s.amount > 0 && s.underweight && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-success/15 text-success flex-shrink-0">
+                    {lang === 'he' ? 'מתחת ליעד' : 'under'}
+                  </span>
+                )}
               </div>
-              <div className="text-end">
-                <span className="text-sm font-bold text-gold">{formatCurrency(s.amount)}</span>
+              <div className="text-end flex-shrink-0">
+                <span className={`text-sm font-bold ${s.amount > 0 ? 'text-gold' : 'text-text-dim'}`}>{formatCurrency(s.amount)}</span>
                 <span className="text-[10px] text-text-dim mr-2 ml-2">
-                  ({formatPercent(s.currentPercent)} → {formatPercent(s.targetPercent)})
+                  {formatPercent(s.currentPercent)} → {formatPercent(s.targetPercent)}
+                  <span className={s.deviation > 0 ? 'text-success' : 'text-text-dim'}> · Δ {s.deviation > 0 ? '+' : ''}{s.deviation}%</span>
                 </span>
               </div>
             </div>

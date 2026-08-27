@@ -1,26 +1,50 @@
-import type { AllocationTarget, SimulationParams, Goal, AssetClass } from '../types';
+import type { AllocationTarget, SimulationParams, Goal, AssetClass, ColorRole } from '../types';
 
-/** Display label + chart color for every asset class (single source of truth). */
-export const ASSET_META: Record<AssetClass, { label: string; color: string }> = {
-  sp500:    { label: 'S&P 500', color: '#3b82f6' },
-  nasdaq:   { label: 'Nasdaq',  color: '#8b5cf6' },
-  bitcoin:  { label: 'Bitcoin', color: '#f59e0b' },
-  dividend: { label: 'SCHD',    color: '#ec4899' },
-  msci:     { label: 'MSCI World', color: '#14b8a6' },
-  bonds:    { label: 'IEF Bonds',  color: '#64748b' },
+/**
+ * Asset master table — Irish-domiciled, accumulating ETFs (tax-efficient).
+ * `ticker` is the LSE/Euronext-traded symbol used for the live price feed.
+ * `role` (green/yellow/red) drives the traffic-light de-risk routing.
+ */
+export interface AssetMeta {
+  /** synthetic Irish ETF (0% withholding) shown while status = Active_Primary */
+  primaryTicker: string;
+  /** physical Irish ETF (15% withholding) used after a regulatory switch */
+  fallbackTicker: string;
+  /** free-tier US-listed proxy tracking the same index — used for live prices */
+  proxyTicker: string;
+  label: string;
+  index: string;
+  color: string;
+  role: ColorRole;
+  leveraged: boolean;
+}
+
+export const ASSET_META: Record<AssetClass, AssetMeta> = {
+  dbxb: { primaryTicker: 'DBXB', fallbackTicker: 'CSPX', proxyTicker: 'SSO',  label: 'S&P 500 ×2 ממונף', index: 'S&P 500 2× Leveraged', color: '#DC2626', role: 'red',   leveraged: true  },
+  eqqs: { primaryTicker: 'EQQS', fallbackTicker: 'CNDX', proxyTicker: 'QQQ',  label: 'נאסד״ק 100',       index: 'NASDAQ 100',          color: '#EF4444', role: 'red',   leveraged: false },
+  p500: { primaryTicker: 'XSPX', fallbackTicker: 'CSPX', proxyTicker: 'SPY',  label: 'S&P 500',          index: 'S&P 500',             color: '#34D399', role: 'green', leveraged: false },
+  xmwo: { primaryTicker: 'XMWO', fallbackTicker: 'IWDA', proxyTicker: 'URTH', label: 'MSCI World',        index: 'MSCI World',          color: '#10B981', role: 'green', leveraged: false },
 };
 
-export const DEFAULT_ALLOCATIONS: AllocationTarget[] = [
-  { assetClass: 'sp500', label: 'S&P 500', targetPercent: 30, currentValue: 0, color: '#3b82f6' },
-  { assetClass: 'nasdaq', label: 'Nasdaq', targetPercent: 30, currentValue: 0, color: '#8b5cf6' },
-  { assetClass: 'bitcoin', label: 'Bitcoin', targetPercent: 15, currentValue: 0, color: '#f59e0b' },
-  { assetClass: 'dividend', label: 'SCHD', targetPercent: 25, currentValue: 0, color: '#ec4899' },
-];
+/** Vanilla "green" anchors (S&P 500 + MSCI World — the Phase-B targets). */
+export const GREEN_ASSETS: AssetClass[] = (Object.keys(ASSET_META) as AssetClass[]).filter(a => ASSET_META[a].role === 'green');
 
-/** Traffic-light (רמזור) phase boundaries, in years from the start of investing. */
-export const PHASE_RED_END = 15;    // 0–15yr: red — diversified monthly deposits
-export const PHASE_YELLOW_END = 20; // 15–20yr: yellow — deposits to SCHD only
-export const WITHDRAW_RATE = 0.04;  // green phase: annual 4% rule withdrawal
+export const DEFAULT_ALLOCATIONS: AllocationTarget[] = (
+  [['p500', 50], ['eqqs', 30], ['dbxb', 20]] as [AssetClass, number][]
+).map(([assetClass, targetPercent]) => ({
+  assetClass, targetPercent, currentValue: 0,
+  label: ASSET_META[assetClass].label, color: ASSET_META[assetClass].color,
+}));
+
+/** Default lifecycle boundaries (most tracks). Track 5 overrides via its durations. */
+export const TURBO_END = 20;       // 🔴 Phase A yr 1–20 : smart-DCA accumulation
+export const GROUNDING_END = 25;   // 🟢 Phase B yr 21–25 : consolidate + deposit → MSCI World
+export const INCUBATION_END = 25;  // (no separate incubation phase in MJS)
+export const WITHDRAW_RATE = 0.04; // 💸 Phase C yr 26+   : 4% rule smart harvesting
+
+// kept for back-compat with older references
+export const PHASE_RED_END = TURBO_END;
+export const PHASE_YELLOW_END = GROUNDING_END;
 
 export const DEFAULT_SIMULATION: SimulationParams = {
   initialDeposit: 10000,
@@ -71,33 +95,10 @@ export const DEFAULT_GOAL: Goal = {
  * We model BTC as a maturing institutional asset, not the early-adoption phase.
  */
 export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
-  // ── Conservative: weak decade, crypto winter ─────────────────────────────
-  conservative: {
-    sp500: 7,          // Lost-decade scenario (2000–2009)
-    nasdaq: 9,         // Tech correction years
-    bitcoin: 8,        // Sideways / crypto winter, some adoption residual
-    dividend: 7,       // Dividend income + modest appreciation
-    msci: 5,           // MSCI World — developed markets, lagging decade
-    bonds: 2,          // IEF (7-10yr Treasuries) — low-rate environment
-  },
-  // ── Moderate: realistic long-term historical averages ────────────────────
-  moderate: {
-    sp500: 11,         // S&P 500 historical avg 1957–2024 ≈ 10.5%
-    nasdaq: 17,        // QQQ 20-year CAGR ≈ 17%
-    bitcoin: 22,       // BTC as a maturing growth asset — well below historical CAGR
-    dividend: 10,      // SCHD total return (~4% yield + ~6% appreciation)
-    msci: 8,           // MSCI World — long-term developed-markets average ≈ 7-8%
-    bonds: 3.5,        // IEF — medium-term Treasury total return ≈ 3-4%
-  },
-  // ── Aggressive: bull cycle, above-average growth ──────────────────────────
-  aggressive: {
-    sp500: 15,         // Bull run (2010–2020 avg ≈ 13.6%)
-    nasdaq: 22,        // High-growth tech cycle
-    bitcoin: 35,       // Continued adoption with institutional inflows
-    dividend: 13,      // High-yield + strong price appreciation
-    msci: 11,          // MSCI World — strong global bull cycle
-    bonds: 5,          // IEF — falling-rate / flight-to-safety tailwind
-  },
+  // dbxb = 2× leveraged S&P (high return, high volatility drag in weak years)
+  conservative: { dbxb: 6,  eqqs: 9,  p500: 7,  xmwo: 5  },
+  moderate:     { dbxb: 18, eqqs: 14, p500: 10, xmwo: 8  },
+  aggressive:   { dbxb: 28, eqqs: 20, p500: 14, xmwo: 11 },
 };
 
 export const SCENARIOS = {

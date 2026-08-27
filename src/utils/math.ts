@@ -163,11 +163,9 @@ export function simulateByAsset(
  *   🔴 red    (year ≤ yellowStartYear):  monthly deposit split across the track
  *                                        allocation; every asset grows.
  *   🟡 yellow (yellowStartYear < y ≤ greenStartYear): the entire monthly deposit
- *                                        flows into SCHD only; other assets keep
- *                                        growing but receive no new money.
- *   🟢 green  (year > greenStartYear):   no new deposits. SCHD dividends are
- *                                        reinvested (already modelled via SCHD's
- *                                        total return), and a 4% withdrawal is
+ *                                        flows into the track's GREEN assets only
+ *                                        (de-risk); others keep growing, no new money.
+ *   🟢 green  (year > greenStartYear):   no new deposits. A 4% withdrawal is
  *                                        taken at the end of each year as income.
  *
  * Withdrawals are removed proportionally from each asset. Growth is reported net
@@ -179,14 +177,20 @@ export function simulateTrack(
   years: number,
   allocations: AllocationTarget[],
   assetReturns: Record<AssetClass, number>,
-  opts: { yellowStartYear: number; greenStartYear: number; withdrawRate: number },
+  opts: {
+    turboEnd: number; groundingEnd: number; incubationEnd: number;
+    grounding: Partial<Record<AssetClass, number>>;
+    incubation: Partial<Record<AssetClass, number>>;
+    withdrawRate: number;
+    /** at Phase-B start, migrate all balances into this asset (MSCI World) */
+    consolidateTo?: AssetClass;
+  },
 ): AssetSimRow[] {
   const active = allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0);
   const results: AssetSimRow[] = [];
 
   const totalCurrentValue = allocations.reduce((s, a) => s + a.currentValue, 0);
   const useActualHoldings = totalCurrentValue > 0;
-  const totalTargetPct = active.reduce((s, a) => s + a.targetPercent, 0) || 100;
 
   const rates: Record<AssetClass, number> = {} as Record<AssetClass, number>;
   const balances: Record<AssetClass, number> = {} as Record<AssetClass, number>;
@@ -204,16 +208,26 @@ export function simulateTrack(
     }
   }
 
-  // SCHD destination for the yellow phase (and dividend reinvestment in green).
-  const schd = active.find(a => a.assetClass === 'dividend')?.assetClass;
-
   let cumulativeIncome = 0;
 
-  const phaseForYear = (year: number): 'red' | 'yellow' | 'green' => {
-    if (year <= opts.yellowStartYear) return 'red';
-    if (year <= opts.greenStartYear) return 'yellow';
-    return 'green';
+  type Phase4 = 'turbo' | 'grounding' | 'incubation' | 'withdraw';
+  const phase4 = (year: number): Phase4 => {
+    if (year <= opts.turboEnd) return 'turbo';
+    if (year <= opts.groundingEnd) return 'grounding';
+    if (year <= opts.incubationEnd) return 'incubation';
+    return 'withdraw';
   };
+  const tl = (p: Phase4): 'red' | 'yellow' | 'green' => p === 'turbo' ? 'red' : p === 'grounding' ? 'yellow' : 'green';
+
+  // Deposit-routing weight map for a given phase (asset → weight).
+  const routeFor = (p: Phase4): Partial<Record<AssetClass, number>> => {
+    if (p === 'turbo') return Object.fromEntries(active.map(a => [a.assetClass, a.targetPercent]));
+    if (p === 'grounding') return opts.grounding;
+    if (p === 'incubation') return opts.incubation;
+    return {};
+  };
+
+  const phaseForYear = (year: number) => tl(phase4(year));
 
   const makeRow = (year: number, income: number): AssetSimRow => {
     let totalValue = 0;
@@ -245,25 +259,36 @@ export function simulateTrack(
   results.push(makeRow(0, 0));
 
   for (let year = 1; year <= years; year++) {
-    const phase = phaseForYear(year);
+    const p4 = phase4(year);
+
+    // Phase B start: migrate all accumulated balances into the target (MSCI World)
+    if (year === opts.turboEnd + 1 && opts.groundingEnd > opts.turboEnd && opts.consolidateTo) {
+      const dest = opts.consolidateTo;
+      if (balances[dest] !== undefined) {
+        for (const a of active) {
+          if (a.assetClass === dest) continue;
+          balances[dest] += balances[a.assetClass]; balances[a.assetClass] = 0;
+          deposited[dest] += deposited[a.assetClass]; deposited[a.assetClass] = 0;
+        }
+      }
+    }
+
+    const route = routeFor(p4);
+    const routeSum = (Object.values(route) as number[]).reduce((s, v) => s + v, 0);
     for (let month = 1; month <= 12; month++) {
       for (const a of active) {
         const ac = a.assetClass;
-        let depositSlice = 0;
-        if (phase === 'red') {
-          depositSlice = monthlyDeposit * (a.targetPercent / totalTargetPct);
-        } else if (phase === 'yellow' && schd && ac === schd) {
-          depositSlice = monthlyDeposit; // entire deposit → SCHD
-        }
+        const w = route[ac] ?? 0;
+        const depositSlice = routeSum > 0 ? monthlyDeposit * (w / routeSum) : 0;
         // Deposit first, then compound (deposit earns interest the same month)
         balances[ac] = (balances[ac] + depositSlice) * (1 + rates[ac]);
         deposited[ac] += depositSlice;
       }
     }
 
-    // Green phase: take the 4% annual withdrawal as income.
+    // Withdrawal phase (year 26+): take the 4% annual withdrawal as income.
     let income = 0;
-    if (phase === 'green') {
+    if (p4 === 'withdraw') {
       const total = active.reduce((s, a) => s + balances[a.assetClass], 0);
       income = total * opts.withdrawRate;
       if (total > 0) {
@@ -279,6 +304,105 @@ export function simulateTrack(
   }
 
   return results;
+}
+
+export interface MonthlyRow {
+  m: number;            // 1-based month index across the whole horizon
+  year: number;
+  monthOfYear: number;  // 1..12
+  value: number;
+  deposited: number;
+  growth: number;
+  income: number;       // 4%/12 withdrawal that month (Phase C)
+  phase: 'red' | 'yellow' | 'green';
+}
+
+/**
+ * Month-by-month version of simulateTrack — same phase logic (turbo → Phase-B
+ * consolidation → withdrawal) but records a snapshot every single month, with
+ * withdrawals applied monthly (4% ÷ 12) during the harvest phase.
+ */
+export function simulateTrackMonthly(
+  initialDeposit: number,
+  monthlyDeposit: number,
+  years: number,
+  allocations: AllocationTarget[],
+  assetReturns: Record<AssetClass, number>,
+  opts: {
+    turboEnd: number; groundingEnd: number; incubationEnd: number;
+    grounding: Partial<Record<AssetClass, number>>;
+    incubation: Partial<Record<AssetClass, number>>;
+    withdrawRate: number;
+    consolidateTo?: AssetClass;
+  },
+): MonthlyRow[] {
+  const active = allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0);
+  const totalCurrentValue = allocations.reduce((s, a) => s + a.currentValue, 0);
+  const useActualHoldings = totalCurrentValue > 0;
+
+  const rates: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+  const balances: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+  const deposited: Record<AssetClass, number> = {} as Record<AssetClass, number>;
+  for (const a of active) {
+    rates[a.assetClass] = toMonthlyRate(assetReturns[a.assetClass]);
+    const start = useActualHoldings ? a.currentValue : initialDeposit * (a.targetPercent / 100);
+    balances[a.assetClass] = start;
+    deposited[a.assetClass] = start;
+  }
+
+  type P4 = 'turbo' | 'grounding' | 'incubation' | 'withdraw';
+  const phase4 = (y: number): P4 =>
+    y <= opts.turboEnd ? 'turbo' : y <= opts.groundingEnd ? 'grounding' : y <= opts.incubationEnd ? 'incubation' : 'withdraw';
+  const tl = (p: P4): 'red' | 'yellow' | 'green' => p === 'turbo' ? 'red' : p === 'grounding' ? 'yellow' : 'green';
+  const routeFor = (p: P4): Partial<Record<AssetClass, number>> =>
+    p === 'turbo' ? Object.fromEntries(active.map(a => [a.assetClass, a.targetPercent]))
+      : p === 'grounding' ? opts.grounding : p === 'incubation' ? opts.incubation : {};
+
+  const rows: MonthlyRow[] = [];
+  let cumulativeIncome = 0;
+  let mIdx = 0;
+
+  for (let year = 1; year <= years; year++) {
+    const p4 = phase4(year);
+    if (year === opts.turboEnd + 1 && opts.groundingEnd > opts.turboEnd && opts.consolidateTo) {
+      const dest = opts.consolidateTo;
+      if (balances[dest] !== undefined) {
+        for (const a of active) {
+          if (a.assetClass === dest) continue;
+          balances[dest] += balances[a.assetClass]; balances[a.assetClass] = 0;
+          deposited[dest] += deposited[a.assetClass]; deposited[a.assetClass] = 0;
+        }
+      }
+    }
+    const route = routeFor(p4);
+    const routeSum = (Object.values(route) as number[]).reduce((s, v) => s + v, 0);
+
+    for (let month = 1; month <= 12; month++) {
+      mIdx++;
+      for (const a of active) {
+        const ac = a.assetClass;
+        const slice = routeSum > 0 ? monthlyDeposit * ((route[ac] ?? 0) / routeSum) : 0;
+        balances[ac] = (balances[ac] + slice) * (1 + rates[ac]);
+        deposited[ac] += slice;
+      }
+      let income = 0;
+      if (p4 === 'withdraw') {
+        const total = active.reduce((s, a) => s + balances[a.assetClass], 0);
+        income = total * opts.withdrawRate / 12;
+        if (total > 0) for (const a of active) balances[a.assetClass] -= income * (balances[a.assetClass] / total);
+        cumulativeIncome += income;
+      }
+      const value = active.reduce((s, a) => s + balances[a.assetClass], 0);
+      const dep = active.reduce((s, a) => s + deposited[a.assetClass], 0);
+      rows.push({
+        m: mIdx, year, monthOfYear: month,
+        value: Math.round(value), deposited: Math.round(dep),
+        growth: Math.round(value - dep + cumulativeIncome),
+        income: Math.round(income), phase: tl(p4),
+      });
+    }
+  }
+  return rows;
 }
 
 export function calcRequiredMonthly(

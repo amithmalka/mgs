@@ -296,7 +296,7 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'wealth-simulator',
-      version: 4,
+      version: 7,
       migrate: (persistedState: unknown, version: number) => {
         let s = persistedState as Record<string, unknown>;
         if (version < 3) {
@@ -323,6 +323,28 @@ export const useStore = create<StoreState>()(
             userAge: DEFAULT_AGE,
             selectedTrackId: DEFAULT_TRACK_ID,
             allocations: trackToAllocations(getTrackById(DEFAULT_TRACK_ID), prev),
+          };
+        }
+        if (version < 5) {
+          // v5: asset universe replaced with 7 Irish ETFs. Old asset classes
+          // (sp500/nasdaq/bitcoin/dividend/msci/bonds) no longer exist — reset
+          // allocations to the selected track's new ETF allocation.
+          const tid = (s.selectedTrackId as TrackId) || DEFAULT_TRACK_ID;
+          s = {
+            ...s,
+            selectedTrackId: tid,
+            allocations: trackToAllocations(getTrackById(tid)),
+            currentPortfolioValue: 0,
+          };
+        }
+        if (version < 7) {
+          // v6/v7: MJS asset universe (DBXB/EQQS/P500/XMWO) + per-track phases.
+          const tid = (s.selectedTrackId as TrackId) || DEFAULT_TRACK_ID;
+          s = {
+            ...s,
+            selectedTrackId: tid,
+            allocations: trackToAllocations(getTrackById(tid)),
+            currentPortfolioValue: 0,
           };
         }
         return s;

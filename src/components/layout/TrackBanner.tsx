@@ -16,19 +16,17 @@ export function TrackBanner() {
   const { lang } = useLangStore();
   const isRtl = lang === 'he';
   const track = getTrackById(selectedTrackId);
-  const hasYellow = track.greenStartYear > track.yellowStartYear;
 
   const entries = (Object.entries(track.allocations) as [AssetClass, number][])
     .sort((a, b) => b[1] - a[1]);
 
+  const aEnd = track.phaseADuration;
+  const bEnd = track.phaseADuration + track.phaseBDuration;
   const segments = [
-    { dot: '🔴', color: '#ef4444', range: `0–${track.yellowStartYear}`, label: t('phaseDepositSplit', lang), show: true,
-      width: track.yellowStartYear },
-    { dot: '🟡', color: '#eab308', range: `${track.yellowStartYear}–${track.greenStartYear}`, label: t('phaseSchdOnly', lang), show: hasYellow,
-      width: track.greenStartYear - track.yellowStartYear },
-    { dot: '🟢', color: '#22c55e', range: `${track.greenStartYear}+`, label: t('phaseHarvest', lang), show: true,
-      width: Math.max(6, 30 - track.greenStartYear) },
-  ].filter(s => s.show);
+    { dot: '🔴', color: '#ef4444', range: `0–${aEnd}`, label: t('phaseDepositSplit', lang), width: aEnd },
+    { dot: '🟢', color: '#10b981', range: `${aEnd}–${bEnd}`, label: t('phaseSchdOnly', lang), width: Math.max(0.001, bEnd - aEnd) },
+    { dot: '💸', color: '#C9A24B', range: `${bEnd}+`, label: t('phaseHarvest', lang), width: 8 },
+  ].filter(s => s.width > 0.01);
 
   return (
     <div className="glass-card rounded-2xl p-4 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
