@@ -253,6 +253,9 @@ export const translations = {
   belongsToModule: { en: 'Belongs to module', he: 'שייך למודול' },
   requiredTitle: { en: 'Title is required', he: 'כותרת היא שדה חובה' },
   courseUnavailable: { en: "Couldn't load the course — see the error above.", he: 'לא ניתן לטעון את הקורס — ראו את השגיאה למעלה.' },
+  videoUnavailable: { en: 'This video cannot be played', he: 'לא ניתן להפעיל את הסרטון' },
+  videoBunnyUnset: { en: 'The lesson stores a Bunny video ID, but the Bunny library is not configured in the app (src/config/bunny.ts).', he: 'השיעור שמור עם מזהה וידאו של Bunny, אך ספריית ה-Bunny לא מוגדרת באפליקציה (src/config/bunny.ts).' },
+  videoNotAUrl: { en: 'The saved value is not a valid video link. Edit the lesson and paste the full embed URL.', he: 'הערך השמור אינו קישור וידאו תקין. ערכו את השיעור והדביקו את כתובת ההטמעה המלאה.' },
 
   // Admin
   admin: { en: 'Admin', he: 'ניהול' },

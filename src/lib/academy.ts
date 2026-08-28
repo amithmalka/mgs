@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { BUNNY_LIBRARY_ID } from '../config/bunny';
 import type { Module, Lesson } from '../types';
 
 /**
@@ -99,19 +100,32 @@ export async function moveLessonToModule(id: string, moduleId: string, sortOrder
 }
 
 // ── Video embedding ──────────────────────────────────────────────────────────
-export interface EmbedInfo {
-  type: 'iframe' | 'video';
-  src: string;
-}
+export type EmbedInfo =
+  | { type: 'iframe'; src: string }
+  | { type: 'video'; src: string }
+  /** the stored value can't be turned into a playable URL — `reason` says why */
+  | { type: 'invalid'; reason: 'bunny-library-unset' | 'not-a-url'; value: string };
+
+/** Bunny video GUIDs are plain UUIDs — that's what the Bunny list view copies. */
+const BARE_GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Turn a pasted video URL into something playable. Bunny Stream embed URLs
- * (iframe.mediadelivery.net) and YouTube/Vimeo render in an <iframe>; direct
- * media files (mp4/webm/m3u8) render in a <video>.
+ * Turn a stored lesson video value into something playable. Accepts a full
+ * YouTube/Vimeo/Bunny URL, a direct media file, or a bare Bunny video GUID.
+ *
+ * Anything that is not an absolute http(s) URL is rejected rather than passed
+ * through: a relative src on an <iframe> resolves against the app's own origin,
+ * which produced a confusing Vercel "404 NOT_FOUND" inside the player.
  */
 export function getEmbed(url: string): EmbedInfo {
   const u = url.trim();
   const lower = u.toLowerCase();
+
+  // Bare Bunny video GUID → build the embed URL for the configured library
+  if (BARE_GUID.test(u)) {
+    if (!BUNNY_LIBRARY_ID) return { type: 'invalid', reason: 'bunny-library-unset', value: u };
+    return { type: 'iframe', src: `https://iframe.mediadelivery.net/embed/${BUNNY_LIBRARY_ID}/${u}` };
+  }
 
   // YouTube → normalise to embed
   const yt = lower.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/);
@@ -121,16 +135,12 @@ export function getEmbed(url: string): EmbedInfo {
   const vm = lower.match(/vimeo\.com\/(\d+)/);
   if (vm) return { type: 'iframe', src: `https://player.vimeo.com/video/${vm[1]}` };
 
-  // Bunny Stream embed (or any iframe-style embed URL)
-  if (lower.includes('mediadelivery.net') || lower.includes('/embed/') || lower.includes('iframe')) {
-    return { type: 'iframe', src: u };
-  }
+  // Everything below must be an absolute URL to be usable as a src
+  if (!/^https?:\/\//.test(lower)) return { type: 'invalid', reason: 'not-a-url', value: u };
 
   // Direct media files
-  if (/\.(mp4|webm|ogg|m3u8|mov)(\?.*)?$/.test(lower)) {
-    return { type: 'video', src: u };
-  }
+  if (/\.(mp4|webm|ogg|m3u8|mov)(\?.*)?$/.test(lower)) return { type: 'video', src: u };
 
-  // Fallback: assume an embeddable page
+  // Bunny Stream embed, or any other embeddable page
   return { type: 'iframe', src: u };
 }
