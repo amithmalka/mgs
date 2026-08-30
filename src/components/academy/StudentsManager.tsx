@@ -21,9 +21,13 @@ export function StudentsManager() {
   useEffect(() => { load(); }, [load]);
 
   const invite = async () => {
-    if (!email.trim()) return;
-    setBusy(true); setErr(''); setMsg('');
-    try { await inviteStudent(email.trim()); setMsg(`הזמנה נשלחה ל-${email.trim()}`); setEmail(''); load(); }
+    const value = email.trim();
+    setErr(''); setMsg('');
+    // Guard with feedback — returning silently here read as "the button is dead".
+    if (!value) { setErr('צריך להזין אימייל לפני שליחת ההזמנה'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { setErr(`״${value}״ אינו אימייל תקין`); return; }
+    setBusy(true);
+    try { await inviteStudent(value); setMsg(`הזמנה נשלחה ל-${value}`); setEmail(''); load(); }
     catch (e) { setErr((e as Error).message); }
     finally { setBusy(false); }
   };

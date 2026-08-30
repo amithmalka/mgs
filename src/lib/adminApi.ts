@@ -15,7 +15,19 @@ async function authHeaders(): Promise<HeadersInit> {
 }
 
 async function handle(res: Response) {
-  const json = await res.json().catch(() => ({}));
+  const text = await res.text();
+  let json: { error?: string; [k: string]: unknown };
+  try {
+    json = JSON.parse(text) as typeof json;
+  } catch {
+    // Not JSON. Almost always the SPA's index.html: /api/* only exists on
+    // Vercel, so under `npm run dev` the request falls through to Vite.
+    throw new Error(
+      /<!doctype html|<html/i.test(text)
+        ? 'ניהול תלמידים לא זמין כאן — פונקציות ה-API רצות רק באתר הפרוס (mgs-system.vercel.app), לא בשרת הפיתוח המקומי.'
+        : `תגובה לא צפויה מהשרת (HTTP ${res.status})`
+    );
+  }
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
   return json;
 }
