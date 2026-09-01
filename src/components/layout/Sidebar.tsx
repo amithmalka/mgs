@@ -6,8 +6,8 @@ import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
 export type Tab =
-  | 'dashboard' | 'tracks' | 'academy' | 'portfolio' | 'transactions'
-  | 'simulation' | 'dividends' | 'goals' | 'custom' | 'market';
+  | 'dashboard' | 'tracking' | 'dividends' | 'academy'
+  | 'portfolio' | 'transactions' | 'simulation' | 'goals' | 'custom';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -19,31 +19,11 @@ interface NavGroup { key: TranslationKey; items: NavItem[] }
  */
 const GROUPS: NavGroup[] = [
   {
-    key: 'navGroupStart',
+    key: 'navGroupMain',
     items: [
-      { id: 'tracks', key: 'tabStart', icon: 'route' },
-      { id: 'market', key: 'tabMarket', icon: 'chart' },
-    ],
-  },
-  {
-    key: 'navGroupMoney',
-    items: [
-      { id: 'dashboard', key: 'tabThisMonth', icon: 'home' },
-      { id: 'portfolio', key: 'tabPortfolio', icon: 'briefcase' },
-      { id: 'custom', key: 'tabCustom', icon: 'custom' },
-      { id: 'transactions', key: 'tabTransactions', icon: 'list' },
-    ],
-  },
-  {
-    key: 'navGroupAhead',
-    items: [
-      { id: 'simulation', key: 'tabSimulation', icon: 'target' },
+      { id: 'dashboard', key: 'tabHome', icon: 'home' },
+      { id: 'tracking', key: 'tabTracking', icon: 'chart' },
       { id: 'dividends', key: 'tabDividends', icon: 'cash' },
-    ],
-  },
-  {
-    key: 'navGroupLearn',
-    items: [
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },
     ],
   },
@@ -105,7 +85,9 @@ export function Sidebar({ activeTab, onTabChange, open, onClose }: SidebarProps)
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
           {GROUPS.map(group => (
             <div key={group.key}>
-              <p className="px-3 mb-1.5 text-[9px] uppercase tracking-[0.15em] text-text-dim">{t(group.key, lang)}</p>
+              {GROUPS.length > 1 && (
+                <p className="px-3 mb-1.5 text-[9px] uppercase tracking-[0.15em] text-text-dim">{t(group.key, lang)}</p>
+              )}
               <div className="space-y-0.5">
                 {group.items.map(item => {
                   const active = activeTab === item.id;

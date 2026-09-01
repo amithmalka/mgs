@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLangStore } from '../store/langStore';
-import { Card } from '../components/layout/Card';
-import { ASSET_META } from '../constants/defaults';
-import { fetchPrices } from '../lib/marketData';
-import type { PriceInfo } from '../lib/marketData';
-import { Icon } from '../components/shared/Icon';
-import { MarketBoard } from '../components/market/MarketBoard';
-import type { BoardRow } from '../components/market/MarketBoard';
-import { CandleChart } from '../components/market/CandleChart';
-import { CandleGuide } from '../components/market/CandleGuide';
-import { Disclaimer } from '../components/shared/Disclaimer';
+import { useLangStore } from '../../store/langStore';
+import { Card } from '../layout/Card';
+import { ASSET_META } from '../../constants/defaults';
+import { fetchPrices } from '../../lib/marketData';
+import type { PriceInfo } from '../../lib/marketData';
+import { Icon } from '../shared/Icon';
+import { MarketBoard } from './MarketBoard';
+import type { BoardRow } from './MarketBoard';
+import { CandleChart } from './CandleChart';
+import { CandleGuide } from './CandleGuide';
 
 const UP = '#34D399';
 const DOWN = '#F87171';
@@ -43,7 +42,7 @@ function buildBoard(he: boolean): BoardRow[] {
   ];
 }
 
-export function MarketPage() {
+export function MarketSection() {
   const { lang } = useLangStore();
   const he = lang !== 'en';
 
@@ -166,8 +165,6 @@ export function MarketPage() {
       <p className="text-[11px] text-text-dim text-center">
         {he ? 'מחירי סוף יום, לא נתוני מסחר חי.' : 'End-of-day prices, not live tick data.'}
       </p>
-
-      <Disclaimer />
     </div>
   );
 }

@@ -266,6 +266,9 @@ export const translations = {
   videoNotAUrl: { en: 'The saved value is not a valid video link. Edit the lesson and paste the full embed URL.', he: 'הערך השמור אינו קישור וידאו תקין. ערכו את השיעור והדביקו את כתובת ההטמעה המלאה.' },
 
   // Navigation
+  navGroupMain: { en: 'Menu', he: 'תפריט' },
+  tabHome: { en: 'Home', he: 'בית' },
+  tabTracking: { en: 'Tracking', he: 'מעקב' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
   navGroupMoney: { en: 'My money', he: 'הכסף שלי' },
   navGroupAhead: { en: 'Looking ahead', he: 'קדימה' },

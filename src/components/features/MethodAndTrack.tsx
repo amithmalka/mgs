@@ -1,17 +1,17 @@
 import { useState, useMemo } from 'react';
-import { useStore } from '../store';
-import { useLangStore } from '../store/langStore';
-import { t } from '../i18n/translations';
-import type { TranslationKey } from '../i18n/translations';
-import { Card } from '../components/layout/Card';
-import { simulateTrack, simulateByAsset } from '../utils/math';
-import { formatCurrency } from '../utils/format';
-import { ASSET_RETURNS, ASSET_META, WITHDRAW_RATE } from '../constants/defaults';
-import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations, trackPhaseOpts } from '../constants/tracks';
-import type { AssetClass, Track } from '../types';
-import { Icon, Dot } from '../components/shared/Icon';
-import { STRATEGIES } from '../constants/strategies';
-import { EngineTrack } from '../components/features/EngineTrack';
+import { useStore } from '../../store';
+import { useLangStore } from '../../store/langStore';
+import { t } from '../../i18n/translations';
+import type { TranslationKey } from '../../i18n/translations';
+import { Card } from '../layout/Card';
+import { simulateTrack, simulateByAsset } from '../../utils/math';
+import { formatCurrency } from '../../utils/format';
+import { ASSET_RETURNS, ASSET_META, WITHDRAW_RATE } from '../../constants/defaults';
+import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations, trackPhaseOpts } from '../../constants/tracks';
+import type { AssetClass, Track } from '../../types';
+import { Icon, Dot } from '../shared/Icon';
+import { STRATEGIES } from '../../constants/strategies';
+import { EngineTrack } from '../features/EngineTrack';
 
 function assetLabel(ac: AssetClass): string {
   return ASSET_META[ac].label;
@@ -30,7 +30,7 @@ function AllocationBar({ track }: { track: Track }) {
   );
 }
 
-export function TracksPage() {
+export function MethodAndTrack() {
   const { userAge, selectedTrackId, setUserAge, setSelectedTrack, simulationParams, selectedStrategyId, setSelectedStrategy } = useStore();
   const { lang } = useLangStore();
   const isRtl = lang === 'he';

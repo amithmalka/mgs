@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
-import { TracksPage } from './pages/TracksPage';
 import { AcademyPage } from './pages/AcademyPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { TransactionsPage } from './pages/TransactionsPage';
@@ -10,7 +9,7 @@ import { SimulationPage } from './pages/SimulationPage';
 import { DividendsPage } from './pages/DividendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { CustomInvestPage } from './pages/CustomInvestPage';
-import { MarketPage } from './pages/MarketPage';
+import { TrackingPage } from './pages/TrackingPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
@@ -18,15 +17,15 @@ import { Disclaimer } from './components/shared/Disclaimer';
 
 const pages: Record<Tab, React.FC> = {
   dashboard: HomePage,
-  tracks: TracksPage,
+  tracking: TrackingPage,
+  dividends: DividendsPage,
   academy: AcademyPage,
+  // Still routable, but reached from within the four screens above.
   portfolio: PortfolioPage,
   transactions: TransactionsPage,
   simulation: SimulationPage,
-  dividends: DividendsPage,
   goals: GoalsPage,
   custom: CustomInvestPage,
-  market: MarketPage,
 };
 
 function App() {

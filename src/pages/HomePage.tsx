@@ -5,76 +5,146 @@ import { Card } from '../components/layout/Card';
 import { formatCurrency } from '../utils/format';
 import { ASSET_META } from '../constants/defaults';
 import { getTrackById } from '../constants/tracks';
+import { MGS_UNIFIED_TRACK } from '../constants/investmentTracks';
 import { fetchPrices } from '../lib/marketData';
 import type { PriceInfo } from '../lib/marketData';
 import { smartDeposit } from '../utils/smartDeposit';
+import { routeDeposit } from '../utils/swrEngine';
 import { Icon } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
+import { MarketSection } from '../components/market/MarketSection';
+import { MethodAndTrack } from '../components/features/MethodAndTrack';
 
 /**
- * "This month" — the one screen that answers what to actually do now.
+ * Home is the whole opening flow, in order:
+ *   the market → pick a method → set a monthly deposit → what to buy and how
+ *   much of each.
  *
- * It used to also carry the market board, candles, the track picker, portfolio
- * value and the goal: six unrelated questions on one screen. The market moved
- * to its own page and the track picker to the start screen, leaving this to do
- * one job.
+ * Everything downstream (tracking, income) assumes those choices are made, so
+ * they belong on one screen rather than scattered across the menu.
  */
 export function HomePage() {
   const {
-    allocations, currentPortfolioValue, simulationParams, setMonthlyDeposit,
-    selectedTrackId, goal, getProfit,
+    allocations, simulationParams, setMonthlyDeposit,
+    selectedTrackId, selectedStrategyId,
   } = useStore();
   const { lang } = useLangStore();
   const he = lang !== 'en';
 
+  const isGeneral = selectedStrategyId === 'wealth';
   const track = getTrackById(selectedTrackId);
   const deposit = simulationParams.monthlyDeposit;
-  const profit = getProfit();
-  const progress = goal.targetAmount > 0
-    ? Math.min(100, (currentPortfolioValue / goal.targetAmount) * 100) : 0;
 
   const active = useMemo(() => allocations.filter(a => a.targetPercent > 0), [allocations]);
   const [prices, setPrices] = useState<Record<string, PriceInfo>>({});
   const [loading, setLoading] = useState(false);
 
-  // Prices are needed only to tilt the split toward whatever dropped.
+  // Prices only tilt the split toward whatever dropped; it works without them.
   const refresh = useCallback(async () => {
-    if (!active.length) return;
+    if (isGeneral || !active.length) return;
     setLoading(true);
     try {
       const byTicker = await fetchPrices(active.map(a => ASSET_META[a.assetClass].proxyTicker));
       const remapped: Record<string, PriceInfo> = {};
       active.forEach(a => { remapped[a.assetClass] = byTicker[ASSET_META[a.assetClass].proxyTicker] || {}; });
       setPrices(remapped);
-    } catch { /* the split falls back to target weights */ }
+    } catch { /* falls back to target weights */ }
     finally { setLoading(false); }
-  }, [active]);
+  }, [active, isGeneral]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const buys = useMemo(() => smartDeposit(deposit, allocations, prices), [deposit, allocations, prices]);
   const anyLive = Object.values(prices).some(p => typeof p?.price === 'number');
 
+  // The general method sends the whole deposit into one asset — the one
+  // furthest below target — rather than splitting it across several.
+  const engineRoute = useMemo(() => {
+    if (!isGeneral) return [];
+    return routeDeposit(deposit, MGS_UNIFIED_TRACK.assets.map(a => ({
+      key: a.key, value: 0, targetWeight: a.weight,
+    })));
+  }, [isGeneral, deposit]);
+
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
 
-      {/* ── The monthly action ──────────────────────────────────────────── */}
-      <Card glow title={he ? 'מה לעשות החודש' : 'What to do this month'}
-            subtitle={he ? `לפי המסלול: ${track.nameHe}` : `Track: ${track.nameEn}`}>
-        <div className="flex items-center gap-3 mt-1 mb-4 flex-wrap">
-          <span className="text-sm text-text-muted">{he ? 'סכום ההפקדה החודשית:' : 'Monthly deposit:'}</span>
-          <input type="number" value={deposit || ''} onChange={e => setMonthlyDeposit(Number(e.target.value) || 0)}
-            className="w-28 text-center font-semibold" />
-          <span className="text-xs text-text-dim">₪</span>
-          {loading && <span className="text-[10px] text-text-dim">{he ? 'טוען מחירים…' : 'Loading prices…'}</span>}
-        </div>
+      {/* ── 1. The market ───────────────────────────────────────────────── */}
+      <MarketSection />
 
-        {deposit > 0 ? (
+      {/* ── 2. Method (and, for the apartment method, a track) ──────────── */}
+      <MethodAndTrack />
+
+      {/* ── 3. Monthly deposit ──────────────────────────────────────────── */}
+      <Card glow title={he ? 'כמה מפקידים בחודש' : 'Monthly deposit'}
+            subtitle={he
+              ? 'הסכום הזה מזין את החלוקה למטה ואת כל התחזיות במערכת.'
+              : 'This amount drives the split below and every projection in the system.'}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <input type="number" min={0} step={500} value={deposit || ''}
+            onChange={e => setMonthlyDeposit(Number(e.target.value) || 0)}
+            className="w-36 text-center text-lg font-bold" />
+          <span className="text-sm text-text-dim">₪</span>
+          <div className="flex gap-1.5">
+            {[1000, 3000, 5000].map(v => (
+              <button key={v} onClick={() => setMonthlyDeposit(v)}
+                className={`text-[11px] px-3 py-1.5 rounded-lg border transition-colors ${
+                  deposit === v ? 'border-gold-border text-gold bg-gold-muted' : 'border-surface-4 text-text-muted hover:text-text'
+                }`}>
+                {v.toLocaleString()}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* ── 4. Where the money goes ─────────────────────────────────────── */}
+      <Card glow title={he ? 'איפה להשקיע וכמה' : 'Where to invest, and how much'}
+            subtitle={isGeneral
+              ? (he ? MGS_UNIFIED_TRACK.nameHe : MGS_UNIFIED_TRACK.nameEn)
+              : (he ? `לפי המסלול: ${track.nameHe}` : `Track: ${track.nameEn}`)}>
+        {deposit <= 0 ? (
+          <p className="text-sm text-text-muted">
+            {he ? 'הזינו סכום הפקדה חודשי למעלה כדי לראות בדיוק מה לקנות.' : 'Enter a monthly deposit above.'}
+          </p>
+        ) : isGeneral ? (
+          <>
+            <p className="text-[13px] text-text-muted mb-3">
+              {he
+                ? 'בשיטה הזו כל ההפקדה נכנסת לנכס אחד — זה שהכי רחוק מתחת למשקל היעד שלו. כך התיק מתאזן בלי למכור ובלי אירוע מס.'
+                : 'The whole deposit goes into one asset — whichever is furthest below its target weight, so the portfolio rebalances without selling.'}
+            </p>
+            <div className="space-y-2">
+              {engineRoute.map(r => {
+                const a = MGS_UNIFIED_TRACK.assets.find(x => x.key === r.key)!;
+                return (
+                  <div key={r.key} className={`flex items-center justify-between p-3.5 rounded-xl border ${
+                    r.amount > 0 ? 'bg-success/[0.06] border-success/25' : 'bg-surface-3 border-surface-4'
+                  }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: a.color }} />
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-text block truncate">{he ? a.labelHe : a.labelEn}</span>
+                        <span className="text-[10px] text-text-dim font-mono" dir="ltr">
+                          {a.ticker} · {he ? 'יעד' : 'target'} {(a.weight * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`text-lg font-bold flex-shrink-0 ${r.amount > 0 ? 'text-gold' : 'text-text-dim'}`}>
+                      {formatCurrency(r.amount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
           <>
             <p className="text-[13px] text-text-muted mb-3">
               {anyLive
                 ? (he ? 'המערכת מגדילה קנייה בנכסים שירדו החודש — לנצל את ההנחה:' : 'We buy more of what dropped:')
                 : (he ? 'הפקידו וחלקו כך (לפי היעד):' : 'Deposit and split like this:')}
+              {loading && <span className="text-[10px] text-text-dim"> · {he ? 'טוען מחירים…' : 'loading…'}</span>}
             </p>
             <div className="space-y-2">
               {buys.filter(b => b.amount > 0).map(b => (
@@ -96,43 +166,16 @@ export function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-text-dim mt-3 flex items-center">
-              <Icon name="bulb" size={13} className="me-1.5" />
-              {he ? 'פשוט קנו את הסכומים האלה בחשבון ההשקעות. אין צורך למכור כלום.' : 'Just buy these amounts. No need to sell anything.'}
-            </p>
           </>
-        ) : (
-          <p className="text-sm text-text-muted">{he ? 'הזינו סכום הפקדה חודשי כדי לראות בדיוק מה לקנות.' : 'Enter a monthly deposit.'}</p>
+        )}
+
+        {deposit > 0 && (
+          <p className="text-[11px] text-text-dim mt-3 flex items-center">
+            <Icon name="bulb" size={13} className="me-1.5" />
+            {he ? 'פשוט קנו את הסכומים האלה בחשבון ההשקעות. אין צורך למכור כלום.' : 'Just buy these amounts. No need to sell anything.'}
+          </p>
         )}
       </Card>
-
-      {/* ── Where I stand ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <p className="text-[10px] uppercase tracking-wider text-text-muted">{he ? 'שווי התיק שלי' : 'My portfolio'}</p>
-          <p className="text-3xl font-bold text-gold-gradient mt-1.5">{formatCurrency(currentPortfolioValue)}</p>
-        </Card>
-        <Card>
-          <p className="text-[10px] uppercase tracking-wider text-text-muted">{he ? 'רווח עד היום' : 'Profit so far'}</p>
-          <p className={`text-3xl font-bold mt-1.5 ${profit >= 0 ? 'text-success' : 'text-danger'}`}>{formatCurrency(profit)}</p>
-        </Card>
-      </div>
-
-      {/* ── Progress to goal ────────────────────────────────────────────── */}
-      {goal.targetAmount > 0 && (
-        <Card title={he ? 'הדרך ליעד שלך' : 'Progress to your goal'}
-              subtitle={`${he ? 'יעד' : 'Target'}: ${formatCurrency(goal.targetAmount)}`}>
-          <div className="mt-2">
-            <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-gold">{progress.toFixed(0)}%</span>
-              <span className="text-text-dim">{formatCurrency(currentPortfolioValue)} / {formatCurrency(goal.targetAmount)}</span>
-            </div>
-            <div className="w-full bg-surface-4 rounded-full h-3 overflow-hidden">
-              <div className="h-3 rounded-full progress-gold transition-all duration-700" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        </Card>
-      )}
 
       <Disclaimer variant="full" />
     </div>
