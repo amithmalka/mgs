@@ -9,11 +9,14 @@ import { formatCurrency } from '../utils/format';
 import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META, PROJECTION_HORIZON } from '../constants/defaults';
 import { getTrackById, trackPhaseOpts } from '../constants/tracks';
 import type { AllocationTarget, AssetClass } from '../types';
-import { Icon, Dot } from '../components/shared/Icon';
+import { Dot } from '../components/shared/Icon';
 import { DividendSimulation } from '../components/features/DividendSimulation';
 import { Disclaimer } from '../components/shared/Disclaimer';
 
 const MILESTONES = [5, 10, 25, 30, 40] as const;
+
+/** Rows shown in the year-by-year table — every fifth year to the horizon. */
+const YEAR_ROWS = [5, 10, 15, 20, 25, 30, 35, 40];
 type MilestoneYear = typeof MILESTONES[number];
 
 
@@ -434,20 +437,18 @@ export function SimulationPage() {
               </tr>
             </thead>
             <tbody>
-              {simData[activeScenario].slice(1).map(row => {
-                const isMilestone = (MILESTONES as readonly number[]).includes(row.year);
+              {simData[activeScenario].filter(r => YEAR_ROWS.includes(r.year)).map(row => {
                 const phaseColor = row.phase === 'red' ? '#ef4444' : row.phase === 'yellow' ? '#eab308' : '#22c55e';
                 const phaseDot = row.phase === 'red' ? 'red' as const : row.phase === 'yellow' ? 'yellow' as const : 'green' as const;
                 return (
                   <tr
                     key={row.year}
-                    className={`border-b border-surface-3/50 ${isMilestone ? 'bg-gold/[0.03]' : ''}`}
+                    className="border-b border-surface-3/50"
                     style={{ boxShadow: `inset 2px 0 0 ${phaseColor}66` }}
                   >
-                    <td className={`py-2 ${isMilestone ? 'text-gold font-semibold' : 'text-text-muted'}`}>
+                    <td className="py-2 text-text font-medium">
                       <Dot color={phaseDot} size={7} className="mx-1" />
                       {row.year}
-                      {isMilestone && <Icon name="sparkle" size={9} className="text-gold/50 mx-1" />}
                     </td>
                     <td className="text-end py-2 font-medium text-gold">{formatCurrency(row.totalValue)}</td>
                     <td className="text-end py-2 text-text-muted">{formatCurrency(row.totalDeposited)}</td>
