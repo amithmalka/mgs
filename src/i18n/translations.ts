@@ -316,7 +316,12 @@ export const translations = {
   depositToSplit: { en: 'Amount to split', he: 'סכום לחלוקה' },
   setTargetsFirst: { en: 'Set a target % on at least one stock first.', he: 'קבעו תחילה יעד באחוזים לפחות למניה אחת.' },
   currentVsTarget: { en: 'now {current}% · target {target}%', he: 'כעת {current}% · יעד {target}%' },
-  rebalanceNote: { en: 'Never buys past a target and never suggests selling, so no tax event is triggered.', he: 'לעולם לא קונה מעבר ליעד ולא מציע מכירה, כך שלא נוצר אירוע מס.' },
+  rebalanceNote: { en: 'Never suggests selling, so no tax event is triggered.', he: 'לעולם לא מציע מכירה, כך שלא נוצר אירוע מס.' },
+  cheapestThisMonth: { en: 'Cheapest this month', he: 'המוזל ביותר החודש' },
+  mostDiscounted: { en: 'most discounted', he: 'הכי מוזל' },
+  atPeak: { en: 'at peak', he: 'בשיא' },
+  cheapestExplain: { en: '{ticker} is trading {discount}% below its 30-day peak, so it gets the largest share of this deposit — {amount}.', he: '{ticker} נסחרת {discount}% מתחת לשיא של 30 הימים האחרונים, ולכן היא מקבלת את החלק הגדול ביותר מההפקדה — {amount}.' },
+  noDiscountNote: { en: 'Nothing is trading below its recent peak right now, so the deposit is split by your target weights alone.', he: 'אף נכס לא נסחר כרגע מתחת לשיא האחרון שלו, ולכן ההפקדה מחולקת לפי משקלי היעד בלבד.' },
 
   monthlyTitle: { en: 'Monthly progress', he: 'מעקב חודשי' },
   monthlySub: { en: 'Report what you actually deposited and what the portfolio is actually worth.', he: 'דווחו כמה באמת הפקדתם ומה השווי האמיתי של התיק.' },

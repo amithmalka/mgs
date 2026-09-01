@@ -1,4 +1,5 @@
 import { toMonthlyRate } from './math';
+import type { PriceInfo } from '../lib/marketData';
 import type { CustomHolding, MonthlyEntry } from '../types';
 
 /**
@@ -99,16 +100,60 @@ export interface CustomRebalanceRow {
   /** target − current; positive means under-weighted */
   deviation: number;
   underweight: boolean;
+  /** how far below its recent peak this asset is trading, % (0 = at the peak) */
+  discount: number;
+  /** received extra money because it is trading at a discount */
+  dipBoosted: boolean;
+  /** the single most discounted holding this month */
+  cheapest: boolean;
+  price: number | null;
+  currency: string | null;
 }
 
 /**
- * Route a deposit into the under-weighted holdings, never selling and never
- * buying a holding past its target. Same algorithm as calcRebalance() in
- * utils/rebalance.ts, over tickers instead of asset classes.
+ * How discounted an asset is right now, as a fraction (0.08 = 8% below peak).
+ *
+ * Preferred measure is the drawdown from the highest close in the fetched
+ * window: that is literally "how far below its recent peak am I buying". The
+ * 30-day change alone is weaker — an asset can be up over 30 days yet still be
+ * well off its peak. Falls back to the 30-day drop when no candles are present.
+ */
+export function discountOf(p?: PriceInfo): number {
+  if (!p) return 0;
+
+  const closes = p.candles?.map(c => c.c).filter(Number.isFinite) ?? [];
+  const price = typeof p.price === 'number' ? p.price : closes[closes.length - 1];
+
+  if (closes.length > 1 && typeof price === 'number') {
+    const peak = Math.max(...closes);
+    if (peak > 0) return Math.max(0, (peak - price) / peak);
+  }
+
+  // No series available — treat a negative 30-day move as the discount.
+  if (typeof p.perf30 === 'number') return Math.max(0, -p.perf30 / 100);
+  return 0;
+}
+
+/**
+ * Route a deposit across the holdings, tilting toward whatever is cheapest.
+ *
+ * Two rules, in order:
+ *   1. Base weight is how far each holding sits *under* its target, so the
+ *      portfolio keeps converging on the allocation the student chose. Nothing
+ *      is ever sold.
+ *   2. That base is then TILTED by how discounted the asset is — the further
+ *      below its recent peak, the larger the share of this month's money:
+ *
+ *        weightᵢ = baseᵢ × (1 + dipBoost × discountᵢ)
+ *
+ * Same shape as smartDeposit() in utils/smartDeposit.ts, which does this for
+ * the fixed track universe. Without prices it degrades to pure target routing.
  */
 export function calcCustomRebalance(
   depositAmount: number,
   holdings: CustomHolding[],
+  prices: Record<string, PriceInfo> = {},
+  dipBoost = 3,
 ): CustomRebalanceRow[] {
   const active = holdings.filter(h => h.targetPercent > 0);
   if (active.length === 0) return [];
@@ -122,21 +167,32 @@ export function calcCustomRebalance(
   );
   const sumDeficit = [...deficit.values()].reduce((s, v) => s + v, 0);
 
+  // Base weight: the under-target gap, or plain target weight when everything
+  // is already at or above target (nothing to catch up on).
+  const priceOf = (h: CustomHolding) => prices[h.ticker.toUpperCase()];
+  const discount = new Map(active.map(h => [h.id, discountOf(priceOf(h))]));
+
+  const weight = new Map(active.map(h => {
+    const base = sumDeficit > 0 ? deficit.get(h.id)! : h.targetPercent;
+    return [h.id, base * (1 + dipBoost * discount.get(h.id)!)];
+  }));
+  const sumWeight = [...weight.values()].reduce((s, v) => s + v, 0);
+
   const amount = new Map<string, number>();
-  if (sumDeficit <= 0) {
-    // Everything at or above target — spread by target weight.
-    active.forEach(h => amount.set(h.id, depositAmount * (h.targetPercent / sumTarget)));
-  } else if (sumDeficit >= depositAmount) {
-    // Not enough to fill every gap — split proportionally to the gaps.
-    active.forEach(h => amount.set(h.id, depositAmount * (deficit.get(h.id)! / sumDeficit)));
+  if (sumWeight > 0) {
+    active.forEach(h => amount.set(h.id, depositAmount * (weight.get(h.id)! / sumWeight)));
   } else {
-    // Fill every gap, then spread what is left by target weight.
-    const residual = depositAmount - sumDeficit;
-    active.forEach(h => amount.set(h.id, deficit.get(h.id)! + residual * (h.targetPercent / sumTarget)));
+    // Every weight collapsed to zero — fall back to target weights so the
+    // deposit is still allocated rather than silently dropped.
+    active.forEach(h => amount.set(h.id, depositAmount * (h.targetPercent / sumTarget)));
   }
+
+  const maxDiscount = Math.max(...discount.values());
 
   const rows: CustomRebalanceRow[] = active.map(h => {
     const current = totalValue > 0 ? (h.currentValue / totalValue) * 100 : 0;
+    const d = discount.get(h.id)!;
+    const p = priceOf(h);
     return {
       id: h.id, ticker: h.ticker, name: h.name,
       amount: Math.round(amount.get(h.id) ?? 0),
@@ -144,6 +200,11 @@ export function calcCustomRebalance(
       targetPercent: h.targetPercent,
       deviation: Math.round((h.targetPercent - current) * 10) / 10,
       underweight: h.targetPercent - current > 0,
+      discount: Math.round(d * 1000) / 10,
+      dipBoosted: d > 0,
+      cheapest: d > 0 && d === maxDiscount,
+      price: typeof p?.price === 'number' ? p.price : null,
+      currency: p?.currency ?? null,
     };
   });
 
@@ -154,7 +215,8 @@ export function calcCustomRebalance(
     target.amount += drift;
   }
 
-  return rows.sort((a, b) => Number(b.underweight) - Number(a.underweight) || b.amount - a.amount);
+  // Biggest buy first — that is the answer to "what do I buy this month".
+  return rows.sort((a, b) => b.amount - a.amount);
 }
 
 // ── Monthly progress ─────────────────────────────────────────────────────────

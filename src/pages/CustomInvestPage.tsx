@@ -127,7 +127,7 @@ export function CustomInvestPage() {
       {holdings.length > 0 && <CustomProjection rows={projection} holdings={holdings} />}
 
       {/* ── Deposit routing ─────────────────────────────────────────────── */}
-      {holdings.length > 0 && <RebalancePanel />}
+      {holdings.length > 0 && <RebalancePanel prices={prices} />}
 
       {/* ── Monthly progress ────────────────────────────────────────────── */}
       <MonthlyTracker blendedReturn={blended} />
