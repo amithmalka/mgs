@@ -192,7 +192,7 @@ export function HomePage() {
       {/* ── Your plan ───────────────────────────────────────────────────── */}
       <Card>
         <p className="text-[11px] uppercase tracking-[0.2em] text-gold/70">
-          {he ? 'במקום דירה' : 'Instead of an Apartment'} · {he ? 'המסלול שלך' : 'your track'}
+          {he ? 'משקיעה להשקעה' : 'Into Investing'} · {he ? 'המסלול שלך' : 'your track'}
         </p>
         <h2 className="text-2xl font-bold text-gold-gradient mt-1 flex items-center">
           <Dot color={track.dot} size={12} className="me-2" />{he ? track.nameHe : track.nameEn}

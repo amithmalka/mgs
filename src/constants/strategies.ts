@@ -26,8 +26,8 @@ export interface Strategy {
 export const STRATEGIES: Strategy[] = [
   {
     id: 'apartment',
-    nameHe: 'במקום דירה',
-    nameEn: 'Instead of an Apartment',
+    nameHe: 'משקיעה להשקעה (במקום דירה)',
+    nameEn: 'Into Investing (Instead of an Apartment)',
     taglineHe: 'להחליף את קניית הדירה בהשקעה מתוכננת.',
     taglineEn: 'Replace buying a property with a planned investment.',
     forWhoHe: 'למי ששוקל לקנות דירה — ובוחר להשקיע את אותו כסף במקום.',
