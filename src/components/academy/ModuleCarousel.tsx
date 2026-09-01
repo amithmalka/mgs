@@ -3,6 +3,7 @@ import { useLangStore } from '../../store/langStore';
 import { t } from '../../i18n/translations';
 import { accentOf } from './accents';
 import type { Module, Lesson } from '../../types';
+import { Icon } from '../shared/Icon';
 
 interface Props {
   modules: Module[];
@@ -32,9 +33,9 @@ export function ModuleCarousel({ modules, lessons, watched, isAdmin, onOpen, onE
       {modules.length > 1 && (
         <div className="flex justify-end gap-1.5 mb-2">
           <button onClick={() => scrollBy(-1)} aria-label={t('scrollLeft', lang)}
-            className="w-7 h-7 rounded-lg border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border transition-colors text-xs">◀</button>
+            className="w-7 h-7 rounded-lg border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border transition-colors flex items-center justify-center"><Icon name="chevronLeft" size={13} /></button>
           <button onClick={() => scrollBy(1)} aria-label={t('scrollRight', lang)}
-            className="w-7 h-7 rounded-lg border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border transition-colors text-xs">▶</button>
+            className="w-7 h-7 rounded-lg border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border transition-colors flex items-center justify-center"><Icon name="chevronRight" size={13} /></button>
         </div>
       )}
 
@@ -63,7 +64,7 @@ export function ModuleCarousel({ modules, lessons, watched, isAdmin, onOpen, onE
                     className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
                     style={{ background: `${accent}22`, color: accent }}
                   >
-                    {complete ? '✓' : mi + 1}
+                    {complete ? <Icon name="check" size={12} /> : mi + 1}
                   </span>
                   <span className="text-[10px] text-text-dim">
                     {mLessons.length} {t('lessons', lang)}
@@ -86,8 +87,9 @@ export function ModuleCarousel({ modules, lessons, watched, isAdmin, onOpen, onE
                   </div>
                 </div>
 
-                <span className="block text-[11px] mt-3 text-gold">
-                  {t('openModule', lang)} {isRtl ? '←' : '→'}
+                <span className="flex items-center gap-1 text-[11px] mt-3 text-gold">
+                  {t('openModule', lang)}
+                  <Icon name={isRtl ? 'arrowLeft' : 'arrowRight'} size={12} />
                 </span>
               </button>
 
@@ -98,14 +100,18 @@ export function ModuleCarousel({ modules, lessons, watched, isAdmin, onOpen, onE
                     onClick={() => onMove(mi, -1)}
                     disabled={mi === 0}
                     title={t('moveEarlier', lang)}
-                    className="w-6 h-6 rounded-md border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border disabled:opacity-25 disabled:hover:text-text-muted disabled:hover:border-surface-4 text-[10px]"
-                  >{isRtl ? '▶' : '◀'}</button>
+                    className="w-6 h-6 rounded-md border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border disabled:opacity-25 disabled:hover:text-text-muted disabled:hover:border-surface-4 flex items-center justify-center"
+                  >
+                    <Icon name={isRtl ? 'chevronRight' : 'chevronLeft'} size={11} />
+                  </button>
                   <button
                     onClick={() => onMove(mi, 1)}
                     disabled={mi === modules.length - 1}
                     title={t('moveLater', lang)}
-                    className="w-6 h-6 rounded-md border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border disabled:opacity-25 disabled:hover:text-text-muted disabled:hover:border-surface-4 text-[10px]"
-                  >{isRtl ? '◀' : '▶'}</button>
+                    className="w-6 h-6 rounded-md border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border disabled:opacity-25 disabled:hover:text-text-muted disabled:hover:border-surface-4 flex items-center justify-center"
+                  >
+                    <Icon name={isRtl ? 'chevronLeft' : 'chevronRight'} size={11} />
+                  </button>
 
                   <span className="flex-1" />
 

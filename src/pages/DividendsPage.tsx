@@ -12,6 +12,7 @@ import { simulateTrack } from '../utils/math';
 import { getTrackById, trackToAllocations, trackPhaseOpts } from '../constants/tracks';
 import { formatCurrency } from '../utils/format';
 import type { AssetClass } from '../types';
+import { Icon } from '../components/shared/Icon';
 
 // The "Financial Freedom" income + withdrawal dashboard (Decision Support System).
 export function DividendsPage() {
@@ -89,7 +90,7 @@ export function DividendsPage() {
     if (plan.covered > 0) {
       addTransaction({ type: 'withdrawal', amount: plan.covered, date: new Date().toISOString().slice(0, 10), notes: he ? 'משיכת הכנסה חודשית (כלל 4%)' : 'Monthly income withdrawal (4% rule)' });
     }
-    setDone(he ? '✓ התיק עודכן והמשיכה נרשמה' : '✓ Portfolio updated and withdrawal recorded');
+    setDone(he ? 'התיק עודכן והמשיכה נרשמה' : 'Portfolio updated and withdrawal recorded');
   };
 
   return (
@@ -98,7 +99,7 @@ export function DividendsPage() {
 
       {/* Income header */}
       <Card glow>
-        <h2 className="text-xl font-bold text-gold-gradient">💸 {he ? 'חופש כלכלי — ההכנסה החודשית שלך' : 'Financial Freedom — Your Monthly Income'}</h2>
+        <h2 className="text-xl font-bold text-gold-gradient">{he ? 'חופש כלכלי — ההכנסה החודשית שלך' : 'Financial Freedom — Your Monthly Income'}</h2>
         <p className="text-[12px] text-text-muted mt-1.5">
           {he ? 'משנה 21 ואילך — אלגוריתם המשיכה החכם סורק את התיק ובוחר מה למכור החודש, תוך נעילת רווחים והימנעות מנכסים בתיקון.' : 'From year 21 — the smart withdrawal algorithm scans your portfolio and picks what to sell this month, locking in profits and avoiding assets in correction.'}
         </p>
@@ -115,7 +116,7 @@ export function DividendsPage() {
       </Card>
 
       {/* Forecast: monthly income at the start of the harvest phase */}
-      <Card glow title={`🔮 ${he ? `ההכנסה החודשית שלך בעוד ${harvestYear} שנים` : `Your monthly income in ${harvestYear} years`}`}>
+      <Card glow title={`${he ? `ההכנסה החודשית שלך בעוד ${harvestYear} שנים` : `Your monthly income in ${harvestYear} years`}`}>
         <p className="text-[12px] text-text-muted mb-4">
           {he
             ? `אם תמשיכו להפקיד ${formatCurrency(simulationParams.monthlyDeposit)} בכל חודש — אחרי ${track.phaseADuration} שנות צבירה + ${track.phaseBDuration} שנות איזון, זה מה שתוכלו למשוך בכל חודש (כלל 4%):`
@@ -152,10 +153,10 @@ export function DividendsPage() {
             <div className="flex items-center justify-between mb-3 mt-1">
               <span className="text-[11px] text-text-dim">{he ? 'מחירים חיים דרך Twelve Data (או הזנה ידנית למטה)' : 'Live prices via Twelve Data (or manual entry below)'}</span>
               <button onClick={refresh} disabled={loading} className="text-xs btn-gold px-3 py-1.5 rounded-lg disabled:opacity-50">
-                {loading ? (he ? 'טוען…' : 'Loading…') : (he ? '↻ רענן מחירים' : '↻ Refresh prices')}
+                {loading ? (he ? 'טוען…' : 'Loading…') : (he ? 'רענן מחירים' : 'Refresh prices')}
               </button>
             </div>
-            {err && <p className="text-[11px] text-danger mb-3">⚠ {err} — {he ? 'אפשר להזין תשואת 30 יום ידנית:' : 'enter 30-day % manually:'}</p>}
+            {err && <p className="text-[11px] text-danger mb-3 flex items-center gap-1.5"><Icon name="warning" size={12} />{err} — {he ? 'אפשר להזין תשואת 30 יום ידנית:' : 'enter 30-day % manually:'}</p>}
             <div className="space-y-2">
               {held.map(h => {
                 const ac = h.assetClass; const pi = prices[ac]; const perf = perfOf(ac);
@@ -182,7 +183,7 @@ export function DividendsPage() {
           </Card>
 
           {/* Sell instructions */}
-          <Card glow title={he ? '📋 הוראות מכירה לחודש זה' : '📋 This Month\'s Sell Instructions'}>
+          <Card glow title={he ? 'הוראות מכירה לחודש זה' : "This Month's Sell Instructions"}>
             <div className="p-3 rounded-xl bg-surface-3/60 border border-gold/10 text-[12px] text-text-muted mb-4">
               {he
                 ? 'האלגוריתם סרק את השוק ובחר את הנכסים הרווחיים ביותר למכירה החודש — תוך עקיפה מוחלטת של נכסים שנמצאים כרגע בתיקון.'
@@ -210,7 +211,7 @@ export function DividendsPage() {
 
             {skipped.length > 0 && (
               <p className="text-[11px] text-text-dim mt-4">
-                🛡 {he ? 'לא נמכרו (בתיקון, מוגנים)' : 'Protected (in correction, untouched)'}: {skipped.map(s => s.ticker).join(', ')}
+                <Icon name="shield" size={12} className="me-1.5" />{he ? 'לא נמכרו (בתיקון, מוגנים)' : 'Protected (in correction, untouched)'}: {skipped.map(s => s.ticker).join(', ')}
               </p>
             )}
             {plan.shortfall > 0 && plan.instructions.length > 0 && (

@@ -10,6 +10,7 @@ import { formatCurrency } from '../utils/format';
 import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META } from '../constants/defaults';
 import { getTrackById, trackPhaseOpts } from '../constants/tracks';
 import type { AllocationTarget, AssetClass } from '../types';
+import { Icon, Dot } from '../components/shared/Icon';
 
 const MILESTONES = [5, 10, 20, 30] as const;
 type MilestoneYear = typeof MILESTONES[number];
@@ -108,7 +109,7 @@ export function SimulationPage() {
             ? 'הסימולציה מחשבת תמיד 30 שנה קדימה — עם נקודות ציון ב-5, 10, 20, 30 שנה'
             : 'Simulation always projects 30 years — with milestones at 5, 10, 20 & 30 years'}
         </p>
-        <p className="text-[10px] text-gold/70 mt-1">🚦 {t('simUsesTrack', lang)}</p>
+        <p className="text-[10px] text-gold/70 mt-1 flex items-center gap-1.5"><Dot color="green" size={6} />{t('simUsesTrack', lang)}</p>
       </Card>
 
       {/* ── 2. Asset allocation + per-scenario return rates ──────────── */}
@@ -185,8 +186,8 @@ export function SimulationPage() {
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-surface-4">
           <span className={`text-xs ${pctOk ? 'text-success' : 'text-danger'}`}>
             {pctOk
-              ? (lang === 'he' ? '✓ החלוקה תקינה' : '✓ Allocation valid')
-              : (lang === 'he' ? `⚠ סה״כ ${totalPct}% — נדרש 100%` : `⚠ Total ${totalPct}% — must equal 100%`)}
+              ? (lang === 'he' ? 'החלוקה תקינה' : 'Allocation valid')
+              : (lang === 'he' ? `סה״כ ${totalPct}% — נדרש 100%` : `Total ${totalPct}% — must equal 100%`)}
           </span>
           <div className="flex gap-2">
             <button
@@ -433,7 +434,7 @@ export function SimulationPage() {
               {simData[activeScenario].slice(1).map(row => {
                 const isMilestone = (MILESTONES as readonly number[]).includes(row.year);
                 const phaseColor = row.phase === 'red' ? '#ef4444' : row.phase === 'yellow' ? '#eab308' : '#22c55e';
-                const phaseDot = row.phase === 'red' ? '🔴' : row.phase === 'yellow' ? '🟡' : '🟢';
+                const phaseDot = row.phase === 'red' ? 'red' as const : row.phase === 'yellow' ? 'yellow' as const : 'green' as const;
                 return (
                   <tr
                     key={row.year}
@@ -441,9 +442,9 @@ export function SimulationPage() {
                     style={{ boxShadow: `inset 2px 0 0 ${phaseColor}66` }}
                   >
                     <td className={`py-2 ${isMilestone ? 'text-gold font-semibold' : 'text-text-muted'}`}>
-                      <span className="text-[9px] mr-1 ml-1">{phaseDot}</span>
+                      <Dot color={phaseDot} size={7} className="mx-1" />
                       {row.year}
-                      {isMilestone && <span className="text-[9px] text-gold/50 mr-1 ml-1">★</span>}
+                      {isMilestone && <Icon name="sparkle" size={9} className="text-gold/50 mx-1" />}
                     </td>
                     <td className="text-end py-2 font-medium text-gold">{formatCurrency(row.totalValue)}</td>
                     <td className="text-end py-2 text-text-muted">{formatCurrency(row.totalDeposited)}</td>

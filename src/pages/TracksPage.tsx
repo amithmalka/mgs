@@ -9,6 +9,7 @@ import { formatCurrency } from '../utils/format';
 import { ASSET_RETURNS, ASSET_META, WITHDRAW_RATE } from '../constants/defaults';
 import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations, trackPhaseOpts } from '../constants/tracks';
 import type { AssetClass, Track } from '../types';
+import { Icon, Dot } from '../components/shared/Icon';
 
 function assetLabel(ac: AssetClass): string {
   return ASSET_META[ac].label;
@@ -72,7 +73,7 @@ export function TracksPage() {
           <div className="flex-1 min-w-[200px] rounded-xl bg-gold-muted border border-gold-border px-4 py-3">
             <p className="text-[10px] uppercase tracking-wider text-gold/70">{t('recommendedForYou', lang)}</p>
             <p className="text-sm font-semibold text-gold mt-0.5">
-              {getTrackById(recommendedId).icon} {lang === 'he' ? getTrackById(recommendedId).nameHe : getTrackById(recommendedId).nameEn}
+              <Dot color={getTrackById(recommendedId).dot} /> {lang === 'he' ? getTrackById(recommendedId).nameHe : getTrackById(recommendedId).nameEn}
             </p>
           </div>
         </div>
@@ -96,7 +97,7 @@ export function TracksPage() {
                 dir={isRtl ? 'rtl' : 'ltr'}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl">{tr.icon}</span>
+                  <Dot color={tr.dot} size={14} />
                   {isRecommended && (
                     <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold-border">
                       {t('recommendedTrack', lang)}
@@ -128,7 +129,7 @@ export function TracksPage() {
                 <div className={`mt-3 text-center text-[11px] font-medium rounded-lg py-1.5 ${
                   isSelected ? 'bg-gold text-surface' : 'text-gold border border-gold-border'
                 }`}>
-                  {isSelected ? `✓ ${t('selected', lang)}` : t('selectTrack', lang)}
+                  {isSelected ? <span className="inline-flex items-center gap-1.5"><Icon name="check" size={13} />{t('selected', lang)}</span> : t('selectTrack', lang)}
                 </div>
               </button>
             );
@@ -140,9 +141,9 @@ export function TracksPage() {
       <Card title={t('trafficLightTitle', lang)} subtitle={t('trafficLightSub', lang)}>
         <div className="grid gap-3 md:grid-cols-3 mt-2">
           {[
-            { color: '#ef4444', glow: 'rgba(239,68,68,0.15)', dot: '🔴', titleKey: 'redTitle', descKey: 'redDesc', labelKey: 'redPhase', active: true },
-            { color: '#eab308', glow: 'rgba(234,179,8,0.15)', dot: '🟡', titleKey: 'yellowTitle', descKey: 'yellowDesc', labelKey: 'yellowPhase', active: hasYellow },
-            { color: '#22c55e', glow: 'rgba(34,197,94,0.15)', dot: '🟢', titleKey: 'greenTitle', descKey: 'greenDesc', labelKey: 'greenPhase2', active: true },
+            { color: '#ef4444', glow: 'rgba(239,68,68,0.15)', dotColor: 'red' as const, titleKey: 'redTitle', descKey: 'redDesc', labelKey: 'redPhase', active: true },
+            { color: '#eab308', glow: 'rgba(234,179,8,0.15)', dotColor: 'yellow' as const, titleKey: 'yellowTitle', descKey: 'yellowDesc', labelKey: 'yellowPhase', active: hasYellow },
+            { color: '#22c55e', glow: 'rgba(34,197,94,0.15)', dotColor: 'green' as const, titleKey: 'greenTitle', descKey: 'greenDesc', labelKey: 'greenPhase2', active: true },
           ].map(p => (
             <div
               key={p.titleKey}
@@ -154,7 +155,7 @@ export function TracksPage() {
               }}
             >
               <div className="flex items-center gap-2">
-                <span className="text-lg">{p.dot}</span>
+                <Dot color={p.dotColor} size={11} />
                 <span className="text-sm font-bold" style={{ color: p.color }}>{t(p.labelKey as TranslationKey, lang)}</span>
               </div>
               <p className="text-[11px] font-semibold text-text mt-2">{t(p.titleKey as TranslationKey, lang)}</p>
@@ -164,7 +165,7 @@ export function TracksPage() {
         </div>
         {!hasYellow && (
           <p className="text-[11px] text-gold mt-3 px-3 py-2 rounded-xl bg-gold-muted border border-gold-border">
-            ⚡ {t('trackEarlyHarvest', lang)}
+            <Icon name="sparkle" size={13} className="me-1.5" />{t('trackEarlyHarvest', lang)}
           </p>
         )}
       </Card>
@@ -181,7 +182,7 @@ export function TracksPage() {
               <div key={yr} className="rounded-2xl p-4 bg-surface-3 border border-surface-4">
                 <div className="flex items-center justify-between">
                   <p className="text-[10px] uppercase tracking-wider text-text-dim">{t('atYear', lang, { n: yr })}</p>
-                  <span className="text-sm">{row.phase === 'red' ? '🔴' : row.phase === 'yellow' ? '🟡' : '🟢'}</span>
+                  <Dot color={row.phase === 'red' ? 'red' : row.phase === 'yellow' ? 'yellow' : 'green'} />
                 </div>
                 <p className="text-[9px] text-text-muted">{t('portfolioAtYear', lang)}</p>
                 <p className="text-xl font-bold text-gold mt-0.5">{formatCurrency(row.totalValue)}</p>
@@ -265,7 +266,7 @@ function ApartmentComparison() {
       <div className="grid gap-3 md:grid-cols-2" dir={isRtl ? 'rtl' : 'ltr'}>
         {/* Apartment */}
         <div className="rounded-2xl p-4 bg-surface-3 border border-surface-4">
-          <p className="text-sm font-bold text-text">🏠 {t('buyApartment', lang)}</p>
+          <p className="text-sm font-bold text-text flex items-center gap-2"><Icon name="home" size={15} />{t('buyApartment', lang)}</p>
           <p className="text-[10px] text-text-dim mt-2">{t('afterYears', lang, { n: horizon })}</p>
           <p className="text-2xl font-bold text-text mt-0.5">{formatCurrency(apartmentValue)}</p>
           <p className="text-[10px] text-text-muted mt-2">{t('passiveIncome', lang)}</p>
@@ -274,7 +275,7 @@ function ApartmentComparison() {
 
         {/* Investment */}
         <div className="rounded-2xl p-4 bg-gold-muted border border-gold-border gold-glow">
-          <p className="text-sm font-bold text-gold">📈 {t('investInstead', lang)}</p>
+          <p className="text-sm font-bold text-gold flex items-center gap-2"><Icon name="chart" size={15} />{t('investInstead', lang)}</p>
           <p className="text-[10px] text-gold/60 mt-2">{t('afterYears', lang, { n: horizon })}</p>
           <p className="text-2xl font-bold text-gold mt-0.5">{formatCurrency(investValue)}</p>
           <p className="text-[10px] text-gold/60 mt-2">{t('passiveIncome', lang)} (4%)</p>

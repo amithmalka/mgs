@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
+import { Icon } from '../components/shared/Icon';
 
 
 interface Message {
@@ -171,7 +172,7 @@ User's current portfolio context:
                 ? 'bg-gold-muted border border-gold-border text-text'
                 : 'bg-surface-2 border border-[#222] text-text'
             }`}>
-              {msg.role === 'assistant' && <span className="text-gold text-xs font-medium">✦ MGS AI</span>}
+              {msg.role === 'assistant' && <span className="text-gold text-xs font-medium">MGS AI</span>}
               <p className="text-sm mt-1 whitespace-pre-wrap leading-relaxed">{msg.content}</p>
             </div>
           </div>
@@ -179,7 +180,7 @@ User's current portfolio context:
         {loading && (
           <div className="flex justify-start">
             <div className="bg-surface-2 border border-[#222] rounded-2xl px-4 py-3">
-              <span className="text-gold text-xs font-medium">✦ MGS AI</span>
+              <span className="text-gold text-xs font-medium">MGS AI</span>
               <div className="flex gap-1 mt-2">
                 <span className="w-2 h-2 bg-gold/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 bg-gold/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -227,7 +228,7 @@ User's current portfolio context:
         </button>
         {apiKey && (
           <button onClick={() => setShowKeyInput(true)} className="px-2 py-2 text-text-dim hover:text-gold text-xs transition-colors" title="API Key">
-            ⚙
+            <Icon name="settings" size={14} />
           </button>
         )}
       </div>

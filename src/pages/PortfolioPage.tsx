@@ -11,6 +11,7 @@ import { formatCurrency, formatPercent } from '../utils/format';
 import { ETF_RECOMMENDATIONS } from '../constants/etfs';
 import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, GREEN_ASSETS } from '../constants/defaults';
 import type { AssetClass } from '../types';
+import { Dot } from '../components/shared/Icon';
 
 const PROJECTION_YEARS = [5, 10, 20, 30];
 
@@ -251,16 +252,16 @@ export function PortfolioPage() {
         <div className="flex gap-1 bg-surface-3 rounded-xl p-1 mb-4 w-fit">
           <button onClick={() => setDeLeverage(false)}
             className={`text-[11px] px-3 py-1.5 rounded-lg transition-colors ${!deLeverage ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}>
-            🔴 {lang === 'he' ? 'צבירה (איזון ליעד)' : 'Accumulation'}
+            <Dot color="red" className="me-1.5" />{lang === 'he' ? 'צבירה (איזון ליעד)' : 'Accumulation'}
           </button>
           <button onClick={() => setDeLeverage(true)}
             className={`text-[11px] px-3 py-1.5 rounded-lg transition-colors ${deLeverage ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}>
-            🟡 {lang === 'he' ? 'ייצוב (שנים 16-20)' : 'De-leverage'}
+            <Dot color="yellow" className="me-1.5" />{lang === 'he' ? 'ייצוב (שנים 16-20)' : 'De-leverage'}
           </button>
         </div>
         {deLeverage && (
           <p className="text-[11px] text-warning mb-3">
-            {lang === 'he' ? '🟡 שלב ייצוב: 100% מההפקדה מנותב לנכסים הירוקים בלבד; נכסי הסיכון מוקפאים (מחזיקים, בלי מכירה).' : '🟡 De-leverage: 100% of the deposit routes to green assets only; risk assets are frozen.'}
+            {lang === 'he' ? 'שלב ייצוב: 100% מההפקדה מנותב לנכסים הירוקים בלבד; נכסי הסיכון מוקפאים (מחזיקים, בלי מכירה).' : 'De-leverage: 100% of the deposit routes to green assets only; risk assets are frozen.'}
           </p>
         )}
         <div className="space-y-2">

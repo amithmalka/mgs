@@ -14,6 +14,7 @@ import {
 } from '../lib/academy';
 import type { CourseData } from '../lib/academy';
 import type { Module, Lesson } from '../types';
+import { Icon } from '../components/shared/Icon';
 
 const emptyCourse: CourseData = { modules: [], lessons: [], setupNeeded: false };
 
@@ -107,11 +108,11 @@ export function AcademyPage() {
       <Card glow>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex-1 min-w-[200px]">
-            <h2 className="text-xl font-bold text-gold-gradient">🎓 {t('academyTitle', lang)}</h2>
+            <h2 className="text-xl font-bold text-gold-gradient">{t('academyTitle', lang)}</h2>
             <p className="text-[12px] text-text-muted mt-1.5">{t('academySubtitle', lang)}</p>
           </div>
           {isAdmin && (
-            <span className="text-[10px] px-3 py-1.5 rounded-full border border-gold-border text-gold">⚙ {t('adminMode', lang)}</span>
+            <span className="text-[10px] px-3 py-1.5 rounded-full border border-gold-border text-gold inline-flex items-center gap-1.5"><Icon name="settings" size={11} />{t('adminMode', lang)}</span>
           )}
         </div>
 
@@ -162,7 +163,7 @@ export function AcademyPage() {
         <>
           {course.error && (
             <Card>
-              <p className="text-sm font-semibold text-warning">⚠ {t('setupNeededTitle', lang)}</p>
+              <p className="text-sm font-semibold text-warning flex items-center gap-1.5"><Icon name="warning" size={14} />{t('setupNeededTitle', lang)}</p>
               <p className="text-[12px] text-text-muted mt-1.5">{t('setupNeededBody', lang)}</p>
               <p className="text-[10px] text-text-dim mt-2 font-mono break-all" dir="ltr">{course.error}</p>
             </Card>
@@ -221,7 +222,9 @@ export function AcademyPage() {
           <div className="w-full max-w-3xl glass-card rounded-2xl p-4" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-gold-light">{playing.title}</h3>
-              <button onClick={() => setPlaying(null)} className="text-text-muted hover:text-text text-lg leading-none">✕</button>
+              <button onClick={() => setPlaying(null)} className="text-text-muted hover:text-text leading-none">
+                <Icon name="close" size={18} />
+              </button>
             </div>
             <VideoPlayer url={playing.video_url} />
             {playing.description && <p className="text-[12px] text-text-muted mt-3">{playing.description}</p>}

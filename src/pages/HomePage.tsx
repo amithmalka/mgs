@@ -8,6 +8,7 @@ import { getTrackById, recommendTrackByAge } from '../constants/tracks';
 import { fetchPrices } from '../lib/marketData';
 import type { PriceInfo } from '../lib/marketData';
 import { smartDeposit } from '../utils/smartDeposit';
+import { Icon, Dot } from '../components/shared/Icon';
 
 // Simple, guided home screen — answers "what do I do this month?" in plain Hebrew,
 // with live prices and a dip-aware buy plan (buy more of what dropped).
@@ -53,7 +54,7 @@ export function HomePage() {
       {/* Greeting + track */}
       <Card glow>
         <p className="text-[11px] uppercase tracking-[0.2em] text-gold/70">{he ? 'המסלול שלך' : 'Your plan'}</p>
-        <h2 className="text-2xl font-bold text-gold-gradient mt-1">{track.icon} {he ? track.nameHe : track.nameEn}</h2>
+        <h2 className="text-2xl font-bold text-gold-gradient mt-1"><Dot color={track.dot} size={12} className="me-2" />{he ? track.nameHe : track.nameEn}</h2>
         <p className="text-[13px] text-text-muted mt-1">{he ? track.taglineHe : track.taglineEn}</p>
         <div className="mt-4 flex items-center gap-3 flex-wrap">
           <label className="text-xs text-text-muted">{he ? 'הגיל שלי:' : 'My age:'}</label>
@@ -80,14 +81,14 @@ export function HomePage() {
       </div>
 
       {/* Live market prices */}
-      <Card title={`📊 ${he ? 'מחירי השוק כרגע' : 'Live Market Prices'}`}>
+      <Card title={he ? 'מחירי השוק כרגע' : 'Live Market Prices'}>
         <div className="flex items-center justify-between mb-3 mt-1">
           <span className="text-[11px] text-text-dim">{he ? 'מחיר נוכחי ושינוי ב-30 יום לכל מדד' : 'Current price + 30-day change'}</span>
           <button onClick={refresh} disabled={loading} className="text-xs btn-gold px-3 py-1.5 rounded-lg disabled:opacity-50">
-            {loading ? (he ? 'טוען…' : 'Loading…') : (he ? '↻ רענן' : '↻ Refresh')}
+            {loading ? (he ? 'טוען…' : 'Loading…') : (he ? 'רענן' : 'Refresh')}
           </button>
         </div>
-        {err && <p className="text-[11px] text-danger mb-3">⚠ {he ? 'מחירים בזמן אמת עדיין לא מחוברים (נדרש מפתח נתוני שוק). בינתיים החלוקה לפי היעד.' : 'Live prices not connected yet.'}</p>}
+        {err && <p className="text-[11px] text-danger mb-3 flex items-center gap-1.5"><Icon name="warning" size={12} /> {he ? 'מחירים בזמן אמת עדיין לא מחוברים (נדרש מפתח נתוני שוק). בינתיים החלוקה לפי היעד.' : 'Live prices not connected yet.'}</p>}
         <div className="grid grid-cols-2 gap-2">
           {active.map(a => {
             const p = prices[a.assetClass]; const perf = p?.perf30;
@@ -112,7 +113,7 @@ export function HomePage() {
       </Card>
 
       {/* THE monthly action */}
-      <Card glow title={`✅ ${he ? 'מה לקנות החודש' : 'What to buy this month'}`}>
+      <Card glow title={he ? 'מה לקנות החודש' : 'What to buy this month'}>
         <div className="flex items-center gap-3 mt-1 mb-4 flex-wrap">
           <span className="text-sm text-text-muted">{he ? 'סכום ההפקדה החודשית:' : 'Monthly deposit:'}</span>
           <input type="number" value={deposit || ''} onChange={e => setMonthlyDeposit(Number(e.target.value) || 0)}
@@ -143,7 +144,7 @@ export function HomePage() {
               ))}
             </div>
             <p className="text-[11px] text-text-dim mt-3">
-              💡 {he ? 'פשוט קנו את הסכומים האלה בחשבון ההשקעות. אין צורך למכור כלום.' : 'Just buy these amounts. No need to sell anything.'}
+              <Icon name="bulb" size={13} className="me-1.5" />{he ? 'פשוט קנו את הסכומים האלה בחשבון ההשקעות. אין צורך למכור כלום.' : 'Just buy these amounts. No need to sell anything.'}
             </p>
           </>
         ) : (
@@ -153,7 +154,7 @@ export function HomePage() {
 
       {/* Progress to goal */}
       {goal.targetAmount > 0 && (
-        <Card title={he ? '🎯 הדרך ליעד שלך' : '🎯 Progress to your goal'}
+        <Card title={he ? 'הדרך ליעד שלך' : 'Progress to your goal'}
               subtitle={`${he ? 'יעד' : 'Target'}: ${formatCurrency(goal.targetAmount)}`}>
           <div className="mt-2">
             <div className="flex justify-between text-xs mb-1.5">

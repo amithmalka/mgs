@@ -4,6 +4,7 @@ import { t } from '../../i18n/translations';
 import { ASSET_META } from '../../constants/defaults';
 import { getTrackById } from '../../constants/tracks';
 import type { AssetClass } from '../../types';
+import { Dot } from '../shared/Icon';
 
 /**
  * Compact, system-wide banner showing the active track: identity, the
@@ -23,15 +24,15 @@ export function TrackBanner() {
   const aEnd = track.phaseADuration;
   const bEnd = track.phaseADuration + track.phaseBDuration;
   const segments = [
-    { dot: '🔴', color: '#ef4444', range: `0–${aEnd}`, label: t('phaseDepositSplit', lang), width: aEnd },
-    { dot: '🟢', color: '#10b981', range: `${aEnd}–${bEnd}`, label: t('phaseSchdOnly', lang), width: Math.max(0.001, bEnd - aEnd) },
-    { dot: '💸', color: '#C9A24B', range: `${bEnd}+`, label: t('phaseHarvest', lang), width: 8 },
+    { dotColor: 'red' as const, color: '#ef4444', range: `0–${aEnd}`, label: t('phaseDepositSplit', lang), width: aEnd },
+    { dotColor: 'green' as const, color: '#10b981', range: `${aEnd}–${bEnd}`, label: t('phaseSchdOnly', lang), width: Math.max(0.001, bEnd - aEnd) },
+    { dotColor: 'gold' as const, color: '#C9A24B', range: `${bEnd}+`, label: t('phaseHarvest', lang), width: 8 },
   ].filter(s => s.width > 0.01);
 
   return (
     <div className="glass-card rounded-2xl p-4 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-2xl">{track.icon}</span>
+        <Dot color={track.dot} size={14} />
         <div className="flex-1 min-w-[120px]">
           <p className="text-[9px] uppercase tracking-[0.15em] text-text-dim">{t('currentTrack', lang)}</p>
           <p className="text-sm font-bold text-gold">{lang === 'he' ? track.nameHe : track.nameEn}</p>
@@ -47,19 +48,19 @@ export function TrackBanner() {
         <div className="flex h-7 w-full overflow-hidden rounded-lg border border-surface-4">
           {segments.map(s => (
             <div
-              key={s.dot}
+              key={s.dotColor}
               className="flex items-center justify-center gap-1 text-[9px] font-medium text-white/90"
               style={{ flexGrow: s.width, background: s.color + 'cc' }}
               title={s.label}
             >
-              <span>{s.dot}</span>
+              <Dot color={s.dotColor} />
               <span className="hidden sm:inline">{s.range}</span>
             </div>
           ))}
         </div>
         <div className="flex justify-between mt-1 px-0.5">
           {segments.map(s => (
-            <span key={s.dot} className="text-[8px] text-text-dim">{s.label}</span>
+            <span key={s.dotColor} className="text-[8px] text-text-dim">{s.label}</span>
           ))}
         </div>
       </div>

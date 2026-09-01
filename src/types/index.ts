@@ -1,6 +1,8 @@
 // ── MJS asset universe (each bucket = synthetic Primary + physical Fallback) ─
-//   dbxb S&P 500 ×2 leveraged · eqqs NASDAQ 100          → 🔴 turbo/leverage
-//   p500 S&P 500 · xmwo MSCI World (Phase-B target)      → 🟢 vanilla/green
+//   dbxb S&P 500 x2 leveraged · eqqs NASDAQ 100      -> red (turbo/leverage)
+//   p500 S&P 500 · xmwo MSCI World (Phase-B target)  -> green (vanilla)
+import type { DotColor } from '../components/shared/Icon';
+
 export type AssetClass = 'dbxb' | 'eqqs' | 'p500' | 'xmwo';
 
 /** Role: green = vanilla anchor (Phase-B target); red = turbo/leveraged. */
@@ -25,7 +27,7 @@ export interface Track {
   nameEn: string;
   ageMin: number;
   ageMax: number;
-  icon: string;
+  dot: DotColor;
   taglineHe: string;
   taglineEn: string;
   /** Phase A target allocation, must sum to 100 */
@@ -151,6 +153,45 @@ export interface Lesson {
   duration: string;
   sort_order: number;
   created_at?: string;
+}
+
+// ── Custom portfolio (per-student stock picking) ───────────────────────────
+/** A stock on the admin's shared recommended list (Supabase). */
+export interface CustomStock {
+  id: string;
+  ticker: string;
+  name: string;
+  /** default expected annual return %, editable per student */
+  expected_return: number;
+  sort_order: number;
+  created_at?: string;
+}
+
+/** A holding in one student's personal custom portfolio (stored locally). */
+export interface CustomHolding {
+  id: string;
+  ticker: string;
+  name: string;
+  /** desired share of the portfolio, % */
+  targetPercent: number;
+  /** expected annual return %, seeded from live data but user-editable */
+  expectedReturn: number;
+  /** actual amount held today, ILS */
+  currentValue: number;
+  /** true when the row originated from the admin's shared list */
+  fromAdmin?: boolean;
+}
+
+/** One month of actual, self-reported progress. */
+export interface MonthlyEntry {
+  id: string;
+  /** 'YYYY-MM' */
+  month: string;
+  /** amount actually deposited that month, ILS */
+  deposit: number;
+  /** actual total portfolio value at month end, ILS */
+  value: number;
+  note?: string;
 }
 
 export interface ETFRecommendation {

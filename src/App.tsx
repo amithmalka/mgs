@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TabBar } from './components/layout/TabBar';
-import type { Tab } from './components/layout/TabBar';
+import { Sidebar, TopBar } from './components/layout/Sidebar';
+import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { TracksPage } from './pages/TracksPage';
 import { AcademyPage } from './pages/AcademyPage';
@@ -9,6 +9,7 @@ import { TransactionsPage } from './pages/TransactionsPage';
 import { SimulationPage } from './pages/SimulationPage';
 import { DividendsPage } from './pages/DividendsPage';
 import { GoalsPage } from './pages/GoalsPage';
+import { CustomInvestPage } from './pages/CustomInvestPage';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
 import { t } from './i18n/translations';
@@ -22,10 +23,12 @@ const pages: Record<Tab, React.FC> = {
   simulation: SimulationPage,
   dividends: DividendsPage,
   goals: GoalsPage,
+  custom: CustomInvestPage,
 };
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [menuOpen, setMenuOpen] = useState(false);
   const { allocations, addNotification, transitionThreshold } = useStore();
   const { lang } = useLangStore();
 
@@ -47,15 +50,27 @@ function App() {
 
   const ActivePage = pages[activeTab];
 
+  const isRtl = lang === 'he';
+
   return (
-    <div className="min-h-screen noise-bg relative">
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-8">
-        <ActivePage />
-      </main>
-      <footer className="relative z-10 text-center py-6 text-[10px] text-text-dim tracking-wider uppercase">
-        {t('disclaimer', lang)}
-      </footer>
+    <div className="min-h-screen noise-bg relative" dir={isRtl ? 'rtl' : 'ltr'}>
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+      />
+
+      {/* Leave room for the sidebar once it becomes permanent (lg and up). */}
+      <div className={isRtl ? 'lg:pr-[248px]' : 'lg:pl-[248px]'}>
+        <TopBar onOpen={() => setMenuOpen(true)} />
+        <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
+          <ActivePage />
+        </main>
+        <footer className="relative z-10 text-center py-6 text-[10px] text-text-dim tracking-wider uppercase">
+          {t('disclaimer', lang)}
+        </footer>
+      </div>
     </div>
   );
 }

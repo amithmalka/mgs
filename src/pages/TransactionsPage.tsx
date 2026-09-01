@@ -6,6 +6,7 @@ import { Card } from '../components/layout/Card';
 import { formatCurrency, formatDate } from '../utils/format';
 import { calcRebalance } from '../utils/rebalance';
 import type { AssetClass } from '../types';
+import { Icon } from '../components/shared/Icon';
 
 export function TransactionsPage() {
   const { transactions, addTransaction, deleteTransaction, allocations, currentPortfolioValue, monthlyDeposit } = useStore();
@@ -104,7 +105,7 @@ export function TransactionsPage() {
                   <span className={`text-sm font-bold ${tx.type === 'deposit' ? 'text-success' : tx.type === 'withdrawal' ? 'text-danger' : 'text-info'}`}>
                     {tx.type === 'deposit' ? '+' : tx.type === 'withdrawal' ? '-' : ''}{formatCurrency(tx.amount)}
                   </span>
-                  <button onClick={() => deleteTransaction(tx.id)} className="text-text-dim hover:text-danger text-xs transition-colors">✕</button>
+                  <button onClick={() => deleteTransaction(tx.id)} className="text-text-dim hover:text-danger transition-colors inline-flex"><Icon name="close" size={13} /></button>
                 </div>
               </div>
             ))}

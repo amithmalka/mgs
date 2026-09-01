@@ -7,7 +7,7 @@ import type { SimulationResult, AllocationTarget, AssetClass, AssetSimRow } from
  * This is the mathematically correct formula. The naive r/12 approximation
  * overstates returns, especially at high annual rates.
  */
-function toMonthlyRate(annualPct: number): number {
+export function toMonthlyRate(annualPct: number): number {
   return Math.pow(1 + annualPct / 100, 1 / 12) - 1;
 }
 
@@ -160,12 +160,12 @@ export function simulateByAsset(
  * Phase-aware "traffic light" (רמזור) simulation for an MGS track.
  *
  * Three phases, measured in years from the start of investing:
- *   🔴 red    (year ≤ yellowStartYear):  monthly deposit split across the track
+ *   red       (year ≤ yellowStartYear):  monthly deposit split across the track
  *                                        allocation; every asset grows.
- *   🟡 yellow (yellowStartYear < y ≤ greenStartYear): the entire monthly deposit
+ *   yellow (yellowStartYear < y ≤ greenStartYear): the entire monthly deposit
  *                                        flows into the track's GREEN assets only
  *                                        (de-risk); others keep growing, no new money.
- *   🟢 green  (year > greenStartYear):   no new deposits. A 4% withdrawal is
+ *   green   (year > greenStartYear):   no new deposits. A 4% withdrawal is
  *                                        taken at the end of each year as income.
  *
  * Withdrawals are removed proportionally from each asset. Growth is reported net

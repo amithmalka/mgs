@@ -5,6 +5,7 @@ import { Card } from '../components/layout/Card';
 import { formatCurrency } from '../utils/format';
 import { simulateByAsset } from '../utils/math';
 import { ASSET_RETURNS, calcWeightedReturn } from '../constants/defaults';
+import { Icon } from '../components/shared/Icon';
 
 const MILESTONE_YEARS = [5, 10, 15, 20, 25, 30] as const;
 
@@ -114,8 +115,8 @@ export function GoalsPage() {
         {depositCount === 0 && (
           <p className="text-xs text-text-dim mt-3 pt-3 border-t border-surface-4">
             {lang === 'he'
-              ? '💡 הוסף פעולות בדף "פעולות" כדי לעקוב אחר קצב ההתקדמות שלך'
-              : '💡 Add transactions in the Transactions tab to track your progress rate'}
+              ? 'הוסף פעולות בדף "פעולות" כדי לעקוב אחר קצב ההתקדמות שלך'
+              : 'Add transactions in the Transactions tab to track your progress rate'}
           </p>
         )}
       </Card>
@@ -158,7 +159,7 @@ export function GoalsPage() {
                     }`}
                   >
                     {reached ? (
-                      <span className="text-gold text-xl font-bold">✓</span>
+                      <Icon name="check" size={18} className="text-gold" />
                     ) : (
                       <>
                         <span className={`text-[9px] uppercase tracking-wider ${isNext ? 'text-gold/70' : 'text-text-dim'}`}>
@@ -214,14 +215,14 @@ export function GoalsPage() {
                         <p className="text-[9px] text-text-dim mt-1">
                           {isNext
                             ? (lang === 'he' ? `עוד ${formatCurrency(remaining)} · ${Math.round(progress)}%` : `${formatCurrency(remaining)} to go · ${Math.round(progress)}%`)
-                            : (lang === 'he' ? `🔒 ${formatCurrency(remaining)} לפתיחה` : `🔒 ${formatCurrency(remaining)} to unlock`)}
+                            : (lang === 'he' ? `${formatCurrency(remaining)} לפתיחה` : `${formatCurrency(remaining)} to unlock`)}
                         </p>
                       </>
                     )}
 
                     {reached && (
                       <p className="text-[9px] text-gold mt-1 font-medium">
-                        {lang === 'he' ? '✓ הושג!' : '✓ Reached!'}
+                        <span className="inline-flex items-center gap-1"><Icon name="check" size={11} />{lang === 'he' ? 'הושג!' : 'Reached!'}</span>
                       </p>
                     )}
                   </div>

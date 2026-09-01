@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card } from '../layout/Card';
 import { listStudents, inviteStudent, banStudent, deleteStudent } from '../../lib/adminApi';
 import type { Student } from '../../lib/adminApi';
+import { Icon } from '../shared/Icon';
 
 /** Admin-only panel: view / invite / block / remove students (course buyers). */
 export function StudentsManager() {
@@ -42,7 +43,7 @@ export function StudentsManager() {
   const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('he-IL') : '—';
 
   return (
-    <Card title={`👥 ניהול תלמידים${students.length ? ` (${students.length})` : ''}`}>
+    <Card title={`ניהול תלמידים${students.length ? ` (${students.length})` : ''}`}>
       {/* Invite */}
       <div className="flex flex-wrap items-center gap-2 mt-2 mb-4">
         <input
@@ -55,7 +56,7 @@ export function StudentsManager() {
         </button>
       </div>
       {msg && <p className="text-[11px] text-success mb-3">{msg}</p>}
-      {err && <p className="text-[11px] text-danger mb-3">⚠ {err}</p>}
+      {err && <p className="text-[11px] text-danger mb-3 flex items-center gap-1.5"><Icon name="warning" size={12} />{err}</p>}
 
       {loading ? (
         <p className="text-sm text-text-muted text-center py-4">טוען…</p>
