@@ -1,19 +1,22 @@
-import { useStore } from '../store';
-import { useLangStore } from '../store/langStore';
-import { Card } from '../components/layout/Card';
-import { formatCurrency } from '../utils/format';
-import { Disclaimer } from '../components/shared/Disclaimer';
-import { Collapsible } from '../components/layout/Collapsible';
-import { TransactionsPage } from './TransactionsPage';
-import { MonthlyTracker } from '../components/custom/MonthlyTracker';
-import { calcWeightedReturn } from '../constants/defaults';
+import { useStore } from '../../store';
+import { useLangStore } from '../../store/langStore';
+import { Card } from '../layout/Card';
+import { formatCurrency } from '../../utils/format';
+import { Collapsible } from '../layout/Collapsible';
+import { TransactionsPage } from '../../pages/TransactionsPage';
+import { MonthlyTracker } from '../custom/MonthlyTracker';
+import { calcWeightedReturn } from '../../constants/defaults';
 
 /**
- * Tracking: what has actually happened, how fast it is moving, and where it
- * ends up. Deposits, the month-by-month log and the full projection used to be
+ * Tracking, embedded inside whichever method is open.
+ *
+ * Each method gets its own copy so its simulation and its progress sit
+ * together; mixing both methods on one tracking screen was the confusing part.
+ * What is tracked — deposits, the monthly log, transactions — is the same
+ * either way, since it records what actually happened. Deposits, the month-by-month log and the full projection used to be
  * three separate menu items answering one question between them.
  */
-export function TrackingPage() {
+export function TrackingSection() {
   const { simulationParams, currentPortfolioValue, allocations, goal, getProfit, getTotalDeposited } = useStore();
   const { lang } = useLangStore();
   const he = lang !== 'en';
@@ -62,7 +65,6 @@ export function TrackingPage() {
         <TransactionsPage />
       </Collapsible>
 
-      <Disclaimer variant="full" />
     </div>
   );
 }

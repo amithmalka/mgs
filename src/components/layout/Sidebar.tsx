@@ -6,8 +6,8 @@ import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
 export type Tab =
-  | 'dashboard' | 'tracking' | 'dividends' | 'academy'
-  | 'portfolio' | 'transactions' | 'simulation' | 'goals' | 'custom';
+  | 'dashboard' | 'apartment' | 'general' | 'custom' | 'dividends' | 'academy'
+  | 'portfolio' | 'transactions' | 'simulation' | 'goals';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -22,8 +22,9 @@ const GROUPS: NavGroup[] = [
     key: 'navGroupMain',
     items: [
       { id: 'dashboard', key: 'tabHome', icon: 'home' },
-      { id: 'tracking', key: 'tabTracking', icon: 'chart' },
-      { id: 'simulation', key: 'tabSimulation', icon: 'target' },
+      // One tab per method — each carries its own projection and tracking.
+      { id: 'apartment', key: 'tabMethodApartment', icon: 'route' },
+      { id: 'general', key: 'tabMethodGeneral', icon: 'target' },
       { id: 'custom', key: 'tabCustom', icon: 'custom' },
       { id: 'dividends', key: 'tabDividends', icon: 'cash' },
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },

@@ -82,8 +82,32 @@ export function SimulationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [p.initialDeposit, p.monthlyDeposit, liveAllocations, activeScenario, track.id],
   );
-  const monthlyReturnPct = (Math.pow(1 + weightedReturns[activeScenario] / 100, 1 / 12) - 1) * 100;
   const monthsOfYear = monthlyData.filter(r => r.year === monthlyYear);
+
+  /**
+   * The monthly return actually in force in the displayed year.
+   *
+   * This used to convert the Phase-A weighted return once and show it above a
+   * table spanning all 40 years, which is only true while the track is intact.
+   * From the yellow phase the portfolio is consolidated into MSCI World and
+   * grows at ITS rate instead, so the real figure drops from about 1.0% to
+   * 0.64%. It is now backed out of the simulated rows:
+   *   value = (prev + deposit) x (1 + r) - withdrawal
+   */
+  const monthlyReturnPct = useMemo(() => {
+    let sum = 0, n = 0;
+    for (const r of monthsOfYear) {
+      const prev = monthlyData[r.m - 2];
+      const base = (prev ? prev.value : 0) + (r.deposited - (prev ? prev.deposited : 0));
+      if (base <= 0) continue;
+      sum += (r.value + r.income) / base - 1;
+      n++;
+    }
+    return n ? (sum / n) * 100 : 0;
+  }, [monthsOfYear, monthlyData]);
+
+  /** What that monthly rate compounds to over a year. */
+  const monthlyAsAnnualPct = (Math.pow(1 + monthlyReturnPct / 100, 12) - 1) * 100;
   const MONTH_NAMES_HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
   return (
@@ -297,8 +321,11 @@ export function SimulationPage() {
               className="w-16 text-center py-1" />
           </div>
           <span className="text-[11px] text-text-dim">
-            {lang === 'he' ? 'תשואה חודשית ממוצעת:' : 'Avg monthly return:'}{' '}
+            {lang === 'he' ? `תשואה חודשית בשנה ${monthlyYear}:` : `Monthly return in year ${monthlyYear}:`}{' '}
             <span className="text-gold font-semibold">{monthlyReturnPct.toFixed(2)}%</span>
+            <span className="text-text-dim">
+              {' '}({monthlyAsAnnualPct.toFixed(1)}%{lang === 'he' ? ' לשנה' : '/yr'})
+            </span>
           </span>
         </div>
 

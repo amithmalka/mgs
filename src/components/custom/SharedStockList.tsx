@@ -8,6 +8,7 @@ import { createStock, updateStock, deleteStock, reorderStocks } from '../../lib/
 import type { StockListData } from '../../lib/customStocks';
 import type { PriceInfo } from '../../lib/marketData';
 import type { CustomStock } from '../../types';
+import { SymbolSearch } from './SymbolSearch';
 
 interface Props {
   list: StockListData;
@@ -192,14 +193,19 @@ function StockForm({ initial, onClose, onSaved }: { initial: Partial<CustomStock
       <div onClick={e => e.stopPropagation()} className="w-full max-w-md glass-card rounded-2xl p-5" dir={lang === 'he' ? 'rtl' : 'ltr'}>
         <h3 className="text-sm font-bold text-gold-light mb-3">{isEdit ? t('editStock', lang) : t('addStock', lang)}</h3>
         <div className="space-y-3">
-          <label className="block">
-            <span className="block text-[10px] text-text-muted mb-1">{t('ticker', lang)}</span>
-            <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} placeholder="AAPL" className="w-full" dir="ltr" autoFocus />
-          </label>
-          <label className="block">
-            <span className="block text-[10px] text-text-muted mb-1">{t('stockName', lang)}</span>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full" />
-          </label>
+          {/* Search by name, so an exact ticker never has to be known. */}
+          <SymbolSearch onPick={hit => { setTicker(hit.symbol.toUpperCase()); setName(hit.name); }} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="block text-[10px] text-text-muted mb-1">{t('ticker', lang)}</span>
+              <input type="text" value={ticker} onChange={e => setTicker(e.target.value)} placeholder="AAPL" className="w-full" dir="ltr" />
+            </label>
+            <label className="block">
+              <span className="block text-[10px] text-text-muted mb-1">{t('stockName', lang)}</span>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full" />
+            </label>
+          </div>
           <label className="block">
             <span className="block text-[10px] text-text-muted mb-1">{t('expectedReturn', lang)}</span>
             <input type="number" step={0.5} value={ret} onChange={e => setRet(e.target.value)} className="w-full" />
