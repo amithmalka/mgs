@@ -8,8 +8,8 @@ import { Icon } from '../components/shared/Icon';
 import { formatCurrency } from '../utils/format';
 import { fetchStocks } from '../lib/customStocks';
 import type { StockListData } from '../lib/customStocks';
-import { fetchPrices } from '../lib/marketData';
-import type { PriceInfo } from '../lib/marketData';
+import { fetchPrices, fetchHistory } from '../lib/marketData';
+import type { PriceInfo, HistoryInfo } from '../lib/marketData';
 import { HoldingsEditor } from '../components/custom/HoldingsEditor';
 import { SharedStockList } from '../components/custom/SharedStockList';
 import { CustomProjection } from '../components/custom/CustomProjection';
@@ -29,6 +29,7 @@ export function CustomInvestPage() {
   const [list, setList] = useState<StockListData>(emptyList);
   const [loadingList, setLoadingList] = useState(true);
   const [prices, setPrices] = useState<Record<string, PriceInfo>>({});
+  const [history, setHistory] = useState<Record<string, HistoryInfo>>({});
   const [pricesError, setPricesError] = useState('');
   const [loadingPrices, setLoadingPrices] = useState(false);
 
@@ -55,6 +56,20 @@ export function CustomInvestPage() {
   }, [tickers]);
 
   useEffect(() => { refreshPrices(); }, [refreshPrices]);
+
+  const heldTickers = useMemo(
+    () => [...new Set(holdings.map(h => h.ticker.trim().toUpperCase()).filter(Boolean))],
+    [holdings]
+  );
+
+  // Real long-run returns, for the holdings only — each symbol costs a credit.
+  const refreshHistory = useCallback(async () => {
+    if (heldTickers.length === 0) { setHistory({}); return; }
+    try { setHistory(await fetchHistory(heldTickers, 10)); }
+    catch { /* the editor simply shows no history */ }
+  }, [heldTickers]);
+
+  useEffect(() => { refreshHistory(); }, [refreshHistory]);
 
   const totalValue = holdings.reduce((s, h) => s + h.currentValue, 0);
   const totalTarget = holdings.reduce((s, h) => s + h.targetPercent, 0);
@@ -113,7 +128,7 @@ export function CustomInvestPage() {
       </Card>
 
       {/* ── The student's own portfolio ──────────────────────────────────── */}
-      <HoldingsEditor prices={prices} />
+      <HoldingsEditor prices={prices} history={history} />
 
       {/* ── Admin's shared recommended list ──────────────────────────────── */}
       <SharedStockList

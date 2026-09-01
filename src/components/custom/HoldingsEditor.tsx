@@ -5,10 +5,36 @@ import { t } from '../../i18n/translations';
 import { Card } from '../layout/Card';
 import { Icon } from '../shared/Icon';
 import { formatCurrency } from '../../utils/format';
-import type { PriceInfo } from '../../lib/marketData';
+import { fetchHistory } from '../../lib/marketData';
+import type { PriceInfo, HistoryInfo } from '../../lib/marketData';
+
+/**
+ * Pick the expected return to seed a holding with, from real history.
+ *
+ * Prefers the 10-year CAGR, then 5, then 3, then whatever span exists. Longer
+ * windows are steadier: a 1-year number is mostly noise. Falls back to 8% when
+ * there is no usable history at all.
+ */
+export function seedReturn(h?: HistoryInfo): { value: number; basis: string } {
+  if (h && !h.error) {
+    if (typeof h.y10 === 'number') return { value: h.y10, basis: '10Y' };
+    if (typeof h.y5 === 'number') return { value: h.y5, basis: '5Y' };
+    if (typeof h.y3 === 'number') return { value: h.y3, basis: '3Y' };
+    if (typeof h.full === 'number' && (h.yearsAvailable ?? 0) >= 1) {
+      return { value: h.full, basis: `${h.yearsAvailable}Y` };
+    }
+  }
+  return { value: 8, basis: 'default' };
+}
+
+/** Clamp a modelled return to a band a long projection can survive. */
+const clampReturn = (n: number) => Math.max(-20, Math.min(30, Math.round(n * 10) / 10));
 
 /** The student's own stock list: weights, expected returns and amounts held. */
-export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }) {
+export function HoldingsEditor({ prices, history }: {
+  prices: Record<string, PriceInfo>;
+  history: Record<string, HistoryInfo>;
+}) {
   const { lang } = useLangStore();
   const {
     holdings, addHolding, updateHolding, removeHolding, moveHolding,
@@ -22,20 +48,30 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
   const totalValue = holdings.reduce((s, h) => s + h.currentValue, 0);
   const totalTarget = holdings.reduce((s, h) => s + h.targetPercent, 0);
 
-  const add = () => {
+  const [adding, setAdding] = useState(false);
+
+  const add = async () => {
     const sym = ticker.trim().toUpperCase();
     setErr('');
     if (!sym) { setErr(t('tickerRequired', lang)); return; }
     if (holdings.some(h => h.ticker.toUpperCase() === sym)) { setErr(t('tickerExists', lang, { ticker: sym })); return; }
-    // Seed the expected return from live 30-day performance when we have it,
-    // annualised — a starting point the student is meant to adjust, not a forecast.
-    const perf = prices[sym]?.perf30;
-    const seeded = typeof perf === 'number' ? Math.round(perf * 12 * 10) / 10 : 8;
+
+    // Seed from the asset's REAL long-run return. Annualising a single month
+    // (the old behaviour) turned one random month into a decades-long forecast.
+    setAdding(true);
+    let seeded = { value: 8, basis: 'default' };
+    try {
+      const h = await fetchHistory([sym], 10);
+      if (h[sym]?.error) { setErr(t('noHistoryFor', lang, { ticker: sym })); }
+      seeded = seedReturn(h[sym]);
+    } catch { /* keep the 8% fallback */ }
+    finally { setAdding(false); }
+
     addHolding({
       ticker: sym,
       name: name.trim() || sym,
       targetPercent: 0,
-      expectedReturn: Math.max(-50, Math.min(40, seeded)),
+      expectedReturn: clampReturn(seeded.value),
       currentValue: 0,
     });
     setTicker(''); setName('');
@@ -69,8 +105,9 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
           <input type="text" value={name} onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && add()} placeholder={t('optional', lang)} className="w-full" />
         </label>
-        <button onClick={add} className="text-[11px] btn-gold px-3 py-2 rounded-lg flex items-center gap-1.5">
-          <Icon name="plus" size={13} /> {t('addStock', lang)}
+        <button onClick={add} disabled={adding}
+          className="text-[11px] btn-gold px-3 py-2 rounded-lg flex items-center gap-1.5 disabled:opacity-50">
+          <Icon name="plus" size={13} /> {adding ? t('loading', lang) : t('addStock', lang)}
         </button>
       </div>
       {err && <p className="text-[11px] text-danger mb-3">{err}</p>}
@@ -80,13 +117,14 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[620px]">
+            <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr className="border-b border-surface-4 text-text-muted text-[11px]">
                   <th className="text-start py-2 w-16">{t('order', lang)}</th>
                   <th className="text-start py-2">{t('ticker', lang)}</th>
                   <th className="text-end py-2">{t('livePrice', lang)}</th>
                   <th className="text-end py-2">{t('targetPercent', lang)}</th>
+                  <th className="text-end py-2">{t('historicalReturn', lang)}</th>
                   <th className="text-end py-2">{t('expectedReturn', lang)}</th>
                   <th className="text-end py-2">{t('heldNow', lang)}</th>
                   <th className="text-end py-2">{t('actualPercent', lang)}</th>
@@ -96,6 +134,9 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
               <tbody>
                 {holdings.map((h, i) => {
                   const p = prices[h.ticker.toUpperCase()];
+                  const hist = history[h.ticker.toUpperCase()];
+                  const seeded = seedReturn(hist);
+                  const hasHist = seeded.basis !== 'default';
                   const actual = totalValue > 0 ? (h.currentValue / totalValue) * 100 : 0;
                   return (
                     <tr key={h.id} className="border-b border-surface-3/50">
@@ -130,6 +171,24 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
                           onChange={e => updateHolding(h.id, { targetPercent: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
                           className="w-[70px] text-end" />
                       </td>
+                      <td className="py-2 text-end text-[11px]" dir="ltr">
+                        {hasHist ? (
+                          <>
+                            <span style={{ color: seeded.value >= 0 ? '#34D399' : '#F87171' }}>
+                              {seeded.value > 0 ? '+' : ''}{seeded.value.toFixed(1)}%
+                            </span>
+                            <span className="block text-text-dim">{seeded.basis}</span>
+                            {clampReturn(seeded.value) !== h.expectedReturn && (
+                              <button
+                                onClick={() => updateHolding(h.id, { expectedReturn: clampReturn(seeded.value) })}
+                                className="mt-0.5 text-[9px] px-1.5 py-0.5 rounded border border-gold-border text-gold hover:bg-gold-muted"
+                              >
+                                {t('useHistorical', lang)}
+                              </button>
+                            )}
+                          </>
+                        ) : <span className="text-text-dim">—</span>}
+                      </td>
                       <td className="py-2 text-end">
                         <input type="number" min={-50} max={40} step={0.5} value={h.expectedReturn}
                           onChange={e => updateHolding(h.id, { expectedReturn: Number(e.target.value) || 0 })}
@@ -152,6 +211,7 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
                 })}
               </tbody>
               <tfoot>
+                {/* Columns: order · ticker · price · target · actual return · expected · held · actual% · delete */}
                 <tr className="text-[11px]">
                   <td />
                   <td className="py-2 text-text-muted">{t('total', lang)}</td>
@@ -160,12 +220,15 @@ export function HoldingsEditor({ prices }: { prices: Record<string, PriceInfo> }
                     {totalTarget.toFixed(1)}%
                   </td>
                   <td />
+                  <td />
                   <td className="py-2 text-end text-gold font-bold">{formatCurrency(totalValue)}</td>
                   <td colSpan={2} />
                 </tr>
               </tfoot>
             </table>
           </div>
+
+          <p className="text-[10px] text-text-dim mt-3 leading-relaxed">{t('historyNote', lang)}</p>
 
           <button onClick={distributeEvenly}
             className="mt-3 text-[11px] px-3 py-1.5 rounded-lg border border-surface-4 text-text-muted hover:text-gold hover:border-gold-border transition-colors">
