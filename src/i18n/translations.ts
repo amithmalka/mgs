@@ -158,6 +158,8 @@ export const translations = {
   tabTracks: { en: 'Tracks', he: 'מסלולים' },
   // The named method — the strategy that replaces buying an apartment.
   // A second, general method is planned alongside it.
+  chooseMethod: { en: 'Choose your method', he: 'בחרו את השיטה' },
+  chooseMethodSub: { en: 'Two different methods, for two different goals. Pick the one that matches yours.', he: 'שתי שיטות שונות, לשתי מטרות שונות. בחרו את זו שמתאימה לכם.' },
   methodName: { en: 'Instead of an Apartment', he: 'במקום דירה' },
   methodTagline: { en: 'For anyone weighing up buying a property — and choosing to invest instead.', he: 'למי ששוקל לקנות דירה — ובוחר להשקיע במקום.' },
   methodPhases: { en: '25 years of deposits · 5 years consolidating · income from year 31', he: '25 שנות הפקדה · 5 שנות ייצוב · הכנסה משנה 31' },

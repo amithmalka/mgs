@@ -10,6 +10,8 @@ import { ASSET_RETURNS, ASSET_META, WITHDRAW_RATE } from '../constants/defaults'
 import { TRACKS, getTrackById, recommendTrackByAge, trackToAllocations, trackPhaseOpts } from '../constants/tracks';
 import type { AssetClass, Track } from '../types';
 import { Icon, Dot } from '../components/shared/Icon';
+import { STRATEGIES } from '../constants/strategies';
+import { EngineTrack } from '../components/features/EngineTrack';
 
 function assetLabel(ac: AssetClass): string {
   return ASSET_META[ac].label;
@@ -29,7 +31,7 @@ function AllocationBar({ track }: { track: Track }) {
 }
 
 export function TracksPage() {
-  const { userAge, selectedTrackId, setUserAge, setSelectedTrack, simulationParams } = useStore();
+  const { userAge, selectedTrackId, setUserAge, setSelectedTrack, simulationParams, selectedStrategyId, setSelectedStrategy } = useStore();
   const { lang } = useLangStore();
   const isRtl = lang === 'he';
 
@@ -55,6 +57,42 @@ export function TracksPage() {
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
 
+      {/* ── Method chooser ──────────────────────────────────────────────── */}
+      <Card glow>
+        <h2 className="text-xl font-bold text-gold-gradient">{t('chooseMethod', lang)}</h2>
+        <p className="text-[12px] text-text-muted mt-1.5">{t('chooseMethodSub', lang)}</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          {STRATEGIES.map(st => {
+            const active = selectedStrategyId === st.id;
+            return (
+              <button
+                key={st.id}
+                onClick={() => setSelectedStrategy(st.id)}
+                className={`text-start p-4 rounded-2xl border transition-all ${
+                  active ? 'border-gold-border bg-gold-muted' : 'border-surface-4 bg-surface-2 hover:border-gold-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: '#D4AF37', opacity: active ? 1 : 0.3 }} />
+                  <span className={`text-[14px] font-bold ${active ? 'text-gold' : 'text-text'}`}>
+                    {isRtl ? st.nameHe : st.nameEn}
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted mt-1.5 leading-snug">{isRtl ? st.taglineHe : st.taglineEn}</p>
+                <p className="text-[10px] text-text-dim mt-1.5 leading-snug">{isRtl ? st.forWhoHe : st.forWhoEn}</p>
+                {(isRtl ? st.phasesHe : st.phasesEn) && (
+                  <p className="text-[10px] text-gold/70 mt-1.5">{isRtl ? st.phasesHe : st.phasesEn}</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {selectedStrategyId === 'wealth' ? <EngineTrack /> : (
+      <>
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <Card glow>
         <p className="text-[10px] uppercase tracking-[0.2em] text-gold/70">{t('methodName', lang)}</p>
@@ -209,7 +247,8 @@ export function TracksPage() {
 
       {/* ── Apartment vs investment ─────────────────────────────────────── */}
       <ApartmentComparison />
-
+      </>
+      )}
     </div>
   );
 }

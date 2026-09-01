@@ -14,6 +14,8 @@ import type {
 } from '../types';
 import { DEFAULT_SIMULATION, DEFAULT_GOAL, TRANSITION_THRESHOLD } from '../constants/defaults';
 import { DEFAULT_TRACK_ID, getTrackById, recommendTrackByAge, trackToAllocations } from '../constants/tracks';
+import { DEFAULT_STRATEGY_ID } from '../constants/strategies';
+import type { StrategyId } from '../constants/strategies';
 
 const DEFAULT_AGE = 30;
 const DEFAULT_TRACK_ALLOCATIONS = trackToAllocations(getTrackById(DEFAULT_TRACK_ID));
@@ -29,6 +31,8 @@ export interface StoreState {
   // Track (מסלול) selection
   userAge: number;
   selectedTrackId: TrackId;
+  /** which investing method is active — each has its own tracks */
+  selectedStrategyId: StrategyId;
 
   // Transactions
   transactions: Transaction[];
@@ -55,6 +59,7 @@ export interface StoreState {
 
   setUserAge: (age: number) => void;
   setSelectedTrack: (id: TrackId) => void;
+  setSelectedStrategy: (id: StrategyId) => void;
 
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
@@ -86,6 +91,7 @@ export const useStore = create<StoreState>()(
 
       userAge: DEFAULT_AGE,
       selectedTrackId: DEFAULT_TRACK_ID,
+      selectedStrategyId: DEFAULT_STRATEGY_ID,
 
       transactions: [],
       simulationParams: DEFAULT_SIMULATION,
@@ -144,6 +150,8 @@ export const useStore = create<StoreState>()(
       },
 
       // Manual track override — keeps the user's age but switches allocations.
+      setSelectedStrategy: (id) => set({ selectedStrategyId: id }),
+
       setSelectedTrack: (id) => {
         const track = getTrackById(id);
         const allocations = trackToAllocations(track, get().allocations);
