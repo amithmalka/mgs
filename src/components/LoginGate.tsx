@@ -30,9 +30,18 @@ export function LoginGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  // Arriving from a recovery link must offer a NEW password, not just sign in.
+  // Supabase puts the token in the URL hash and fires PASSWORD_RECOVERY.
+  const [changingPassword, setChangingPassword] = useState(
+    /type=recovery/.test(window.location.hash) || /type=recovery/.test(window.location.search)
+  );
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      if (event === 'PASSWORD_RECOVERY') setChangingPassword(true);
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -71,19 +80,25 @@ export function LoginGate({ children }: { children: ReactNode }) {
   if (!ready) return null;
 
   if (session) {
+    const chip: React.CSSProperties = {
+      fontSize: 11, color: '#C9A24B', background: 'rgba(6,6,5,0.6)',
+      border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
+    };
     return (
       <>
-        <button
-          onClick={() => supabase.auth.signOut()}
-          title="יציאה"
-          style={{
-            position: 'fixed', top: 10, insetInlineStart: 10, zIndex: 60,
-            fontSize: 11, color: '#C9A24B', background: 'rgba(6,6,5,0.6)',
-            border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
-          }}
-        >
-          יציאה
-        </button>
+        <div style={{ position: 'fixed', top: 10, insetInlineStart: 10, zIndex: 60, display: 'flex', gap: 6 }}>
+          <button onClick={() => supabase.auth.signOut()} title="יציאה" style={chip}>יציאה</button>
+          <button onClick={() => setChangingPassword(true)} title="שינוי סיסמה" style={chip}>סיסמה</button>
+        </div>
+        {changingPassword && (
+          <SetPassword
+            onDone={() => {
+              setChangingPassword(false);
+              // Drop the recovery token from the address bar.
+              window.history.replaceState(null, '', window.location.pathname);
+            }}
+          />
+        )}
         {children}
       </>
     );
@@ -139,6 +154,71 @@ export function LoginGate({ children }: { children: ReactNode }) {
         <p style={{ color: '#5C574D', fontSize: '0.72rem', textAlign: 'center', marginTop: 18 }}>
           הגישה מיועדת לתלמידי קורס MGS בלבד
         </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Set a new password. Shown after following a recovery link, and reachable any
+ * time from the "סיסמה" chip — the app had no way to change a password before,
+ * which left a forgotten one only recoverable through email that may not arrive.
+ */
+function SetPassword({ onDone }: { onDone: () => void }) {
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [ok, setOk] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (pw.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
+    if (pw !== pw2) { setError('הסיסמאות אינן תואמות'); return; }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw });
+      if (error) throw error;
+      setOk(true);
+      setTimeout(onDone, 1400);
+    } catch (err) {
+      setError((err as Error).message || 'אירעה שגיאה, נסו שוב');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div dir="rtl" style={{
+      position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', padding: 24, background: 'rgba(0,0,0,0.8)',
+    }}>
+      <div className="w-full max-w-sm rounded-2xl p-7" style={{
+        background: 'rgba(18,17,15,0.95)', backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(212,175,55,0.18)',
+      }}>
+        <p style={{ color: '#C9C4B8', fontSize: '0.95rem', marginBottom: 16 }}>בחירת סיסמה חדשה</p>
+
+        {ok ? (
+          <p style={{ color: '#7FB58A', fontSize: '0.85rem' }}>הסיסמה עודכנה. אפשר להתחבר איתה מכל מחשב.</p>
+        ) : (
+          <form onSubmit={save} className="space-y-3">
+            <input type="password" required autoFocus value={pw} onChange={e => { setPw(e.target.value); setError(''); }}
+              placeholder="סיסמה חדשה" className="w-full rounded-lg px-4 py-3 text-sm" style={inputStyle} />
+            <input type="password" required value={pw2} onChange={e => { setPw2(e.target.value); setError(''); }}
+              placeholder="אישור סיסמה" className="w-full rounded-lg px-4 py-3 text-sm" style={inputStyle} />
+            {error && <p style={{ color: '#F87171', fontSize: '0.8rem' }}>{error}</p>}
+            <button type="submit" disabled={busy}
+              className="w-full rounded-lg py-3 text-sm font-semibold disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg,#B8941F,#D4AF37,#F5E6A3)', color: '#1a1505', border: 'none', cursor: 'pointer' }}>
+              {busy ? 'שומר…' : 'שמירת סיסמה'}
+            </button>
+            <button type="button" onClick={onDone}
+              style={{ width: '100%', color: '#9C968A', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem' }}>
+              ביטול
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

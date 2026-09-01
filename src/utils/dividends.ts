@@ -14,9 +14,17 @@ import { toMonthlyRate } from './math';
  *   yield grows→ payouts can rise faster than price (dividend growth), so the
  *                yield itself is grown each year and capped, see below.
  *
- * Total return is therefore priceReturn + dividendYield, which is why the
- * price return is entered separately rather than reusing the all-in figure
- * from the main simulation — counting both would double-count the dividend.
+ * A yield is quoted against the current price, so price and dividend COMPOUND
+ * rather than add: total = (1 + price)(1 + yield) − 1. The price return is
+ * therefore entered separately rather than reusing the all-in figure from the
+ * main simulation, which would double-count the dividend.
+ *
+ * The yield is treated as a nominal annual rate paid in twelve instalments
+ * (yield / 12 each month), while the price return is converted geometrically.
+ * That is deliberate and matches reality — a 3.5% yield paid monthly and
+ * reinvested compounds to about 3.56% — but it does mean a dividend-heavy mix
+ * ends roughly 1% ahead of a growth-heavy one over 25 years at the same quoted
+ * total return. That gap is the reinvestment effect, not a modelling error.
  */
 
 export interface DividendRow {
