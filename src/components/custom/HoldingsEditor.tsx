@@ -6,7 +6,8 @@ import { Card } from '../layout/Card';
 import { Icon } from '../shared/Icon';
 import { formatCurrency } from '../../utils/format';
 import { fetchHistory } from '../../lib/marketData';
-import type { PriceInfo, HistoryInfo } from '../../lib/marketData';
+import type { PriceInfo, HistoryInfo, SymbolHit } from '../../lib/marketData';
+import { SymbolSearch } from './SymbolSearch';
 
 /**
  * Pick the expected return to seed a holding with, from real history.
@@ -41,8 +42,6 @@ export function HoldingsEditor({ prices, history }: {
     distributeEvenly, monthlyDeposit, setMonthlyDeposit, horizonYears, setHorizonYears,
   } = useCustomStore();
 
-  const [ticker, setTicker] = useState('');
-  const [name, setName] = useState('');
   const [err, setErr] = useState('');
 
   const totalValue = holdings.reduce((s, h) => s + h.currentValue, 0);
@@ -50,8 +49,8 @@ export function HoldingsEditor({ prices, history }: {
 
   const [adding, setAdding] = useState(false);
 
-  const add = async () => {
-    const sym = ticker.trim().toUpperCase();
+  const add = async (hit: SymbolHit) => {
+    const sym = hit.symbol.trim().toUpperCase();
     setErr('');
     if (!sym) { setErr(t('tickerRequired', lang)); return; }
     if (holdings.some(h => h.ticker.toUpperCase() === sym)) { setErr(t('tickerExists', lang, { ticker: sym })); return; }
@@ -69,12 +68,11 @@ export function HoldingsEditor({ prices, history }: {
 
     addHolding({
       ticker: sym,
-      name: name.trim() || sym,
+      name: hit.name || sym,
       targetPercent: 0,
       expectedReturn: clampReturn(seeded.value),
       currentValue: 0,
     });
-    setTicker(''); setName('');
   };
 
   return (
@@ -93,22 +91,9 @@ export function HoldingsEditor({ prices, history }: {
         </label>
       </div>
 
-      {/* Add a stock */}
+      {/* Add an asset — searched by name, so a ticker need not be known */}
       <div className="flex flex-wrap items-end gap-2 mb-4">
-        <label className="flex-1 min-w-[110px]">
-          <span className="block text-[10px] text-text-muted mb-1">{t('ticker', lang)}</span>
-          <input type="text" value={ticker} onChange={e => { setTicker(e.target.value); setErr(''); }}
-            onKeyDown={e => e.key === 'Enter' && add()} placeholder="AAPL" className="w-full" dir="ltr" />
-        </label>
-        <label className="flex-[2] min-w-[140px]">
-          <span className="block text-[10px] text-text-muted mb-1">{t('stockName', lang)}</span>
-          <input type="text" value={name} onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && add()} placeholder={t('optional', lang)} className="w-full" />
-        </label>
-        <button onClick={add} disabled={adding}
-          className="text-[11px] btn-gold px-3 py-2 rounded-lg flex items-center gap-1.5 disabled:opacity-50">
-          <Icon name="plus" size={13} /> {adding ? t('loading', lang) : t('addStock', lang)}
-        </button>
+        <SymbolSearch onPick={add} busy={adding} />
       </div>
       {err && <p className="text-[11px] text-danger mb-3">{err}</p>}
 

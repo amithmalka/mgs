@@ -20,6 +20,37 @@ export interface PriceInfo {
   error?: string;
 }
 
+/** One instrument returned by the search. */
+export interface SymbolHit {
+  symbol: string;
+  name: string;
+  exchange: string;
+  country: string;
+  currency: string;
+  type: string;
+}
+
+/**
+ * Find an instrument by name or ticker (via /api/search). Covers worldwide
+ * stocks and ETFs plus crypto and forex pairs.
+ */
+export async function searchSymbols(query: string, signal?: AbortSignal): Promise<SymbolHit[]> {
+  const res = await fetch('/api/search?q=' + encodeURIComponent(query), { signal });
+  const text = await res.text();
+  let json: { results?: SymbolHit[]; error?: string };
+  try {
+    json = JSON.parse(text) as typeof json;
+  } catch {
+    throw new Error(
+      /<!doctype html|<html/i.test(text)
+        ? 'החיפוש זמין רק באתר הפרוס (mgs-system.vercel.app), לא בשרת הפיתוח המקומי.'
+        : `תגובה לא צפויה מהשרת (HTTP ${res.status})`
+    );
+  }
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json.results || [];
+}
+
 /** Historical compound annual growth rates, from real monthly closes. */
 export interface HistoryInfo {
   /** CAGR over the trailing N years, % — null when history is too short */
