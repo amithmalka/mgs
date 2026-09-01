@@ -40,6 +40,13 @@ export const DEFAULT_ALLOCATIONS: AllocationTarget[] = (
 export const TURBO_END = 25;       // Phase A yr 1-25 : smart-DCA accumulation
 export const GROUNDING_END = 30;   // Phase B yr 26-30 : consolidate + deposit -> MSCI World
 export const INCUBATION_END = 30;  // (no separate incubation phase in MJS)
+/**
+ * Years every long-range projection covers. Must stay above the green-phase
+ * start (TURBO_END + 5 + 1 = year 31 on the standard timing), or the income
+ * years never appear on screen.
+ */
+export const PROJECTION_HORIZON = 40;
+
 export const WITHDRAW_RATE = 0.04; // Phase C yr 31+   : 4% rule smart harvesting
 
 // kept for back-compat with older references

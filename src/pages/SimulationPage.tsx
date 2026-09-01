@@ -7,7 +7,7 @@ import { TrackBanner } from '../components/layout/TrackBanner';
 import { ScenarioChart } from '../components/charts/ScenarioChart';
 import { simulateTrack, simulateTrackMonthly } from '../utils/math';
 import { formatCurrency } from '../utils/format';
-import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META } from '../constants/defaults';
+import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META, PROJECTION_HORIZON } from '../constants/defaults';
 import { getTrackById, trackPhaseOpts } from '../constants/tracks';
 import type { AllocationTarget, AssetClass } from '../types';
 import { Icon, Dot } from '../components/shared/Icon';
@@ -17,8 +17,7 @@ import { Disclaimer } from '../components/shared/Disclaimer';
 const MILESTONES = [5, 10, 25, 30, 40] as const;
 type MilestoneYear = typeof MILESTONES[number];
 
-/** Projection horizon. Must stay above the green-phase start year. */
-const HORIZON = 40;
+
 type ScenarioKey = 'conservative' | 'moderate' | 'aggressive';
 
 export function SimulationPage() {
@@ -50,9 +49,9 @@ export function SimulationPage() {
   // selected track. The horizon must exceed the green-phase start (year 31 on
   // the standard timing) or the income years would never appear on screen.
   const simData = useMemo(() => ({
-    conservative: simulateTrack(p.initialDeposit, p.monthlyDeposit, HORIZON, liveAllocations, ASSET_RETURNS.conservative, phaseOpts),
-    moderate:     simulateTrack(p.initialDeposit, p.monthlyDeposit, HORIZON, liveAllocations, ASSET_RETURNS.moderate, phaseOpts),
-    aggressive:   simulateTrack(p.initialDeposit, p.monthlyDeposit, HORIZON, liveAllocations, ASSET_RETURNS.aggressive, phaseOpts),
+    conservative: simulateTrack(p.initialDeposit, p.monthlyDeposit, PROJECTION_HORIZON, liveAllocations, ASSET_RETURNS.conservative, phaseOpts),
+    moderate:     simulateTrack(p.initialDeposit, p.monthlyDeposit, PROJECTION_HORIZON, liveAllocations, ASSET_RETURNS.moderate, phaseOpts),
+    aggressive:   simulateTrack(p.initialDeposit, p.monthlyDeposit, PROJECTION_HORIZON, liveAllocations, ASSET_RETURNS.aggressive, phaseOpts),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [p.initialDeposit, p.monthlyDeposit, liveAllocations, track.id]);
 
@@ -77,7 +76,7 @@ export function SimulationPage() {
 
   // Month-by-month simulation for the active scenario
   const monthlyData = useMemo(
-    () => simulateTrackMonthly(p.initialDeposit, p.monthlyDeposit, HORIZON, liveAllocations, ASSET_RETURNS[activeScenario], phaseOpts),
+    () => simulateTrackMonthly(p.initialDeposit, p.monthlyDeposit, PROJECTION_HORIZON, liveAllocations, ASSET_RETURNS[activeScenario], phaseOpts),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [p.initialDeposit, p.monthlyDeposit, liveAllocations, activeScenario, track.id],
   );

@@ -8,7 +8,8 @@ import { Icon } from '../shared/Icon';
 import { formatCurrency } from '../../utils/format';
 import { simulateDividends, yearIncomeReached, MAX_MODELLED_YIELD } from '../../utils/dividends';
 import { defaultYieldFor } from '../../constants/dividendYields';
-import { ASSET_META, ASSET_RETURNS } from '../../constants/defaults';
+import { ASSET_META, ASSET_RETURNS, PROJECTION_HORIZON } from '../../constants/defaults';
+import { getTrackById } from '../../constants/tracks';
 
 /** One asset feeding the dividend calculation. */
 interface DivAsset {
@@ -36,8 +37,9 @@ type Source = 'custom' | 'track';
 export function DividendSimulation() {
   const { lang } = useLangStore();
   const he = lang !== 'en';
-  const { currentPortfolioValue, simulationParams, allocations } = useStore();
+  const { currentPortfolioValue, simulationParams, allocations, selectedTrackId } = useStore();
   const { holdings } = useCustomStore();
+  const track = getTrackById(selectedTrackId);
 
   const hasCustom = holdings.length > 0;
   const [source, setSource] = useState<Source>(hasCustom ? 'custom' : 'track');
@@ -99,11 +101,19 @@ export function DividendSimulation() {
   const portfolioTotalReturn =
     ((1 + portfolioPriceReturn / 100) * (1 + portfolioYield / 100) - 1) * 100;
 
-  const [dividendGrowth, setGrowth] = useState(5);
-  const [years, setYears] = useState(30);
+  // Default 0: a company that grows its payout while its price grows too keeps
+  // roughly the same yield. Compounding the YIELD upward is the aggressive case,
+  // and over a 40-year horizon it runs away — hence the default and the warning.
+  const [dividendGrowth, setGrowth] = useState(0);
+  const [years, setYears] = useState(PROJECTION_HORIZON);
   const [reinvest, setReinvest] = useState(true);
-  const [depositUntil, setDepositUntil] = useState(20);
+  // Deposits run for the track's accumulation phase — 25 years on the standard
+  // timing — rather than an arbitrary default, so this follows the MGS model.
+  const [depositUntil, setDepositUntil] = useState(track.phaseADuration);
   const [targetMonthly, setTargetMonthly] = useState(10000);
+
+  // Switching track changes the accumulation length; follow it.
+  useEffect(() => { setDepositUntil(track.phaseADuration); }, [track.phaseADuration]);
 
   const initialValue = currentPortfolioValue || simulationParams.initialDeposit;
   const monthlyDeposit = simulationParams.monthlyDeposit;
@@ -225,9 +235,11 @@ export function DividendSimulation() {
 
       {/* Scenario inputs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <Field label={he ? 'צמיחת הדיבידנד %/שנה' : 'Dividend growth %/yr'} value={dividendGrowth} onChange={setGrowth} step={0.5} min={0} max={20} />
+        <Field label={he ? 'עליית תשואה %/שנה (מעבר למחיר)' : 'Yield growth %/yr (above price)'}
+          value={dividendGrowth} onChange={setGrowth} step={0.5} min={0} max={10} />
         <Field label={he ? 'שנים' : 'Years'} value={years} onChange={setYears} step={1} min={1} max={50} />
-        <Field label={he ? 'מפקידים עד שנה' : 'Deposit until year'} value={depositUntil} onChange={setDepositUntil} step={1} min={0} max={50} />
+        <Field label={he ? `מפקידים עד שנה (מסלול: ${track.phaseADuration})` : `Deposit until year (track: ${track.phaseADuration})`}
+          value={depositUntil} onChange={setDepositUntil} step={1} min={0} max={50} />
         <Field label={he ? 'יעד הכנסה חודשית ₪' : 'Target monthly ₪'} value={targetMonthly} onChange={setTargetMonthly} step={500} min={0} />
       </div>
 
@@ -251,6 +263,15 @@ export function DividendSimulation() {
             : (he ? `היעד של ${formatCurrency(targetMonthly)} לחודש לא מושג בתוך ${years} שנים בתמהיל הזה.` : `Target not reached within ${years} years with this mix.`)}
         </p>
       </div>
+
+      {dividendGrowth > 0 && (
+        <p className="text-[11px] text-text-dim flex items-start gap-1.5 mb-3">
+          <Icon name="warning" size={12} className="mt-0.5 flex-shrink-0" />
+          {he
+            ? 'שדה זה מעלה את תשואת הדיבידנד עצמה בכל שנה, והוא מצטבר. בפועל, כשחברה מגדילה דיבידנד והמחיר עולה איתו — התשואה נשארת דומה, וההכנסה גדלה ממילא כי התיק גדל. ערך גבוה על פני עשרות שנים מנפח את התחזית.'
+            : 'This raises the yield itself every year and compounds. In reality a rising payout usually comes with a rising price, so the yield stays similar while income grows anyway as the portfolio grows. A high value over decades inflates the projection.'}
+        </p>
+      )}
 
       {capped && (
         <p className="text-[11px] text-warning flex items-start gap-1.5 mb-3">
