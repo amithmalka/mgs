@@ -24,6 +24,7 @@ const GROUPS: NavGroup[] = [
       { id: 'dashboard', key: 'tabHome', icon: 'home' },
       { id: 'tracking', key: 'tabTracking', icon: 'chart' },
       { id: 'simulation', key: 'tabSimulation', icon: 'target' },
+      { id: 'custom', key: 'tabCustom', icon: 'custom' },
       { id: 'dividends', key: 'tabDividends', icon: 'cash' },
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },
     ],
