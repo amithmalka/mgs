@@ -28,7 +28,6 @@ const GROUPS: NavGroup[] = [
       { id: 'simulation', key: 'tabSimulation', icon: 'chart' },
       { id: 'custom', key: 'tabCustom', icon: 'custom' },
       { id: 'tracks', key: 'tabTracks', icon: 'route' },
-      { id: 'goals', key: 'tabGoals', icon: 'target' },
       { id: 'dividends', key: 'tabDividends', icon: 'cash' },
     ],
   },

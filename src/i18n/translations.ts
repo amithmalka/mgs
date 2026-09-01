@@ -8,7 +8,7 @@ export const translations = {
   // Tabs
   tabDashboard: { en: 'Home', he: 'בית' },
   tabPortfolio: { en: 'My Portfolio', he: 'התיק שלי' },
-  tabTransactions: { en: 'Transactions', he: 'פעולות' },
+  tabTransactions: { en: 'Transactions & Goals', he: 'פעולות ויעדים' },
   tabSimulation: { en: 'Simulation', he: 'סימולציה' },
   tabDividends: { en: 'Income', he: 'חופש כלכלי' },
   tabGoals: { en: 'Goals', he: 'יעדים' },

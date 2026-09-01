@@ -12,14 +12,16 @@ import { ETF_RECOMMENDATIONS } from '../constants/etfs';
 import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, GREEN_ASSETS } from '../constants/defaults';
 import type { AssetClass } from '../types';
 import { Dot } from '../components/shared/Icon';
+import { getTrackById } from '../constants/tracks';
 
 const PROJECTION_YEARS = [5, 10, 20, 30];
 
 export function PortfolioPage() {
   const {
     allocations, setAllocations, updateAllocationValue,
-    currentPortfolioValue, simulationParams, setSimulationParams,
+    currentPortfolioValue, simulationParams, setSimulationParams, selectedTrackId,
   } = useStore();
+  const track = getTrackById(selectedTrackId);
   const { lang } = useLangStore();
   const isRtl = lang === 'he';
   const [editMode, setEditMode] = useState(false);
@@ -256,7 +258,7 @@ export function PortfolioPage() {
           </button>
           <button onClick={() => setDeLeverage(true)}
             className={`text-[11px] px-3 py-1.5 rounded-lg transition-colors ${deLeverage ? 'bg-surface-4 text-text' : 'text-text-muted hover:text-text'}`}>
-            <Dot color="yellow" className="me-1.5" />{lang === 'he' ? 'ייצוב (שנים 16-20)' : 'De-leverage'}
+            <Dot color="yellow" className="me-1.5" />{lang === 'he' ? `ייצוב (שנים ${track.phaseADuration + 1}-${track.phaseADuration + track.phaseBDuration})` : 'De-leverage'}
           </button>
         </div>
         {deLeverage && (

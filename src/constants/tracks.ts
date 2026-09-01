@@ -2,10 +2,15 @@ import type { Track, TrackId, AllocationTarget, AssetClass } from '../types';
 import { ASSET_META, WITHDRAW_RATE } from './defaults';
 
 /**
- * MJS — 5 age-based tracks. Phase A (accumulation, smart-DCA) runs for
- * phaseADuration years; Phase B (consolidation) then migrates everything into
- * phaseBTarget (MSCI World) and routes new deposits there for phaseBDuration
- * years; Phase C (year after that) switches to 4% smart harvesting.
+ * MJS — 5 age-based tracks, on the traffic-light model:
+ *   red    — years 1..phaseADuration: deposits split across the track mix
+ *   yellow — the next phaseBDuration years: everything is consolidated into
+ *            phaseBTarget (MSCI World) and every new deposit goes there alone
+ *   green  — the year after that on: no new deposits, income is withdrawn
+ *
+ * The standard MGS timing is 25 years red then 5 years yellow, so green opens
+ * in year 31. 'security' is the deliberate exception — it is the 60-65 track,
+ * where 25 years of deposits would push income out to age 90.
  */
 export const TRACKS: Track[] = [
   {
@@ -13,28 +18,28 @@ export const TRACKS: Track[] = [
     ageMin: 20, ageMax: 30, dot: 'green', leverage: 20,
     taglineHe: 'חשיפה מקסימלית, מינוף 20%', taglineEn: 'Max exposure, 20% leverage',
     allocations: { p500: 50, eqqs: 30, dbxb: 20 },
-    phaseADuration: 20, phaseBDuration: 5, phaseBTarget: 'xmwo',
+    phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'stable', nameHe: 'טורבו מבוקר', nameEn: 'Controlled Turbo',
     ageMin: 30, ageMax: 40, dot: 'yellow', leverage: 15,
     taglineHe: 'צמיחה עם מינוף 15%', taglineEn: 'Growth with 15% leverage',
     allocations: { p500: 60, eqqs: 25, dbxb: 15 },
-    phaseADuration: 20, phaseBDuration: 5, phaseBTarget: 'xmwo',
+    phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'mature', nameHe: 'שמרנות אקטיבית', nameEn: 'Active Conservatism',
     ageMin: 40, ageMax: 50, dot: 'orange', leverage: 10,
     taglineHe: 'איזון עם מינוף 10%', taglineEn: 'Balance with 10% leverage',
     allocations: { p500: 70, eqqs: 20, dbxb: 10 },
-    phaseADuration: 20, phaseBDuration: 5, phaseBTarget: 'xmwo',
+    phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'defensive', nameHe: 'ביצור דינמי', nameEn: 'Dynamic Fortification',
     ageMin: 50, ageMax: 60, dot: 'red', leverage: 5,
     taglineHe: 'הגנתי עם נגיעת מינוף 5%', taglineEn: 'Defensive, 5% leverage',
     allocations: { p500: 80, eqqs: 15, dbxb: 5 },
-    phaseADuration: 20, phaseBDuration: 5, phaseBTarget: 'xmwo',
+    phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'security', nameHe: 'מגן פלדה', nameEn: 'Steel Shield',

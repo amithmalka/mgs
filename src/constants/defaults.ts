@@ -37,10 +37,10 @@ export const DEFAULT_ALLOCATIONS: AllocationTarget[] = (
 }));
 
 /** Default lifecycle boundaries (most tracks). Track 5 overrides via its durations. */
-export const TURBO_END = 20;       // Phase A yr 1–20 : smart-DCA accumulation
-export const GROUNDING_END = 25;   // Phase B yr 21–25 : consolidate + deposit → MSCI World
-export const INCUBATION_END = 25;  // (no separate incubation phase in MJS)
-export const WITHDRAW_RATE = 0.04; // Phase C yr 26+   : 4% rule smart harvesting
+export const TURBO_END = 25;       // Phase A yr 1-25 : smart-DCA accumulation
+export const GROUNDING_END = 30;   // Phase B yr 26-30 : consolidate + deposit -> MSCI World
+export const INCUBATION_END = 30;  // (no separate incubation phase in MJS)
+export const WITHDRAW_RATE = 0.04; // Phase C yr 31+   : 4% rule smart harvesting
 
 // kept for back-compat with older references
 export const PHASE_RED_END = TURBO_END;

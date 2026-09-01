@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '../utils/format';
 import { calcRebalance } from '../utils/rebalance';
 import type { AssetClass } from '../types';
 import { Icon } from '../components/shared/Icon';
+import { GoalsPage } from './GoalsPage';
 
 export function TransactionsPage() {
   const { transactions, addTransaction, deleteTransaction, allocations, currentPortfolioValue, monthlyDeposit } = useStore();
@@ -112,6 +113,11 @@ export function TransactionsPage() {
           </div>
         )}
       </Card>
+
+      {/* Goals live on this screen — they are the target the transactions feed. */}
+      <div className="pt-2 border-t border-surface-4">
+        <GoalsPage />
+      </div>
     </div>
   );
 }

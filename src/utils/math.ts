@@ -157,6 +157,31 @@ export function simulateByAsset(
 }
 
 /**
+ * Assets the simulation must track, given the phase routing.
+ *
+ * An asset with a 0% Phase-A target and no holdings is still needed if a later
+ * phase routes deposits into it or consolidates into it — MSCI World is exactly
+ * that: every track carries it at 0% until the yellow phase. Leaving it out
+ * made Phase-B consolidation a no-op and silently discarded every yellow-phase
+ * deposit, because the routing weight pointed at an asset the loop never
+ * visited.
+ */
+function activeForPhases(
+  allocations: AllocationTarget[],
+  routing: Array<Partial<Record<AssetClass, number>> | undefined>,
+  consolidateTo?: AssetClass,
+): AllocationTarget[] {
+  const routed = new Set<AssetClass>();
+  for (const map of routing) {
+    for (const k of Object.keys(map ?? {})) routed.add(k as AssetClass);
+  }
+  if (consolidateTo) routed.add(consolidateTo);
+  return allocations.filter(
+    a => a.targetPercent > 0 || a.currentValue > 0 || routed.has(a.assetClass)
+  );
+}
+
+/**
  * Phase-aware "traffic light" (רמזור) simulation for an MGS track.
  *
  * Three phases, measured in years from the start of investing:
@@ -186,7 +211,7 @@ export function simulateTrack(
     consolidateTo?: AssetClass;
   },
 ): AssetSimRow[] {
-  const active = allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0);
+  const active = activeForPhases(allocations, [opts.grounding, opts.incubation], opts.consolidateTo);
   const results: AssetSimRow[] = [];
 
   const totalCurrentValue = allocations.reduce((s, a) => s + a.currentValue, 0);
@@ -336,7 +361,7 @@ export function simulateTrackMonthly(
     consolidateTo?: AssetClass;
   },
 ): MonthlyRow[] {
-  const active = allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0);
+  const active = activeForPhases(allocations, [opts.grounding, opts.incubation], opts.consolidateTo);
   const totalCurrentValue = allocations.reduce((s, a) => s + a.currentValue, 0);
   const useActualHoldings = totalCurrentValue > 0;
 
