@@ -300,6 +300,14 @@ export function simulateTrack(
 
     const route = routeFor(p4);
     const routeSum = (Object.values(route) as number[]).reduce((s, v) => s + v, 0);
+    // Growth and withdrawal interleave month by month. The 4% is drawn
+    // MONTHLY, not as a single year-end lump — a lump would leave the whole
+    // balance compounding all year and overstate it, and it disagreed with
+    // simulateTrackMonthly, which always drew monthly. Same question, two
+    // different answers.
+    const withdrawMonthly = p4 === 'withdraw' ? opts.withdrawRate / 12 : 0;
+    let income = 0;
+
     for (let month = 1; month <= 12; month++) {
       for (const a of active) {
         const ac = a.assetClass;
@@ -309,22 +317,21 @@ export function simulateTrack(
         balances[ac] = (balances[ac] + depositSlice) * (1 + rates[ac]);
         deposited[ac] += depositSlice;
       }
-    }
 
-    // Withdrawal phase (year 26+): take the 4% annual withdrawal as income.
-    let income = 0;
-    if (p4 === 'withdraw') {
-      const total = active.reduce((s, a) => s + balances[a.assetClass], 0);
-      income = total * opts.withdrawRate;
-      if (total > 0) {
-        for (const a of active) {
-          const ac = a.assetClass;
-          balances[ac] -= income * (balances[ac] / total); // proportional drawdown
+      if (withdrawMonthly > 0) {
+        const total = active.reduce((s, a) => s + balances[a.assetClass], 0);
+        if (total > 0) {
+          const slice = total * withdrawMonthly;
+          for (const a of active) {
+            const ac = a.assetClass;
+            balances[ac] -= slice * (balances[ac] / total); // proportional drawdown
+          }
+          income += slice;
         }
       }
-      cumulativeIncome += income;
     }
 
+    cumulativeIncome += income;
     results.push(makeRow(year, income));
   }
 

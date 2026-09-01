@@ -12,6 +12,7 @@ import type { AssetClass, Track } from '../../types';
 import { Icon, Dot } from '../shared/Icon';
 import { STRATEGIES } from '../../constants/strategies';
 import { EngineTrack } from '../features/EngineTrack';
+import { Collapsible } from '../layout/Collapsible';
 
 function assetLabel(ac: AssetClass): string {
   return ASSET_META[ac].label;
@@ -179,7 +180,8 @@ export function MethodAndTrack() {
       </Card>
 
       {/* ── Traffic light ───────────────────────────────────────────────── */}
-      <Card title={t('trafficLightTitle', lang)} subtitle={t('trafficLightSub', lang)}>
+      <Collapsible title={t('trafficLightTitle', lang)} subtitle={t('trafficLightSub', lang)}>
+      <Card>
         <div className="grid gap-3 md:grid-cols-3 mt-2">
           {[
             { color: '#ef4444', glow: 'rgba(239,68,68,0.15)', dotColor: 'red' as const, titleKey: 'redTitle', descKey: 'redDesc', labelKey: 'redPhase', active: true },
@@ -210,6 +212,7 @@ export function MethodAndTrack() {
           </p>
         )}
       </Card>
+      </Collapsible>
 
       {/* ── Track projection ────────────────────────────────────────────── */}
       <Card title={t('trackProjection', lang)}>
@@ -245,8 +248,11 @@ export function MethodAndTrack() {
         </p>
       </Card>
 
-      {/* ── Apartment vs investment ─────────────────────────────────────── */}
-      <ApartmentComparison />
+      {/* ── Apartment vs investment — reference, folded ─────────────────── */}
+      <Collapsible title={isRtl ? 'דירה מול השקעה' : 'Apartment vs investing'}
+                   subtitle={isRtl ? 'השוואה מספרית בין קניית דירה להשקעה' : 'A numeric comparison'}>
+        <ApartmentComparison />
+      </Collapsible>
       </>
       )}
     </div>

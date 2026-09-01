@@ -67,7 +67,7 @@ function App() {
       <div className={isRtl ? 'lg:pr-[248px]' : 'lg:pl-[248px]'}>
         <TopBar onOpen={() => setMenuOpen(true)} />
         <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
-          <ContextBar />
+          <ContextBar onEdit={() => setActiveTab('dashboard')} />
           <ActivePage />
         </main>
         <footer className="relative z-10 py-6 px-5 max-w-3xl mx-auto">

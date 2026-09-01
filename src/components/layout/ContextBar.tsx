@@ -3,7 +3,7 @@ import { useLangStore } from '../../store/langStore';
 import { getTrackById } from '../../constants/tracks';
 import { getStrategy } from '../../constants/strategies';
 import { formatCurrency } from '../../utils/format';
-import { Dot } from '../shared/Icon';
+import { Dot, Icon } from '../shared/Icon';
 import type { DotColor } from '../shared/Icon';
 
 /**
@@ -13,7 +13,7 @@ import type { DotColor } from '../shared/Icon';
  * active, so every screen's numbers looked arbitrary. This keeps the answer on
  * screen without the user having to navigate back to find it.
  */
-export function ContextBar() {
+export function ContextBar({ onEdit }: { onEdit: () => void }) {
   const { selectedStrategyId, selectedTrackId, simulationParams } = useStore();
   const { lang } = useLangStore();
   const he = lang !== 'en';
@@ -49,6 +49,17 @@ export function ContextBar() {
           </span>
         </div>
       ))}
+
+      <span className="flex-1" />
+
+      {/* Every value in this bar is set on the home screen, so edit goes there. */}
+      <button
+        onClick={onEdit}
+        className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border border-gold-border text-gold hover:bg-gold-muted transition-colors flex-shrink-0"
+      >
+        <Icon name="pencil" size={11} />
+        {he ? 'עריכה' : 'Edit'}
+      </button>
     </div>
   );
 }

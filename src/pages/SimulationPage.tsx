@@ -3,7 +3,6 @@ import { useStore } from '../store';
 import { useLangStore } from '../store/langStore';
 import { t } from '../i18n/translations';
 import { Card } from '../components/layout/Card';
-import { TrackBanner } from '../components/layout/TrackBanner';
 import { ScenarioChart } from '../components/charts/ScenarioChart';
 import { simulateTrack, simulateTrackMonthly } from '../utils/math';
 import { formatCurrency } from '../utils/format';
@@ -86,7 +85,6 @@ export function SimulationPage() {
 
   return (
     <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
-      <TrackBanner />
 
       {/* ── 1. Parameters ────────────────────────────────────────────── */}
       <Card title={t('simulationParams', lang)}>
@@ -474,6 +472,7 @@ export function SimulationPage() {
       <DividendSimulation />
 
       <Disclaimer variant="full" />
+
     </div>
   );
 }

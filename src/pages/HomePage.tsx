@@ -13,6 +13,7 @@ import { routeDeposit } from '../utils/swrEngine';
 import { Icon } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import { MarketSection } from '../components/market/MarketSection';
+import { Collapsible } from '../components/layout/Collapsible';
 import { MethodAndTrack } from '../components/features/MethodAndTrack';
 
 /**
@@ -69,8 +70,11 @@ export function HomePage() {
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
 
-      {/* ── 1. The market ───────────────────────────────────────────────── */}
-      <MarketSection />
+      {/* ── 1. The market — reference, so it opens closed ───────────────── */}
+      <Collapsible title={he ? 'הלוח החם — מה קורה בשוק' : 'The market right now'}
+                   subtitle={he ? 'מחירים, תנועה יומית, גרף נרות ומדריך' : 'Prices, daily moves, candlesticks and a guide'}>
+        <MarketSection />
+      </Collapsible>
 
       {/* ── 2. Method (and, for the apartment method, a track) ──────────── */}
       <MethodAndTrack />

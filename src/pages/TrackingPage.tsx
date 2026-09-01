@@ -3,8 +3,8 @@ import { useLangStore } from '../store/langStore';
 import { Card } from '../components/layout/Card';
 import { formatCurrency } from '../utils/format';
 import { Disclaimer } from '../components/shared/Disclaimer';
+import { Collapsible } from '../components/layout/Collapsible';
 import { TransactionsPage } from './TransactionsPage';
-import { SimulationPage } from './SimulationPage';
 import { MonthlyTracker } from '../components/custom/MonthlyTracker';
 import { calcWeightedReturn } from '../constants/defaults';
 
@@ -51,14 +51,16 @@ export function TrackingPage() {
         )}
       </Card>
 
-      {/* ── Month-by-month, actual vs plan ──────────────────────────────── */}
-      <MonthlyTracker blendedReturn={blended} />
+      {/* Detail lives folded away — the screen opens on the numbers above. */}
+      <Collapsible title={he ? 'דיווח חודשי — בפועל מול תוכנית' : 'Monthly log — actual vs plan'}
+                   subtitle={he ? 'רשמו כמה הפקדתם ומה השווי בפועל' : 'Report what you deposited and what it is worth'}>
+        <MonthlyTracker blendedReturn={blended} />
+      </Collapsible>
 
-      {/* ── Deposits, withdrawals and goals ─────────────────────────────── */}
-      <TransactionsPage />
-
-      {/* ── Full projection ─────────────────────────────────────────────── */}
-      <SimulationPage />
+      <Collapsible title={he ? 'פעולות ויעדים' : 'Transactions & goals'}
+                   subtitle={he ? 'הפקדות, משיכות ועדכוני שווי' : 'Deposits, withdrawals and value updates'}>
+        <TransactionsPage />
+      </Collapsible>
 
       <Disclaimer variant="full" />
     </div>
