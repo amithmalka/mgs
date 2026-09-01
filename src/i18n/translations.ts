@@ -156,8 +156,14 @@ export const translations = {
 
   // Tracks tab + page
   tabTracks: { en: 'Tracks', he: 'מסלולים' },
+  // The named method — the strategy that replaces buying an apartment.
+  // A second, general method is planned alongside it.
+  methodName: { en: 'Instead of an Apartment', he: 'במקום דירה' },
+  methodTagline: { en: 'For anyone weighing up buying a property — and choosing to invest instead.', he: 'למי ששוקל לקנות דירה — ובוחר להשקיע במקום.' },
+  methodPhases: { en: '25 years of deposits · 5 years consolidating · income from year 31', he: '25 שנות הפקדה · 5 שנות ייצוב · הכנסה משנה 31' },
+  methodScope: { en: 'This method fits one specific goal: replacing a property purchase. It is not a general investing plan.', he: 'השיטה הזו מתאימה למטרה אחת: להחליף קניית דירה. היא אינה תוכנית השקעות כללית.' },
   tracksTitle: { en: 'Your Investment Track', he: 'מסלול ההשקעה שלך' },
-  tracksSubtitle: { en: 'A long-term plan tailored to your age — replacing a property purchase with investments that build strong growth and high passive income within 20 years.', he: 'תוכנית ארוכת-טווח המותאמת לגיל שלך — מחליפה את קניית הדירה בהשקעות שבונות צמיחה חזקה והכנסה פאסיבית גבוהה תוך 20 שנה.' },
+  tracksSubtitle: { en: 'A long-term plan tailored to your age — replacing a property purchase with investments that build growth and passive income over 30 years.', he: 'תוכנית ארוכת-טווח המותאמת לגיל שלך — מחליפה את קניית הדירה בהשקעות שבונות צמיחה והכנסה פאסיבית על פני 30 שנה.' },
   yourAge: { en: 'Your Age', he: 'הגיל שלך' },
   recommendedForYou: { en: 'Recommended for you', he: 'מומלץ עבורך' },
   recommendedTrack: { en: 'Recommended track', he: 'מסלול מומלץ' },

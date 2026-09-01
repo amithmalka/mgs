@@ -57,8 +57,11 @@ export function TracksPage() {
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <Card glow>
-        <h2 className="text-xl font-bold text-gold-gradient">{t('tracksTitle', lang)}</h2>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gold/70">{t('methodName', lang)}</p>
+        <h2 className="text-xl font-bold text-gold-gradient mt-1">{t('tracksTitle', lang)}</h2>
         <p className="text-[12px] text-text-muted mt-2 leading-relaxed">{t('tracksSubtitle', lang)}</p>
+        <p className="text-[11px] text-gold/80 mt-2">{t('methodPhases', lang)}</p>
+        <p className="text-[11px] text-text-dim mt-2 leading-relaxed">{t('methodScope', lang)}</p>
 
         {/* Age input + recommendation */}
         <div className="mt-5 flex flex-wrap items-center gap-4">
