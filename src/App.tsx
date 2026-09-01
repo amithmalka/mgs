@@ -10,6 +10,8 @@ import { SimulationPage } from './pages/SimulationPage';
 import { DividendsPage } from './pages/DividendsPage';
 import { GoalsPage } from './pages/GoalsPage';
 import { CustomInvestPage } from './pages/CustomInvestPage';
+import { MarketPage } from './pages/MarketPage';
+import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
 import { Disclaimer } from './components/shared/Disclaimer';
@@ -24,6 +26,7 @@ const pages: Record<Tab, React.FC> = {
   dividends: DividendsPage,
   goals: GoalsPage,
   custom: CustomInvestPage,
+  market: MarketPage,
 };
 
 function App() {
@@ -65,6 +68,7 @@ function App() {
       <div className={isRtl ? 'lg:pr-[248px]' : 'lg:pl-[248px]'}>
         <TopBar onOpen={() => setMenuOpen(true)} />
         <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
+          <ContextBar />
           <ActivePage />
         </main>
         <footer className="relative z-10 py-6 px-5 max-w-3xl mx-auto">

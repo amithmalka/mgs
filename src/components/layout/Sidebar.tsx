@@ -7,27 +7,37 @@ import type { TranslationKey } from '../../i18n/translations';
 
 export type Tab =
   | 'dashboard' | 'tracks' | 'academy' | 'portfolio' | 'transactions'
-  | 'simulation' | 'dividends' | 'goals' | 'custom';
+  | 'simulation' | 'dividends' | 'goals' | 'custom' | 'market';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
 
-/** Every page is reachable from here — nothing is hidden inside other screens. */
+/**
+ * Ordered by the question a student asks, not by the tool that answers it:
+ * where do I start → what is the market doing → what do I do now → what do I
+ * hold → where is it going → am I on track → learn.
+ */
 const GROUPS: NavGroup[] = [
   {
-    key: 'navGroupOverview',
+    key: 'navGroupStart',
     items: [
-      { id: 'dashboard', key: 'tabDashboard', icon: 'home' },
+      { id: 'tracks', key: 'tabStart', icon: 'route' },
+      { id: 'market', key: 'tabMarket', icon: 'chart' },
+    ],
+  },
+  {
+    key: 'navGroupMoney',
+    items: [
+      { id: 'dashboard', key: 'tabThisMonth', icon: 'home' },
       { id: 'portfolio', key: 'tabPortfolio', icon: 'briefcase' },
+      { id: 'custom', key: 'tabCustom', icon: 'custom' },
       { id: 'transactions', key: 'tabTransactions', icon: 'list' },
     ],
   },
   {
-    key: 'navGroupPlanning',
+    key: 'navGroupAhead',
     items: [
-      { id: 'simulation', key: 'tabSimulation', icon: 'chart' },
-      { id: 'custom', key: 'tabCustom', icon: 'custom' },
-      { id: 'tracks', key: 'tabTracks', icon: 'route' },
+      { id: 'simulation', key: 'tabSimulation', icon: 'target' },
       { id: 'dividends', key: 'tabDividends', icon: 'cash' },
     ],
   },

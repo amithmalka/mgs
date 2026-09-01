@@ -7,10 +7,10 @@ export const translations = {
 
   // Tabs
   tabDashboard: { en: 'Home', he: 'בית' },
-  tabPortfolio: { en: 'My Portfolio', he: 'התיק שלי' },
-  tabTransactions: { en: 'Transactions & Goals', he: 'פעולות ויעדים' },
-  tabSimulation: { en: 'Simulation', he: 'סימולציה' },
-  tabDividends: { en: 'Income', he: 'חופש כלכלי' },
+  tabPortfolio: { en: 'Portfolio by track', he: 'התיק לפי המסלול' },
+  tabTransactions: { en: 'My tracking', he: 'המעקב שלי' },
+  tabSimulation: { en: 'Where it leads', he: 'לאן זה מוביל' },
+  tabDividends: { en: 'Income & withdrawals', he: 'הכנסה ומשיכות' },
   tabGoals: { en: 'Goals', he: 'יעדים' },
   tabActivity: { en: 'Activity', he: 'פעילות' },
 
@@ -266,14 +266,18 @@ export const translations = {
   videoNotAUrl: { en: 'The saved value is not a valid video link. Edit the lesson and paste the full embed URL.', he: 'הערך השמור אינו קישור וידאו תקין. ערכו את השיעור והדביקו את כתובת ההטמעה המלאה.' },
 
   // Navigation
-  navGroupOverview: { en: 'Overview', he: 'סקירה' },
-  navGroupPlanning: { en: 'Planning', he: 'תכנון' },
+  navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
+  navGroupMoney: { en: 'My money', he: 'הכסף שלי' },
+  navGroupAhead: { en: 'Looking ahead', he: 'קדימה' },
   navGroupLearn: { en: 'Learning', he: 'למידה' },
+  tabStart: { en: 'My method & track', he: 'השיטה והמסלול שלי' },
+  tabMarket: { en: 'The market', he: 'השוק' },
+  tabThisMonth: { en: 'This month', he: 'החודש' },
   openMenu: { en: 'Open menu', he: 'פתח תפריט' },
   close: { en: 'Close', he: 'סגור' },
 
   // Custom investing tab
-  tabCustom: { en: 'Custom Portfolio', he: 'השקעה בהתאמה אישית' },
+  tabCustom: { en: 'Stocks I picked', he: 'מניות שבחרתי' },
   customTitle: { en: 'Custom Portfolio', he: 'השקעה בהתאמה אישית' },
   customSubtitle: { en: 'Pick your own stocks, set the weights, and see the projection, the deposit split and your month-by-month progress.', he: 'בחרו מניות משלכם, קבעו משקלים, וראו את התחזית, את חלוקת ההפקדה ואת ההתקדמות חודש אחר חודש.' },
   refreshPrices: { en: 'Refresh prices', he: 'רענן מחירים' },
