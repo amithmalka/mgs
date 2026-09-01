@@ -1,5 +1,5 @@
 /**
- * The single unified track for "מהשקעה לעושר" (From Investing to Wealth).
+ * The single unified track for the general investing method (שיטת השקעות כללית).
  *
  * Each asset carries BOTH the instrument the method names and a separate
  * `proxy` used for live price and history, because the two are not the same

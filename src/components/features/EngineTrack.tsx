@@ -11,7 +11,7 @@ import {
 
 const STOPS = [36, 60, 120, 180, 240, 300, 360];
 
-/** The "From Investing to Wealth" engine: one track, dynamic SWR from month 36. */
+/** The general investing method: one track, dynamic SWR from month 36. */
 export function EngineTrack() {
   const { lang } = useLangStore();
   const he = lang !== 'en';

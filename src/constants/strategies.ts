@@ -38,8 +38,8 @@ export const STRATEGIES: Strategy[] = [
   },
   {
     id: 'wealth',
-    nameHe: 'מהשקעה לעושר',
-    nameEn: 'From Investing to Wealth',
+    nameHe: 'שיטת השקעות כללית',
+    nameEn: 'General Investing Method',
     taglineHe: 'שיטת השקעה כללית — לא קשורה לרכישת דירה.',
     taglineEn: 'A general investing method, not tied to buying property.',
     forWhoHe: 'למי שרוצה לבנות הון לאורך זמן בלי שהיעד יהיה דירה.',
