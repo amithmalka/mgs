@@ -11,6 +11,46 @@
 const LIMIT = 40;
 
 /**
+ * Hebrew (and loose English) query rewriting.
+ *
+ * Twelve Data indexes instrument names in English only, so "טסלה" returns
+ * nothing. The query is rewritten before being sent upstream.
+ */
+const TRANSLATE = [
+  [/טסלה/i, 'Tesla'], [/אפל/i, 'Apple'], [/גוגל|אלפאבית/i, 'Alphabet'],
+  [/אמזון/i, 'Amazon'], [/מיקרוסופט/i, 'Microsoft'], [/אנבידיה|נבידיה/i, 'NVIDIA'],
+  [/מטא|פייסבוק/i, 'Meta Platforms'], [/נטפליקס/i, 'Netflix'], [/אינטל/i, 'Intel'],
+  [/קוקה.?קולה/i, 'Coca-Cola'], [/מקדונלדס/i, 'McDonald'], [/דיסני/i, 'Disney'],
+  [/ביטקוין|ביטקויין/i, 'Bitcoin'], [/את'?ריום|אתריום/i, 'Ethereum'],
+  [/זהב/i, 'Gold'], [/כסף \(מתכת\)|סילבר/i, 'Silver'], [/נפט/i, 'Oil'],
+  [/נאסד.?ק/i, 'Nasdaq'], [/מדד עולמי|עולמי/i, 'MSCI World'],
+  [/דיבידנד/i, 'Dividend'], [/אג.?ח/i, 'Bond'],
+];
+
+function rewrite(q) {
+  for (const [re, en] of TRANSLATE) if (re.test(q)) return en;
+  return q;
+}
+
+/**
+ * Curated crypto and forex lines.
+ *
+ * Twelve Data's crypto/forex reference endpoints only match on the SYMBOL, so
+ * a name search like "bitcoin" never reaches BTC/USD, and filtering the full
+ * list would mean pulling thousands of rows on every keystroke. These are the
+ * pairs a student would realistically hold, injected when the query matches.
+ */
+const DIRECT = [
+  { symbol: 'BTC/USD', name: 'Bitcoin / US Dollar', type: 'Crypto', match: /^(btc|bitcoin|ביטקוין|ביטקויין)/i },
+  { symbol: 'ETH/USD', name: 'Ethereum / US Dollar', type: 'Crypto', match: /^(eth|ethereum|את.?ריום)/i },
+  { symbol: 'SOL/USD', name: 'Solana / US Dollar', type: 'Crypto', match: /^(sol|solana|סולנה)/i },
+  { symbol: 'XRP/USD', name: 'XRP / US Dollar', type: 'Crypto', match: /^(xrp|ripple)/i },
+  { symbol: 'USD/ILS', name: 'US Dollar / Israeli Shekel', type: 'Forex', match: /(usd\/?ils|dollar.*shekel|דולר|שקל)/i },
+  { symbol: 'EUR/ILS', name: 'Euro / Israeli Shekel', type: 'Forex', match: /(eur\/?ils|euro.*shekel|אירו)/i },
+  { symbol: 'EUR/USD', name: 'Euro / US Dollar', type: 'Forex', match: /^(eur\/?usd|euro)/i },
+];
+
+/**
  * Exchanges our price/history endpoints handle most reliably, best first.
  * A search for "Tesla" returns a dozen cross-listings; the US line is the one
  * a student actually wants, so it has to sort to the top.
@@ -45,7 +85,8 @@ export default async function handler(req, res) {
 
   const key = process.env.TWELVE_DATA_API_KEY;
   const auth = key ? `&apikey=${key}` : '';
-  const enc = encodeURIComponent(q);
+  // Search upstream in English; the user may well have typed Hebrew.
+  const enc = encodeURIComponent(rewrite(q));
 
   const [sym, crypto, forex] = await Promise.all([
     getJson(`https://api.twelvedata.com/symbol_search?symbol=${enc}&outputsize=${LIMIT}${auth}`),
@@ -54,6 +95,16 @@ export default async function handler(req, res) {
   ]);
 
   const results = [];
+
+  // Curated pairs first — these are exact intent matches, so rank -1.
+  for (const d of DIRECT) {
+    if (!d.match.test(q)) continue;
+    results.push({
+      symbol: d.symbol, name: d.name,
+      exchange: d.type, country: '', currency: d.symbol.split('/')[1] || '',
+      type: d.type, _rank: -1,
+    });
+  }
 
   for (const r of sym?.data ?? []) {
     if (!r.symbol) continue;
