@@ -16,6 +16,7 @@ import { CustomProjection } from '../components/custom/CustomProjection';
 import { RebalancePanel } from '../components/custom/RebalancePanel';
 import { MonthlyTracker } from '../components/custom/MonthlyTracker';
 import { blendedReturn, simulateCustom } from '../utils/customPortfolio';
+import { Disclaimer } from '../components/shared/Disclaimer';
 
 const emptyList: StockListData = { stocks: [], setupNeeded: false };
 
@@ -131,6 +132,8 @@ export function CustomInvestPage() {
 
       {/* ── Monthly progress ────────────────────────────────────────────── */}
       <MonthlyTracker blendedReturn={blended} />
+
+      <Disclaimer variant="full" />
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { ASSET_RETURNS, SCENARIOS, calcWeightedReturn, ASSET_META } from '../con
 import { getTrackById, trackPhaseOpts } from '../constants/tracks';
 import type { AllocationTarget, AssetClass } from '../types';
 import { Icon, Dot } from '../components/shared/Icon';
+import { DividendSimulation } from '../components/features/DividendSimulation';
+import { Disclaimer } from '../components/shared/Disclaimer';
 
 const MILESTONES = [5, 10, 20, 30] as const;
 type MilestoneYear = typeof MILESTONES[number];
@@ -465,6 +467,10 @@ export function SimulationPage() {
         </div>
       </Card>
 
+      {/* Dividend income simulation */}
+      <DividendSimulation />
+
+      <Disclaimer variant="full" />
     </div>
   );
 }

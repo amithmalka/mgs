@@ -13,6 +13,7 @@ import { MarketBoard } from '../components/market/MarketBoard';
 import type { BoardRow } from '../components/market/MarketBoard';
 import { CandleChart } from '../components/market/CandleChart';
 import { CandleGuide } from '../components/market/CandleGuide';
+import { Disclaimer } from '../components/shared/Disclaimer';
 
 const UP = '#34D399';
 const DOWN = '#F87171';
@@ -278,6 +279,8 @@ export function HomePage() {
       <p className="text-[11px] text-text-dim text-center">
         {he ? 'מחירי סוף יום, לא נתוני מסחר חי. תחזית לטווח ארוך — טאב "סימולציה".' : 'End-of-day prices, not live tick data.'}
       </p>
+
+      <Disclaimer variant="full" />
     </div>
   );
 }

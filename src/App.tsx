@@ -12,7 +12,7 @@ import { GoalsPage } from './pages/GoalsPage';
 import { CustomInvestPage } from './pages/CustomInvestPage';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
-import { t } from './i18n/translations';
+import { Disclaimer } from './components/shared/Disclaimer';
 
 const pages: Record<Tab, React.FC> = {
   dashboard: HomePage,
@@ -67,8 +67,8 @@ function App() {
         <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
           <ActivePage />
         </main>
-        <footer className="relative z-10 text-center py-6 text-[10px] text-text-dim tracking-wider uppercase">
-          {t('disclaimer', lang)}
+        <footer className="relative z-10 py-6 px-5 max-w-3xl mx-auto">
+          <Disclaimer />
         </footer>
       </div>
     </div>

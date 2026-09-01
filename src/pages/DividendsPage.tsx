@@ -13,6 +13,7 @@ import { getTrackById, trackToAllocations, trackPhaseOpts } from '../constants/t
 import { formatCurrency } from '../utils/format';
 import type { AssetClass } from '../types';
 import { Icon } from '../components/shared/Icon';
+import { Disclaimer } from '../components/shared/Disclaimer';
 
 // The "Financial Freedom" income + withdrawal dashboard (Decision Support System).
 export function DividendsPage() {
@@ -231,6 +232,7 @@ export function DividendsPage() {
           </p>
         </>
       )}
+    <Disclaimer variant="full" />
     </div>
   );
 }
