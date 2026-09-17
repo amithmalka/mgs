@@ -3,14 +3,8 @@ import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { AcademyPage } from './pages/AcademyPage';
-import { PortfolioPage } from './pages/PortfolioPage';
-import { TransactionsPage } from './pages/TransactionsPage';
-import { SimulationPage } from './pages/SimulationPage';
-import { DividendsPage } from './pages/DividendsPage';
-import { GoalsPage } from './pages/GoalsPage';
 import { CustomInvestPage } from './pages/CustomInvestPage';
-import { ApartmentMethodPage } from './pages/ApartmentMethodPage';
-import { GeneralMethodPage } from './pages/GeneralMethodPage';
+import { MgsPage } from './pages/MgsPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
@@ -18,16 +12,9 @@ import { Disclaimer } from './components/shared/Disclaimer';
 
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   dashboard: HomePage,
-  apartment: ApartmentMethodPage,
-  general: GeneralMethodPage,
+  mgs: MgsPage,
   custom: CustomInvestPage,
-  dividends: DividendsPage,
   academy: AcademyPage,
-  // Reached from within the method tabs rather than the menu.
-  portfolio: PortfolioPage,
-  transactions: TransactionsPage,
-  simulation: SimulationPage,
-  goals: GoalsPage,
 };
 
 function App() {
@@ -69,7 +56,7 @@ function App() {
       <div className={isRtl ? 'lg:pr-[248px]' : 'lg:pl-[248px]'}>
         <TopBar onOpen={() => setMenuOpen(true)} />
         <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
-          <ContextBar onEdit={() => setActiveTab('dashboard')} />
+          <ContextBar onEdit={() => setActiveTab('mgs')} />
           <ActivePage onNavigate={setActiveTab} />
         </main>
         <footer className="relative z-10 py-6 px-5 max-w-3xl mx-auto">

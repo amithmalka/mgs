@@ -268,6 +268,7 @@ export const translations = {
   // Navigation
   navGroupMain: { en: 'Menu', he: 'תפריט' },
   tabHome: { en: 'Home', he: 'בית' },
+  tabMgs: { en: 'MGS', he: 'MGS' },
   tabTracking: { en: 'Tracking', he: 'מעקב' },
   tabMethodApartment: { en: 'Into Investing', he: 'משקיעה להשקעה' },
   tabMethodGeneral: { en: 'General method', he: 'שיטה כללית' },
