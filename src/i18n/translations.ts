@@ -6,13 +6,6 @@ export const translations = {
   disclaimer: { en: 'This is an educational tool. Not financial advice.', he: 'זהו כלי חינוכי בלבד. אין זו המלצת השקעה.' },
 
   // Tabs
-  tabDashboard: { en: 'Home', he: 'בית' },
-  tabPortfolio: { en: 'Portfolio by track', he: 'התיק לפי המסלול' },
-  tabTransactions: { en: 'My tracking', he: 'המעקב שלי' },
-  tabSimulation: { en: 'Where it leads', he: 'לאן זה מוביל' },
-  tabDividends: { en: 'Income & withdrawals', he: 'הכנסה ומשיכות' },
-  tabGoals: { en: 'Goals', he: 'יעדים' },
-  tabActivity: { en: 'Activity', he: 'פעילות' },
 
   // Dashboard
   portfolioValue: { en: 'Portfolio Value', he: 'שווי תיק' },
@@ -155,7 +148,6 @@ export const translations = {
   bonds: { en: 'Medium-Term Bonds (IEF)', he: 'אג״ח טווח בינוני (IEF)' },
 
   // Tracks tab + page
-  tabTracks: { en: 'Tracks', he: 'מסלולים' },
   // The named method — the strategy that replaces buying an apartment.
   // A second, general method is planned alongside it.
   chooseMethod: { en: 'Choose your method', he: 'בחרו את השיטה' },
@@ -269,21 +261,14 @@ export const translations = {
   navGroupMain: { en: 'Menu', he: 'תפריט' },
   tabHome: { en: 'Home', he: 'בית' },
   tabMgs: { en: 'MGS', he: 'MGS' },
-  tabTracking: { en: 'Tracking', he: 'מעקב' },
-  tabMethodApartment: { en: 'Into Investing', he: 'משקיעה להשקעה' },
-  tabMethodGeneral: { en: 'General method', he: 'שיטה כללית' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
   navGroupMoney: { en: 'My money', he: 'הכסף שלי' },
   navGroupAhead: { en: 'Looking ahead', he: 'קדימה' },
   navGroupLearn: { en: 'Learning', he: 'למידה' },
-  tabStart: { en: 'My method & track', he: 'השיטה והמסלול שלי' },
-  tabMarket: { en: 'The market', he: 'השוק' },
-  tabThisMonth: { en: 'This month', he: 'החודש' },
   openMenu: { en: 'Open menu', he: 'פתח תפריט' },
   close: { en: 'Close', he: 'סגור' },
 
   // Custom investing tab
-  tabCustom: { en: 'Stocks I picked', he: 'מניות שבחרתי' },
   customTitle: { en: 'Custom Portfolio', he: 'השקעה בהתאמה אישית' },
   customSubtitle: { en: 'Pick your own stocks, set the weights, and see the projection, the deposit split and your month-by-month progress.', he: 'בחרו מניות משלכם, קבעו משקלים, וראו את התחזית, את חלוקת ההפקדה ואת ההתקדמות חודש אחר חודש.' },
   refreshPrices: { en: 'Refresh prices', he: 'רענן מחירים' },
