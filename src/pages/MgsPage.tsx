@@ -48,7 +48,18 @@ export function MgsPage() {
   const deposit = simulationParams.monthlyDeposit;
   const month = currentPlanMonth(startMonth);
   const phase = phaseOf(track, horizonYears, month);
-  const retireAge = age + horizonYears;
+  /**
+   * Ages are anchored to the START of the plan, not to today.
+   *
+   * `age` is the age now, while the horizon counts from the plan's first
+   * month, so for anyone who began investing earlier the two differ. Reading
+   * the chart by plan year alone also made it look like the plan starts at
+   * age 0, which is what these conversions fix.
+   */
+  const elapsedYears = (month - 1) / 12;
+  const ageAtStart = age - elapsedYears;
+  const ageAt = (planYear: number) => Math.round(ageAtStart + planYear);
+  const retireAge = ageAt(horizonYears);
 
   // ── Real holdings → Rule 1 for this month ──────────────────────────────
   const book = emptyBook();
@@ -63,7 +74,7 @@ export function MgsPage() {
   // every render, which is what "recalculates instantly" needs anyway.
   const rows = projectMgs({
     track, horizonYears, monthlyDeposit: deposit,
-    overrides, returns: MGS_RETURNS[scenario], withdrawYears: 10,
+    overrides, returns: MGS_RETURNS[scenario], withdrawYears: 0,
     startMonth: month,
     startBook: Object.fromEntries(ASSETS.map(a => [a, holdings[a].value])),
     startBasis: Object.fromEntries(ASSETS.map(a => [a, holdings[a].cost || holdings[a].value])),
@@ -73,6 +84,7 @@ export function MgsPage() {
 
   const chart = rows.filter(r => r.month % 12 === 0).map(r => ({
     year: r.month / 12,
+    [he ? 'גיל' : 'Age']: ageAt(r.month / 12),
     [he ? 'שווי התיק' : 'Portfolio']: Math.round(r.value),
     [he ? 'סך הפקדות' : 'Contributions']: Math.round(r.deposited),
   }));
@@ -81,7 +93,7 @@ export function MgsPage() {
   const tableYears = [...new Set([
     ...Array.from({ length: Math.floor(horizonYears / 5) }, (_, i) => (i + 1) * 5),
     ...(track.deRiskYears > 0 ? [deRiskStart] : []),
-    horizonYears, horizonYears + 5, horizonYears + 10,
+    horizonYears,
   ])].sort((a, b) => a - b);
 
   const shiftRow = rows.find(r => r.shiftTax > 0);
@@ -148,13 +160,13 @@ export function MgsPage() {
         {/* Phase timeline */}
         <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
           <PhasePill color={PHASE_LABEL.accumulate.color}
-            label={`${he ? PHASE_LABEL.accumulate.he : PHASE_LABEL.accumulate.en}: ${he ? 'שנים' : 'years'} 1–${track.deRiskYears > 0 ? deRiskStart - 1 : horizonYears}`} />
+            label={`${he ? PHASE_LABEL.accumulate.he : PHASE_LABEL.accumulate.en}: ${he ? 'גיל' : 'age'} ${ageAt(0)}–${ageAt(track.deRiskYears > 0 ? deRiskStart - 1 : horizonYears)}`} />
           {track.deRiskYears > 0 && (
             <PhasePill color={PHASE_LABEL.derisk.color}
-              label={`${he ? PHASE_LABEL.derisk.he : PHASE_LABEL.derisk.en}: ${he ? 'שנים' : 'years'} ${deRiskStart}–${horizonYears}`} />
+              label={`${he ? PHASE_LABEL.derisk.he : PHASE_LABEL.derisk.en}: ${he ? 'גיל' : 'age'} ${ageAt(deRiskStart - 1)}–${ageAt(horizonYears)}`} />
           )}
           <PhasePill color={PHASE_LABEL.withdraw.color}
-            label={`${he ? PHASE_LABEL.withdraw.he : PHASE_LABEL.withdraw.en}: ${he ? 'משנה' : 'from year'} ${horizonYears + 1}`} />
+            label={`${he ? PHASE_LABEL.withdraw.he : PHASE_LABEL.withdraw.en}: ${he ? 'מגיל' : 'from age'} ${ageAt(horizonYears)}`} />
         </div>
       </Card>
 
@@ -310,10 +322,12 @@ export function MgsPage() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-            <XAxis dataKey="year" stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
+            <XAxis dataKey={he ? 'גיל' : 'Age'} stroke="#555" tick={{ fill: '#888', fontSize: 11 }}
+              label={{ value: he ? 'גיל' : 'Age', position: 'insideBottomRight', offset: -4, fill: '#666', fontSize: 10 }} />
             <YAxis tickFormatter={v => `₪${(v / 1_000_000).toFixed(1)}M`} stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
             <Tooltip contentStyle={{ background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', color: '#E8E8E8', fontSize: '12px' }}
-              formatter={v => `₪${Number(v).toLocaleString()}`} />
+              formatter={v => `₪${Number(v).toLocaleString()}`}
+              labelFormatter={v => (he ? `גיל ${v}` : `Age ${v}`)} />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
             <Area type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#D4AF37" fill="url(#mgsGrad)" strokeWidth={2} />
             <Line type="monotone" dataKey={he ? 'סך הפקדות' : 'Contributions'} stroke="#666" strokeDasharray="5 5" dot={false} />
@@ -359,12 +373,12 @@ export function MgsPage() {
           <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-surface-4 text-text-muted text-[11px]">
-                <th className="text-start py-2">{he ? 'שנה' : 'Year'}</th>
+                <th className="text-start py-2">{he ? 'גיל' : 'Age'}</th>
+                <th className="text-start py-2 text-[10px]">{he ? 'שנה בתוכנית' : 'Plan year'}</th>
                 <th className="text-start py-2">{he ? 'שלב' : 'Phase'}</th>
                 <th className="text-end py-2">{he ? 'סך הפקדות' : 'Contributions'}</th>
                 <th className="text-end py-2">{he ? 'שווי התיק' : 'Portfolio'}</th>
                 <th className="text-end py-2">QQQ3</th>
-                <th className="text-end py-2">{he ? 'נטו לחודש' : 'Net/mo'}</th>
               </tr>
             </thead>
             <tbody>
@@ -374,14 +388,14 @@ export function MgsPage() {
                 const ph = PHASE_LABEL[r.phase];
                 return (
                   <tr key={y} className="border-b border-surface-3/50">
-                    <td className="py-2 text-text">{y}</td>
+                    <td className="py-2 text-text font-medium">{ageAt(y)}</td>
+                    <td className="py-2 text-text-dim text-[11px]">{y}</td>
                     <td className="py-2 text-[11px]" style={{ color: ph.color }}>{he ? ph.he : ph.en}</td>
                     <td className="py-2 text-end text-text-muted">{formatCurrency(r.deposited)}</td>
                     <td className="py-2 text-end text-gold font-medium">{formatCurrency(r.value)}</td>
                     <td className={`py-2 text-end text-[11px] ${r.qqq3Weight >= QQQ3_CAP ? 'text-danger' : 'text-text-dim'}`} dir="ltr">
                       {(r.qqq3Weight * 100).toFixed(1)}%
                     </td>
-                    <td className="py-2 text-end text-success">{r.net > 0 ? formatCurrency(r.net) : '—'}</td>
                   </tr>
                 );
               })}

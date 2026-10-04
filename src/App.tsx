@@ -3,7 +3,6 @@ import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { AcademyPage } from './pages/AcademyPage';
-import { CustomInvestPage } from './pages/CustomInvestPage';
 import { MgsPage } from './pages/MgsPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
@@ -13,7 +12,6 @@ import { Disclaimer } from './components/shared/Disclaimer';
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   dashboard: HomePage,
   mgs: MgsPage,
-  custom: CustomInvestPage,
   academy: AcademyPage,
 };
 
