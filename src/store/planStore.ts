@@ -23,6 +23,14 @@ export interface Lot {
   lastHarvest: number;
 }
 
+/** The income sleeve: what the harvests bought, and what it has paid out. */
+export interface Jepq {
+  units: number;
+  cost: number;
+  /** every distribution so far, after tax */
+  received: number;
+}
+
 export interface MonthLog {
   /** 'YYYY-MM' */
   month: string;
@@ -32,6 +40,8 @@ export interface MonthLog {
   harvested: number;
   taxPaid: number;
   deposit: number;
+  /** JEPQ's own distribution that month, after tax */
+  income: number;
 }
 
 const empty = (): Lot => ({ units: 0, cost: 0, ath: 0, armed: false, lastHarvest: 0 });
@@ -42,11 +52,12 @@ interface PlanState {
   /** 'YYYY-MM' of the first month */
   startMonth: string;
   lots: Record<SleeveId, Lot>;
+  jepq: Jepq;
   log: MonthLog[];
 
   start: (month: string) => void;
   setLot: (sleeve: SleeveId, patch: Partial<Lot>) => void;
-  recordMonth: (entry: MonthLog, lots: Record<SleeveId, Lot>) => void;
+  recordMonth: (entry: MonthLog, lots: Record<SleeveId, Lot>, jepq: Jepq) => void;
   undoLast: () => void;
   reset: () => void;
 }
@@ -63,19 +74,21 @@ export const usePlanStore = create<PlanState>()(
       started: false,
       startMonth: thisMonth(),
       lots: emptyLots(),
+      jepq: { units: 0, cost: 0, received: 0 },
       log: [],
 
       start: (month) => set({ started: true, startMonth: month }),
       setLot: (sleeve, patch) => set(s => ({
         lots: { ...s.lots, [sleeve]: { ...s.lots[sleeve], ...patch } },
       })),
-      recordMonth: (entry, lots) => set(s => ({
+      recordMonth: (entry, lots, jepq) => set(s => ({
         log: [...s.log.filter(l => l.month !== entry.month), entry]
           .sort((a, b) => a.month.localeCompare(b.month)),
-        lots,
+        lots, jepq,
       })),
       undoLast: () => set(s => ({ log: s.log.slice(0, -1) })),
-      reset: () => set({ started: false, lots: emptyLots(), log: [] }),
+      reset: () => set({ started: false, lots: emptyLots(),
+        jepq: { units: 0, cost: 0, received: 0 }, log: [] }),
     }),
     { name: 'mgs-plan' },
   ),

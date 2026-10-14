@@ -6,7 +6,7 @@
  * depends on what is actually held and on each sleeve's own history.
  */
 import { horizonFor, type SleeveId } from '../constants/mgsScenarios';
-import type { Lot } from '../store/planStore';
+import type { Lot, Jepq } from '../store/planStore';
 
 export const TAX = 0.25;
 /** how far a sleeve must fall from its high before the next harvest arms */
@@ -17,6 +17,8 @@ export const BREAKOUT = 0.10;
 /** a sleeve this far below its own high takes most of the month's money */
 export const DEEP = 0.50;
 export const DEEP_SHARE = 0.70;
+/** what JEPQ hands over a year, as a share of its value */
+export const JEPQ_YIELD = 0.09;
 
 export type Reason =
   | 'onTarget' | 'over' | 'under' | 'deep' | 'landing';
@@ -55,6 +57,10 @@ export interface MonthPlan {
   harvests: HarvestLine[];
   total: number;
   portfolio: number;
+  /** JEPQ's value right now, in shekels */
+  jepqValue: number;
+  /** what it hands over this month, after tax */
+  income: number;
 }
 
 /** The mix the age calls for, in this plan month. */
@@ -74,6 +80,8 @@ export function buildMonth(
   lots: Record<SleeveId, Lot>,
   /** value of one unit, in shekels */
   price: Partial<Record<SleeveId, number>>,
+  jepq: Jepq = { units: 0, cost: 0, received: 0 },
+  jepqPrice = 0,
 ): MonthPlan {
   const years = (month - 1) / 12;
   const [depositYears, shiftYears] = horizonFor(startAge);
@@ -149,9 +157,12 @@ export function buildMonth(
     harvests.push({ sleeve: k, gross, tax, net: gross - tax, bar });
   }
 
+  const jepqValue = jepq.units * jepqPrice;
   return {
     month, age: startAge + Math.floor(years), phase, lines, harvests,
     total: lines.reduce((s, l) => s + l.amount, 0), portfolio,
+    jepqValue,
+    income: ((jepqValue * JEPQ_YIELD) / 12) * (1 - TAX),
   };
 }
 
@@ -160,7 +171,9 @@ export function applyMonth(
   lots: Record<SleeveId, Lot>,
   plan: MonthPlan,
   price: Partial<Record<SleeveId, number>>,
-): Record<SleeveId, Lot> {
+  jepq: Jepq = { units: 0, cost: 0, received: 0 },
+  jepqPrice = 0,
+): { lots: Record<SleeveId, Lot>; jepq: Jepq } {
   const next: Record<SleeveId, Lot> = { ...lots };
   for (const k of Object.keys(lots) as SleeveId[]) next[k] = { ...lots[k] };
 
@@ -171,8 +184,16 @@ export function applyMonth(
     lot.cost *= 1 - frac;
     lot.armed = false;
     lot.lastHarvest = plan.month;
-    next.WORLD = next.WORLD; // JEPQ is tracked outside the sleeve mix
   }
+
+  // the harvest buys JEPQ, and JEPQ's own distribution leaves the plan as cash
+  const nextJepq: Jepq = { ...jepq };
+  const harvested = plan.harvests.reduce((s, h) => s + h.net, 0);
+  if (harvested > 0 && jepqPrice > 0) {
+    nextJepq.units += harvested / jepqPrice;
+    nextJepq.cost += harvested;
+  }
+  nextJepq.received += plan.income;
   for (const l of plan.lines) {
     if (l.amount <= 0) continue;
     const p = price[l.sleeve];
@@ -187,5 +208,5 @@ export function applyMonth(
     if (p > next[k].ath) next[k].ath = p;
     else if (reset && next[k].ath > 0 && p < next[k].ath * (1 - reset)) next[k].armed = true;
   }
-  return next;
+  return { lots: next, jepq: nextJepq };
 }

@@ -12,6 +12,7 @@ import { Icon } from '../components/shared/Icon';
 const TICKER: Partial<Record<SleeveId, string>> = {
   BTC: 'BTC/USD', SMH: 'SMH', SPMO: 'SPMO', XLK: 'XLK', WORLD: 'URTH',
 };
+const JEPQ_TICKER = 'JEPQ';
 const BUY_AS: Partial<Record<SleeveId, string>> = {
   BTC: 'IBIT', SMH: 'SMH', SPMO: 'SPMO', XLK: 'XLK', WORLD: 'URTH',
 };
@@ -37,7 +38,7 @@ export function MonthPage() {
   const { age } = useMgsStore();
   const { simulationParams } = useStore();
   const deposit = simulationParams.monthlyDeposit;
-  const { started, startMonth, lots, log, start, recordMonth } = usePlanStore();
+  const { started, startMonth, lots, jepq, log, start, recordMonth } = usePlanStore();
 
   const [prices, setPrices] = useState<Record<string, PriceInfo>>({});
   const [fx, setFx] = useState<number | undefined>();
@@ -48,7 +49,7 @@ export function MonthPage() {
     setLoading(true); setErr('');
     try {
       const syms = [...new Set(Object.values(TICKER))] as string[];
-      const p = await fetchPrices([...syms, 'USD/ILS']);
+      const p = await fetchPrices([...syms, JEPQ_TICKER, 'USD/ILS']);
       setPrices(p); setFx(p['USD/ILS']?.price);
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setLoading(false); }
@@ -70,20 +71,23 @@ export function MonthPage() {
   const doneThisMonth = log.some(l => l.month === current);
   const ready = Object.keys(priceIls).length > 0;
 
+  const jepqIls = (prices[JEPQ_TICKER]?.price ?? 0) * (fx ?? 0);
+
   const plan = useMemo(
-    () => buildMonth(age, month, deposit, lots, priceIls),
-    [age, month, deposit, lots, priceIls],
+    () => buildMonth(age, month, deposit, lots, priceIls, jepq, jepqIls),
+    [age, month, deposit, lots, priceIls, jepq, jepqIls],
   );
 
   const confirm = () => {
-    const next = applyMonth(lots, plan, priceIls);
+    const next = applyMonth(lots, plan, priceIls, jepq, jepqIls);
     recordMonth({
       month: current,
       bought: Object.fromEntries(plan.lines.filter(l => l.amount > 0).map(l => [l.sleeve, l.amount])),
       harvested: plan.harvests.reduce((s, h) => s + h.net, 0),
       taxPaid: plan.harvests.reduce((s, h) => s + h.tax, 0),
+      income: plan.income,
       deposit,
-    }, next);
+    }, next.lots, next.jepq);
   };
 
   if (!started) {
@@ -119,6 +123,8 @@ export function MonthPage() {
         <span className="tk"><span className="sym">הפקדה</span><b>{n0(deposit)} ₪</b></span>
         <span className="tk"><span className="sym">שווי התיק</span>
           <b>{ready ? `${n0(plan.portfolio)} ₪` : '—'}</b></span>
+        <span className="tk"><span className="sym">JEPQ</span>
+          <b>{plan.jepqValue ? `${n0(plan.jepqValue)} ₪` : '—'}</b></span>
         {fx && <span className="tk"><span className="sym">דולר</span><b>{fx.toFixed(3)}</b></span>}
       </div>
 
@@ -177,7 +183,17 @@ export function MonthPage() {
       </section>
 
       <div className="fl">
-        <div className="f tot" style={{ flex: '1 1 100%' }}>
+        <div className="f">
+          <span className="fk">מנוע ההכנסה</span>
+          <span className="ft">JEPQ · {plan.jepqValue ? `${n0(plan.jepqValue)} ₪` : 'עוד לא נבנה'}</span>
+          <p>
+            {plan.jepqValue > 0
+              ? <>מחלקת <b style={{ color: 'var(--up)' }}>{n0(plan.income)} ₪</b> החודש, נטו אחרי מס.
+                  עד היום התקבלו <b>{n0(jepq.received)} ₪</b>.</>
+              : <>JEPQ נבנית רק מקצירות — היא תתחיל לשלם אחרי הקצירה הראשונה.</>}
+          </p>
+        </div>
+        <div className="f tot" style={{ flex: '1 1 260px' }}>
           <span className="fk">{doneThisMonth ? 'בוצע' : 'לביצוע החודש'}</span>
           <span className="ft" style={{ fontSize: 22 }}>{n0(plan.total)} ₪</span>
           <p>
@@ -203,13 +219,14 @@ export function MonthPage() {
           <h2>מה כבר בוצע</h2>
           <div className="scroll">
             <table>
-              <thead><tr>{['חודש', 'הופקד', 'נקצר ל-JEPQ', 'מס'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+              <thead><tr>{['חודש', 'הופקד', 'נקצר ל-JEPQ', 'התקבל מ-JEPQ', 'מס'].map(h => <th key={h}>{h}</th>)}</tr></thead>
               <tbody>
                 {[...log].reverse().map(l => (
                   <tr key={l.month}>
                     <td className="dim">{monthName(l.month)}</td>
                     <td className="v">{n0(l.deposit)}</td>
                     <td className="v gold">{l.harvested ? n0(l.harvested) : '—'}</td>
+                    <td className="v up">{l.income ? n0(l.income) : '—'}</td>
                     <td className="v dim">{l.taxPaid ? n0(l.taxPaid) : '—'}</td>
                   </tr>
                 ))}
