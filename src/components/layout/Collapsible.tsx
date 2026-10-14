@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../shared/Icon';
+import { ExplainPanel } from '../shared/Explain';
+import type { ExplainKey } from '../../constants/mgsExplain';
 
 /**
  * A section that starts closed unless it is the main thing on the screen.
@@ -10,13 +12,15 @@ import { Icon } from '../shared/Icon';
  * detail lives in here, closed, so a screen opens with only what it is for.
  */
 export function Collapsible({
-  title, subtitle, children, defaultOpen = false, badge,
+  title, subtitle, children, defaultOpen = false, badge, explain,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   defaultOpen?: boolean;
   badge?: string;
+  /** explanation shown at the top of the section once it is opened */
+  explain?: ExplainKey;
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -40,7 +44,12 @@ export function Collapsible({
         <Icon name={open ? 'chevronUp' : 'chevronDown'} size={16} className="text-text-muted flex-shrink-0" />
       </button>
 
-      {open && <div className="px-1 pb-1">{children}</div>}
+      {open && (
+        <div className="px-1 pb-1">
+          {explain && <div className="px-4 pt-1"><ExplainPanel topic={explain} inline /></div>}
+          {children}
+        </div>
+      )}
     </div>
   );
 }

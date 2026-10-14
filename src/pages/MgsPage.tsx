@@ -11,13 +11,14 @@ import { Disclaimer } from '../components/shared/Disclaimer';
 import { TrackingSection } from '../components/features/TrackingSection';
 import { formatCurrency } from '../utils/format';
 import {
-  MGS_ASSETS, MGS_TRACKS, MGS_RETURNS, QQQ3_CAP, getMgsTrack,
+  MGS_ASSETS, MGS_RETURNS, milestonesFor, targetLeveraged, allocationFor, COHORTS,
 } from '../constants/mgsTracks';
 import type { MgsAsset } from '../constants/mgsTracks';
 import {
-  emptyBook, phaseOf, routeDeposit, projectMgs, insightFrom, qqq3Weight,
+  emptyBook, phaseOf, routeDeposit, projectMgs, insightFrom, leveragedWeight, ageAtMonth,
 } from '../utils/mgsEngine';
 import type { Phase } from '../utils/mgsEngine';
+import { Track1Tables } from '../components/mgs/Track1Tables';
 
 const ASSETS = Object.keys(MGS_ASSETS) as MgsAsset[];
 
@@ -40,14 +41,14 @@ export function MgsPage() {
   const he = lang !== 'en';
   const { simulationParams, setMonthlyDeposit } = useStore();
   const {
-    age, trackId, horizonYears, startMonth, holdings, overrides, scenario,
-    setAge, setTrack, setHorizon, setStartMonth, setHolding, setOverride, removeOverride, setScenario,
+    age, startMonth, holdings, overrides, scenario,
+    setAge, setStartMonth, setHolding, setOverride, removeOverride, setScenario,
   } = useMgsStore();
 
-  const track = getMgsTrack(trackId);
+  const { shiftYears, withdrawYears: horizonYears } = milestonesFor(age);
   const deposit = simulationParams.monthlyDeposit;
   const month = currentPlanMonth(startMonth);
-  const phase = phaseOf(track, horizonYears, month);
+  const phase = phaseOf(age, month);
   /**
    * Ages are anchored to the START of the plan, not to today.
    *
@@ -65,22 +66,37 @@ export function MgsPage() {
   const book = emptyBook();
   for (const a of ASSETS) book[a] = { value: holdings[a].value, basis: holdings[a].cost || holdings[a].value };
 
-  const liveWeight = qqq3Weight(book);
+  const liveWeight = leveragedWeight(book);
+  // The leverage target follows the investor's age, stepping down each year.
+  const trackCap = targetLeveraged(ageAtMonth(age, month));
+  const capPct = +(trackCap * 100).toFixed(0);
   const thisMonthAmount = overrides[month] ?? deposit;
-  const routing = routeDeposit(thisMonthAmount, book, track, phase);
+  const routing = routeDeposit(thisMonthAmount, book, age, month);
 
   // ── Projection from today ──────────────────────────────────────────────
   // Cheap — a few hundred months across four assets — so it simply reruns on
   // every render, which is what "recalculates instantly" needs anyway.
   const rows = projectMgs({
-    track, horizonYears, monthlyDeposit: deposit,
-    overrides, returns: MGS_RETURNS[scenario], withdrawYears: 0,
+    startAge: age, monthlyDeposit: deposit,
+    overrides, returns: MGS_RETURNS[scenario], withdrawYears: 1,
     startMonth: month,
     startBook: Object.fromEntries(ASSETS.map(a => [a, holdings[a].value])),
     startBasis: Object.fromEntries(ASSETS.map(a => [a, holdings[a].cost || holdings[a].value])),
   });
 
-  const insight = insightFrom(rows, horizonYears);
+  const insight = insightFrom(rows, age);
+
+  /**
+   * Motivation strip: how far the finish line still is, and what this month's
+   * deposit is buying in the end. Both come from the projection already
+   * computed above, so they move the moment the deposit is edited.
+   */
+  const monthsToWithdraw = Math.max(0, horizonYears * 12 - month + 1);
+  const yearsLeft = Math.floor(monthsToWithdraw / 12);
+  const monthsLeft = monthsToWithdraw % 12;
+  const depositsLeft = monthsToWithdraw * deposit;
+  const atWithdraw = rows.find(r => r.month === horizonYears * 12);
+  const firstDraw = rows.find(r => r.phase === 'withdraw');
 
   const chart = rows.filter(r => r.month % 12 === 0).map(r => ({
     year: r.month / 12,
@@ -89,10 +105,10 @@ export function MgsPage() {
     [he ? 'סך הפקדות' : 'Contributions']: Math.round(r.deposited),
   }));
 
-  const deRiskStart = horizonYears - track.deRiskYears + 1;
+  const deRiskStart = shiftYears + 1;
   const tableYears = [...new Set([
     ...Array.from({ length: Math.floor(horizonYears / 5) }, (_, i) => (i + 1) * 5),
-    ...(track.deRiskYears > 0 ? [deRiskStart] : []),
+    deRiskStart,
     horizonYears,
   ])].sort((a, b) => a - b);
 
@@ -106,7 +122,9 @@ export function MgsPage() {
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
 
       {/* ── Onboarding ─────────────────────────────────────────────────── */}
-      <Card glow title={he ? 'המסלול שלי' : 'My track'}
+      <Track1Tables age={age} monthlyDeposit={simulationParams.monthlyDeposit} />
+
+      <Card glow explain="track" title={he ? 'המסלול שלי' : 'My track'}
             subtitle={he ? 'הגיל קובע את המסלול. אפשר לשנות ידנית.' : 'Your age sets the track. You can change it.'}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <label className="block">
@@ -114,14 +132,10 @@ export function MgsPage() {
             <input type="number" min={18} max={80} value={age}
               onChange={e => setAge(Number(e.target.value) || 0)} className="w-full" />
           </label>
-          <label className="block">
-            <span className="block text-[10px] text-text-muted mb-1">
-              {he ? 'אופק (שנים)' : 'Horizon (years)'}{track.horizonYears !== null && (he ? ' · קבוע' : ' · fixed')}
-            </span>
-            <input type="number" value={horizonYears} disabled={track.horizonYears !== null}
-              min={track.horizonRange?.[0]} max={track.horizonRange?.[1]}
-              onChange={e => setHorizon(Number(e.target.value) || 0)} className="w-full disabled:opacity-50" />
-          </label>
+          <div className="rounded-xl bg-surface-3 border border-surface-4 px-3 py-2">
+            <p className="text-[10px] text-text-dim">{he ? 'מעבר למדד עולמי בגיל' : 'Shift to world index at'}</p>
+            <p className="text-[15px] font-bold text-text">{age + shiftYears}</p>
+          </div>
           <label className="block">
             <span className="block text-[10px] text-text-muted mb-1">{he ? 'תחילת ההשקעה' : 'Started'}</span>
             <input type="month" value={startMonth} onChange={e => setStartMonth(e.target.value)} className="w-full" dir="ltr" />
@@ -132,27 +146,27 @@ export function MgsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-4">
-          {MGS_TRACKS.map(t => {
-            const active = t.id === trackId;
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-4">
+          {COHORTS.map(c => {
+            const active = age >= c.from && age <= c.to;
             return (
-              <button key={t.id} onClick={() => setTrack(t.id)}
-                className={`text-start p-3 rounded-xl border transition-colors ${
-                  active ? 'border-gold-border bg-gold-muted' : 'border-surface-4 bg-surface-2 hover:border-gold-border'
+              <div key={c.label}
+                className={`p-3 rounded-xl border ${
+                  active ? 'border-gold-border bg-gold-muted' : 'border-surface-4 bg-surface-2'
                 }`}>
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-[13px] font-semibold ${active ? 'text-gold' : 'text-text'}`}>{he ? t.nameHe : t.nameEn}</span>
-                  <span className="text-[10px] text-text-dim">{he ? 'גיל' : 'age'} {t.ageLabel}</span>
+                  <span className={`text-[13px] font-semibold ${active ? 'text-gold' : 'text-text'}`}>{c.label}</span>
+                  <span className="text-[10px] text-text-dim" dir="ltr">
+                    {(targetLeveraged(c.from) * 100).toFixed(0)}%
+                  </span>
                 </div>
-                <p className="text-[10px] text-text-muted mt-1" dir="ltr">
-                  {Object.entries(t.weights).map(([a, w]) => `${a} ${(w! * 100).toFixed(1).replace(/\.0$/, '')}%`).join(' · ')}
+                <p className="text-[10px] text-text-muted mt-1">
+                  {he ? `מעבר אחרי ${c.shiftYears} שנה` : `Shift after ${c.shiftYears}y`}
                 </p>
                 <p className="text-[10px] text-text-dim mt-0.5">
-                  {t.deRiskYears > 0
-                    ? (he ? `${t.deRiskYears} שנים אחרונות: הכל ל-MWRD` : `Final ${t.deRiskYears} years: all to MWRD`)
-                    : (he ? 'ללא מינוף · הרכב קבוע' : 'No leverage · fixed mix')}
+                  {he ? `משיכה אחרי ${c.withdrawYears} שנה` : `Withdraw after ${c.withdrawYears}y`}
                 </p>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -160,18 +174,77 @@ export function MgsPage() {
         {/* Phase timeline */}
         <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
           <PhasePill color={PHASE_LABEL.accumulate.color}
-            label={`${he ? PHASE_LABEL.accumulate.he : PHASE_LABEL.accumulate.en}: ${he ? 'גיל' : 'age'} ${ageAt(0)}–${ageAt(track.deRiskYears > 0 ? deRiskStart - 1 : horizonYears)}`} />
-          {track.deRiskYears > 0 && (
-            <PhasePill color={PHASE_LABEL.derisk.color}
-              label={`${he ? PHASE_LABEL.derisk.he : PHASE_LABEL.derisk.en}: ${he ? 'גיל' : 'age'} ${ageAt(deRiskStart - 1)}–${ageAt(horizonYears)}`} />
-          )}
+            label={`${he ? PHASE_LABEL.accumulate.he : PHASE_LABEL.accumulate.en}: ${he ? 'גיל' : 'age'} ${ageAt(0)}–${ageAt(shiftYears)}`} />
+          <PhasePill color={PHASE_LABEL.derisk.color}
+            label={`${he ? PHASE_LABEL.derisk.he : PHASE_LABEL.derisk.en}: ${he ? 'גיל' : 'age'} ${ageAt(shiftYears)}–${ageAt(horizonYears)}`} />
           <PhasePill color={PHASE_LABEL.withdraw.color}
             label={`${he ? PHASE_LABEL.withdraw.he : PHASE_LABEL.withdraw.en}: ${he ? 'מגיל' : 'from age'} ${ageAt(horizonYears)}`} />
         </div>
       </Card>
 
+      {/* ── How far to go, and what it buys ────────────────────────────── */}
+      {phase !== 'withdraw' && atWithdraw && (
+        <Card glow explain="progress" title={he ? 'כמה נשאר, וכמה זה יביא' : 'How far to go, and what it buys'}
+              subtitle={he
+                ? `הפקדה של ${formatCurrency(deposit)} בחודש, בתרחיש ${scenario === 'moderate' ? 'המתון' : scenario === 'conservative' ? 'השמרני' : 'האגרסיבי'}`
+                : `${formatCurrency(deposit)} a month, ${scenario} scenario`}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="rounded-xl bg-surface-3 border border-surface-4 px-3 py-3">
+              <p className="text-[10px] text-text-dim">{he ? 'נשאר עד המשיכה' : 'Left until withdrawals'}</p>
+              <p className="text-[19px] font-bold text-gold leading-tight">{monthsToWithdraw}</p>
+              <p className="text-[10px] text-text-muted mt-0.5">
+                {he ? `חודשים · ${yearsLeft} שנים ו-${monthsLeft} חודשים` : `months · ${yearsLeft}y ${monthsLeft}m`}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface-3 border border-surface-4 px-3 py-3">
+              <p className="text-[10px] text-text-dim">{he ? 'עוד תפקידו' : 'Still to deposit'}</p>
+              <p className="text-[19px] font-bold text-text leading-tight">{formatCurrency(depositsLeft)}</p>
+              <p className="text-[10px] text-text-muted mt-0.5">
+                {he ? `עד גיל ${age + horizonYears}` : `until age ${age + horizonYears}`}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface-3 border border-surface-4 px-3 py-3">
+              <p className="text-[10px] text-text-dim">{he ? 'התיק בפרישה' : 'Portfolio at retirement'}</p>
+              <p className="text-[19px] font-bold text-success leading-tight">{formatCurrency(atWithdraw.value)}</p>
+              <p className="text-[10px] text-text-muted mt-0.5">
+                {he ? `בגיל ${age + horizonYears}` : `at age ${age + horizonYears}`}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gold-muted border border-gold-border px-3 py-3">
+              <p className="text-[10px] text-text-dim">{he ? 'תמשכו הביתה כל חודש' : 'You take home monthly'}</p>
+              <p className="text-[19px] font-bold text-gold leading-tight">
+                {formatCurrency(firstDraw?.net ?? 0)}
+              </p>
+              <p className="text-[10px] text-text-muted mt-0.5">{he ? 'נטו, אחרי מס' : 'net, after tax'}</p>
+            </div>
+          </div>
+
+          {/* Progress along the accumulation road */}
+          <div className="mt-4">
+            <div className="flex justify-between text-[11px] mb-1.5">
+              <span className="text-text-muted">
+                {he ? `עברתם ${month - 1} מתוך ${horizonYears * 12} חודשים` : `${month - 1} of ${horizonYears * 12} months done`}
+              </span>
+              <span className="text-gold font-semibold" dir="ltr">
+                {(((month - 1) / (horizonYears * 12)) * 100).toFixed(1)}%
+              </span>
+            </div>
+            <div className="w-full bg-surface-4 rounded-full h-2.5 overflow-hidden">
+              <div className="h-2.5 rounded-full bg-gold transition-all"
+                style={{ width: `${Math.min(100, ((month - 1) / (horizonYears * 12)) * 100)}%` }} />
+            </div>
+          </div>
+
+          <p className="text-[11px] text-text-dim mt-3">
+            {he
+              ? `כל הפקדה חודשית נוספת מקרבת אתכם ליעד. המספרים מתעדכנים ברגע שמשנים את סכום ההפקדה, והם מניחים שתמשיכו באותו קצב עד גיל ${age + horizonYears}.`
+              : `Every monthly deposit moves the line. These update the moment you change the amount, and assume you keep the same pace until age ${age + horizonYears}.`}
+          </p>
+        </Card>
+      )}
+
       {/* ── This month ─────────────────────────────────────────────────── */}
-      <Card glow title={he ? 'מה קונים החודש' : 'What to buy this month'}
+      <Card glow explain="buyThisMonth" title={he ? 'מה קונים החודש' : 'What to buy this month'}
             subtitle={he
               ? `חודש ${month} בתוכנית · שלב: ${PHASE_LABEL[phase].he}`
               : `Plan month ${month} · phase: ${PHASE_LABEL[phase].en}`}>
@@ -188,22 +261,24 @@ export function MgsPage() {
           )}
         </div>
 
-        {/* QQQ3 weight vs the 25% line — QA item 3 */}
-        {track.leveraged && phase === 'accumulate' && (
+        {/* QQQ3 weight vs this track's own ceiling — QA item 3 */}
+        {phase === 'accumulate' && (
           <div className="mt-4">
             <div className="flex justify-between text-[11px] mb-1.5">
-              <span className="text-text-muted">{he ? 'משקל QQQ3 בתיק מול 25%' : 'QQQ3 weight vs 25%'}</span>
-              <span className={liveWeight >= QQQ3_CAP ? 'text-danger font-semibold' : 'text-text'} dir="ltr">
-                {(liveWeight * 100).toFixed(2)}% / 25%
+              <span className="text-text-muted">
+                {he ? `משקל QQQ3 בתיק מול ${capPct}%` : `QQQ3 weight vs ${capPct}%`}
+              </span>
+              <span className={liveWeight >= trackCap ? 'text-danger font-semibold' : 'text-text'} dir="ltr">
+                {(liveWeight * 100).toFixed(2)}% / {capPct}%
               </span>
             </div>
             <div className="relative w-full bg-surface-4 rounded-full h-2.5 overflow-hidden">
               <div className="h-2.5 rounded-full transition-all"
-                style={{ width: `${Math.min(100, liveWeight * 100)}%`, background: liveWeight >= QQQ3_CAP ? '#F87171' : '#A78BFA' }} />
-              <div className="absolute inset-y-0" style={{ insetInlineStart: '25%', width: 2, background: '#D4AF37' }} />
+                style={{ width: `${Math.min(100, liveWeight * 100)}%`, background: liveWeight >= trackCap ? '#F87171' : '#A78BFA' }} />
+              <div className="absolute inset-y-0" style={{ insetInlineStart: `${trackCap * 100}%`, width: 2, background: '#D4AF37' }} />
             </div>
             <p className="text-[11px] mt-1.5 flex items-start gap-1.5">
-              {routing.qqq3Capped ? (
+              {routing.leverageHalted ? (
                 <><Icon name="lock" size={12} className="text-danger mt-0.5 flex-shrink-0" />
                   <span className="text-danger">{he
                     ? 'QQQ3 הגיע ל-25% — הקנייה בו נעצרה. כל ההפקדה עוברת ל-I500 ו-EQQS.'
@@ -218,7 +293,7 @@ export function MgsPage() {
         )}
 
         <div className="space-y-2 mt-4">
-          {ASSETS.filter(a => (routing.split[a] ?? 0) > 0 || (track.weights[a] ?? 0) > 0).map(a => {
+          {ASSETS.filter(a => (routing.split[a] ?? 0) > 0 || (allocationFor(ageAtMonth(age, month))[a] ?? 0) > 0).map(a => {
             const amt = routing.split[a] ?? 0;
             const meta = MGS_ASSETS[a];
             return (
@@ -240,7 +315,7 @@ export function MgsPage() {
       </Card>
 
       {/* ── Holdings ───────────────────────────────────────────────────── */}
-      <Collapsible title={he ? 'האחזקות שלי היום' : 'My holdings today'}
+      <Collapsible explain="holdings" title={he ? 'האחזקות שלי היום' : 'My holdings today'}
                    subtitle={he ? 'שווי נוכחי וכמה שילמתם — קובע את משקל QQQ3, את המס ואת סדר המכירה' : 'Value and cost — drives the QQQ3 weight, tax and sale order'}>
         <div className="p-4 space-y-2">
           {ASSETS.map(a => (
@@ -265,7 +340,7 @@ export function MgsPage() {
       </Collapsible>
 
       {/* ── Projection ─────────────────────────────────────────────────── */}
-      <Card title={he ? 'מחשבון תחזית' : 'Projection calculator'}
+      <Card explain="projection" title={he ? 'מחשבון תחזית' : 'Projection calculator'}
             subtitle={he ? 'מתעדכן מיד עם כל שינוי בהפקדות' : 'Recalculates instantly on every deposit change'}>
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div className="flex gap-1.5">
@@ -341,11 +416,11 @@ export function MgsPage() {
               {he ? (
                 <>אם תמשיכו בדפוס ההפקדה הנוכחי (ממוצע של <b className="text-gold">{formatCurrency(insight.avgMonthlyDeposit)}</b> לחודש),
                   סך ההפקדות הצפוי לטווח ארוך יהיה <b className="text-gold">{formatCurrency(insight.totalContributions)}</b>,
-                  והמשיכה החודשית לפי כלל ה-4% תהיה כ-<b className="text-gold">{formatCurrency(insight.netMonthlyWithdrawal)}</b> לחודש.</>
+                  והמשיכה החודשית לפי כלל ה-4% תהיה כ-<b className="text-gold">{formatCurrency(insight.netMonthlyPayout)}</b> לחודש.</>
               ) : (
                 <>If you continue with your current average deposit pattern (averaging <b className="text-gold">{formatCurrency(insight.avgMonthlyDeposit)}</b>/month),
                   your long-term projected total contributions will be <b className="text-gold">{formatCurrency(insight.totalContributions)}</b>,
-                  and your sustainable monthly withdrawal via the 4% rule will be approx. <b className="text-gold">{formatCurrency(insight.netMonthlyWithdrawal)}</b>/month.</>
+                  and your sustainable monthly withdrawal via the 4% rule will be approx. <b className="text-gold">{formatCurrency(insight.netMonthlyPayout)}</b>/month.</>
               )}
             </p>
           ) : (
@@ -354,8 +429,8 @@ export function MgsPage() {
           {insight && (
             <p className="text-[10px] text-text-dim mt-1">
               {he
-                ? `נטו, אחרי מס רווח הון של 25% על חלק הרווח. ברוטו: ${formatCurrency(insight.grossMonthlyWithdrawal)} לחודש.`
-                : `Net of 25% capital gains tax on the profit portion. Gross: ${formatCurrency(insight.grossMonthlyWithdrawal)}/month.`}
+                ? `נטו, אחרי מס רווח הון של 25% על חלק הרווח. ברוטו: ${formatCurrency((insight.netMonthlyPayout / 0.92))} לחודש.`
+                : `Net of 25% capital gains tax on the profit portion. Gross: ${formatCurrency((insight.netMonthlyPayout / 0.92))}/month.`}
             </p>
           )}
         </div>
@@ -393,8 +468,8 @@ export function MgsPage() {
                     <td className="py-2 text-[11px]" style={{ color: ph.color }}>{he ? ph.he : ph.en}</td>
                     <td className="py-2 text-end text-text-muted">{formatCurrency(r.deposited)}</td>
                     <td className="py-2 text-end text-gold font-medium">{formatCurrency(r.value)}</td>
-                    <td className={`py-2 text-end text-[11px] ${r.qqq3Weight >= QQQ3_CAP ? 'text-danger' : 'text-text-dim'}`} dir="ltr">
-                      {(r.qqq3Weight * 100).toFixed(1)}%
+                    <td className={`py-2 text-end text-[11px] ${r.leveragedWeight >= trackCap ? 'text-danger' : 'text-text-dim'}`} dir="ltr">
+                      {(r.leveragedWeight * 100).toFixed(1)}%
                     </td>
                   </tr>
                 );

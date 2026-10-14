@@ -3,15 +3,21 @@ import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { AcademyPage } from './pages/AcademyPage';
-import { MgsPage } from './pages/MgsPage';
+import { TracksPage } from './pages/TracksPage';
+import { KidsPage } from './pages/KidsPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
 import { Disclaimer } from './components/shared/Disclaimer';
+import { Onboarding } from './components/onboarding/Onboarding';
+import { useOnboardingStore } from './store/onboardingStore';
 
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   dashboard: HomePage,
-  mgs: MgsPage,
+  // MGS is the projection page; the month's buy list lives in MgsPage and is
+  // kept in the repo, ready to be routed again.
+  mgs: TracksPage,
+  kids: KidsPage,
   academy: AcademyPage,
 };
 
@@ -20,6 +26,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { allocations, addNotification, transitionThreshold } = useStore();
   const { lang } = useLangStore();
+  const onboarded = useOnboardingStore(s => s.done);
 
   useEffect(() => {
     const totalValue = allocations.reduce((s, a) => s + a.currentValue, 0);
@@ -38,8 +45,20 @@ function App() {
   }, []);
 
   const ActivePage = pages[activeTab];
-
   const isRtl = lang === 'he';
+
+  // three questions first; nothing else is worth showing until we know the age,
+  // the deposit and what the money is for
+  if (!onboarded) {
+    return (
+      <div className="min-h-screen noise-bg relative" dir={isRtl ? 'rtl' : 'ltr'}>
+        <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-12">
+          <Onboarding />
+          <div className="mt-8"><Disclaimer /></div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen noise-bg relative" dir={isRtl ? 'rtl' : 'ltr'}>

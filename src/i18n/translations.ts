@@ -261,6 +261,8 @@ export const translations = {
   navGroupMain: { en: 'Menu', he: 'תפריט' },
   tabHome: { en: 'Home', he: 'בית' },
   tabMgs: { en: 'MGS', he: 'MGS' },
+  tabTracks: { en: 'Tracks', he: 'מסלולים' },
+  tabKids: { en: 'For kids', he: 'השקעות לילדים' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
   navGroupMoney: { en: 'My money', he: 'הכסף שלי' },
   navGroupAhead: { en: 'Looking ahead', he: 'קדימה' },

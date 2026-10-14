@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MgsAsset, MgsTrackId } from '../constants/mgsTracks';
-import { getMgsTrack, recommendMgsTrack, defaultHorizon } from '../constants/mgsTracks';
+import type { MgsAsset } from '../constants/mgsTracks';
 
 export type Scenario = 'conservative' | 'moderate' | 'aggressive';
 
@@ -11,14 +10,13 @@ export interface Holding { value: number; cost: number }
 /**
  * The student's MGS settings.
  *
- * The monthly deposit itself lives in the main store (simulationParams), which
- * tracking already reads; this holds everything specific to the method.
- * Stored on the device, like the rest of the portfolio data.
+ * Age is the only lever: it sets the leveraged target, the shift date and the
+ * withdrawal date, so there is no track or horizon to store alongside it.
+ * The monthly deposit lives in the main store (simulationParams), which
+ * tracking already reads.
  */
 interface MgsState {
   age: number;
-  trackId: MgsTrackId;
-  horizonYears: number;
   /** first month of the plan, 'YYYY-MM' */
   startMonth: string;
   holdings: Record<MgsAsset, Holding>;
@@ -27,8 +25,6 @@ interface MgsState {
   scenario: Scenario;
 
   setAge: (age: number) => void;
-  setTrack: (id: MgsTrackId) => void;
-  setHorizon: (years: number) => void;
   setStartMonth: (ym: string) => void;
   setHolding: (asset: MgsAsset, patch: Partial<Holding>) => void;
   setOverride: (month: number, amount: number) => void;
@@ -50,34 +46,14 @@ const DEFAULT_AGE = 30;
 
 export const useMgsStore = create<MgsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       age: DEFAULT_AGE,
-      trackId: recommendMgsTrack(DEFAULT_AGE),
-      horizonYears: defaultHorizon(getMgsTrack(recommendMgsTrack(DEFAULT_AGE)), DEFAULT_AGE),
       startMonth: thisMonth(),
       holdings: emptyHoldings(),
       overrides: {},
       scenario: 'moderate',
 
-      // Changing age re-routes to the matching track, as onboarding requires.
-      setAge: (age) => {
-        const trackId = recommendMgsTrack(age);
-        set({ age, trackId, horizonYears: defaultHorizon(getMgsTrack(trackId), age) });
-      },
-
-      // Fixed-horizon tracks carry their own horizon; Track A keeps the user's.
-      setTrack: (trackId) => {
-        const t = getMgsTrack(trackId);
-        set({ trackId, horizonYears: t.horizonYears ?? defaultHorizon(t, get().age) });
-      },
-
-      setHorizon: (years) => {
-        const t = getMgsTrack(get().trackId);
-        if (t.horizonYears !== null) return; // fixed by the track
-        const [lo, hi] = t.horizonRange ?? [15, 35];
-        set({ horizonYears: Math.min(hi, Math.max(lo, Math.round(years))) });
-      },
-
+      setAge: (age) => set({ age: Math.min(75, Math.max(18, Math.round(age) || 0)) }),
       setStartMonth: (startMonth) => set({ startMonth }),
 
       setHolding: (asset, patch) => set(s => ({
@@ -96,7 +72,22 @@ export const useMgsStore = create<MgsState>()(
 
       setScenario: (scenario) => set({ scenario }),
     }),
-    { name: 'mgs-engine' }
+    {
+      name: 'mgs-engine',
+      version: 3,
+      /**
+       * v1 and v2 stored a chosen track and horizon. Both are now derived from
+       * age alone, so they are simply dropped; anything else the user set —
+       * age, holdings, one-off deposits — carries over untouched.
+       */
+      migrate: (persisted) => {
+        const s = persisted as Partial<MgsState> & { trackId?: string; horizonYears?: number };
+        if (!s) return s as MgsState;
+        const { trackId: _t, horizonYears: _h, ...rest } = s;
+        void _t; void _h;
+        return rest as MgsState;
+      },
+    }
   )
 );
 

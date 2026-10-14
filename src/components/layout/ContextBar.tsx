@@ -1,32 +1,38 @@
 import { useStore } from '../../store';
 import { useLangStore } from '../../store/langStore';
 import { useMgsStore, currentPlanMonth } from '../../store/mgsStore';
-import { getMgsTrack } from '../../constants/mgsTracks';
-import { phaseOf } from '../../utils/mgsEngine';
+import { cohortLabel, milestonesFor, targetLeveraged } from '../../constants/mgsTracks';
+import { phaseOf, ageAtMonth } from '../../utils/mgsEngine';
 import { formatCurrency } from '../../utils/format';
 import { Icon } from '../shared/Icon';
 
 /**
- * Always-visible strip naming the MGS track, phase and monthly deposit, with an
- * edit button into the MGS tab where all three are set.
+ * Always-visible strip naming the cohort, the current phase, the leveraged
+ * target for this age and the monthly deposit, with an edit button into the
+ * MGS tab where the age and deposit are set.
  */
 export function ContextBar({ onEdit }: { onEdit: () => void }) {
   const { simulationParams } = useStore();
   const { lang } = useLangStore();
   const he = lang !== 'en';
-  const { trackId, horizonYears, startMonth } = useMgsStore();
+  const { age, startMonth } = useMgsStore();
 
-  const track = getMgsTrack(trackId);
-  const phase = phaseOf(track, horizonYears, currentPlanMonth(startMonth));
+  const month = currentPlanMonth(startMonth);
+  const phase = phaseOf(age, month);
+  const { withdrawYears } = milestonesFor(age);
+  const target = targetLeveraged(ageAtMonth(age, month));
+
   const phaseLabel = {
     accumulate: { he: 'צבירה', en: 'Accumulation', color: '#F87171' },
-    derisk: { he: 'ייצוב', en: 'De-risk', color: '#FBBF24' },
+    derisk: { he: 'מעבר למדד עולמי', en: 'Shift to world index', color: '#FBBF24' },
     withdraw: { he: 'משיכה', en: 'Withdrawal', color: '#34D399' },
   }[phase];
 
   const items = [
-    { label: he ? 'מסלול' : 'Track', value: he ? track.nameHe : track.nameEn },
+    { label: he ? 'קבוצת גיל' : 'Cohort', value: cohortLabel(age) },
     { label: he ? 'שלב' : 'Phase', value: he ? phaseLabel.he : phaseLabel.en, color: phaseLabel.color },
+    { label: he ? 'יעד מינוף' : 'Leverage target', value: `${(target * 100).toFixed(0)}%` },
+    { label: he ? 'משיכה מגיל' : 'Withdraw at', value: String(age + withdrawYears) },
     { label: he ? 'הפקדה חודשית' : 'Monthly', value: formatCurrency(simulationParams.monthlyDeposit) },
   ];
 

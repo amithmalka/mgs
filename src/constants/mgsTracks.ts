@@ -107,3 +107,60 @@ export function defaultHorizon(track: MgsTrack, age: number): number {
   const [lo, hi] = track.horizonRange ?? [15, 35];
   return Math.min(hi, Math.max(lo, 65 - age));
 }
+
+// ── Age bands ────────────────────────────────────────────────────────────────
+
+export interface Cohort {
+  label: string;
+  from: number;
+  to: number;
+  /** final years routed entirely to the world index */
+  shiftYears: number;
+  /** the whole horizon, after which withdrawals begin */
+  withdrawYears: number;
+}
+
+/**
+ * The bands the tracks already define, named for the context bar.
+ *
+ * Each one mirrors the track `recommendMgsTrack` picks for that age, so the
+ * strip and the track page can never disagree about a cohort's horizon.
+ */
+export const COHORTS: Cohort[] = [
+  { label: '20–42', from: 20, to: 42, shiftYears: 5, withdrawYears: 30 },
+  { label: '43–47', from: 43, to: 47, shiftYears: 4, withdrawYears: 10 },
+  { label: '48–55', from: 48, to: 55, shiftYears: 0, withdrawYears: 15 },
+  { label: '56+',   from: 56, to: 99, shiftYears: 0, withdrawYears: 10 },
+];
+
+export function cohortLabel(age: number): string {
+  return (COHORTS.find(c => age >= c.from && age <= c.to) ?? COHORTS[0]).label;
+}
+
+export interface MgsMilestones {
+  /** final years routed entirely to MWRD */
+  shiftYears: number;
+  /** the whole horizon, after which withdrawals begin */
+  withdrawYears: number;
+}
+
+/** How long this age invests, and how much of that is the glide into MWRD. */
+export function milestonesFor(startAge: number): MgsMilestones {
+  const track = getMgsTrack(recommendMgsTrack(startAge));
+  return { shiftYears: track.deRiskYears, withdrawYears: defaultHorizon(track, startAge) };
+}
+
+/** The target mix for an age — the weights of the track that age falls into. */
+export function allocationFor(age: number): Partial<Record<MgsAsset, number>> {
+  return getMgsTrack(recommendMgsTrack(age)).weights;
+}
+
+/**
+ * The leveraged share this age is allowed to hold.
+ *
+ * It is the track's own QQQ3 weight, which the leveraged tracks cap at
+ * `QQQ3_CAP` and the age-50-and-up tracks drop to zero.
+ */
+export function targetLeveraged(age: number): number {
+  return Math.min(QQQ3_CAP, allocationFor(age).QQQ3 ?? 0);
+}

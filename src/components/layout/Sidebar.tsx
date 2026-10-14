@@ -5,7 +5,7 @@ import { Icon } from '../shared/Icon';
 import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
-export type Tab = 'dashboard' | 'mgs' | 'academy';
+export type Tab = 'dashboard' | 'mgs' | 'kids' | 'academy';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -23,6 +23,8 @@ const GROUPS: NavGroup[] = [
       // MGS is the only method, so it is one tab carrying track, buys,
       // projection, withdrawals and tracking together.
       { id: 'mgs', key: 'tabMgs', icon: 'target' },
+      // the same growth engine, run from a child's age to twenty
+      { id: 'kids', key: 'tabKids', icon: 'sparkle' },
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },
     ],
   },

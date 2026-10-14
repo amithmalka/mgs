@@ -1,20 +1,22 @@
-import { MGS_ASSETS, QQQ3_CAP } from '../constants/mgsTracks';
-import type { MgsAsset, MgsTrack } from '../constants/mgsTracks';
+import { MGS_ASSETS, targetLeveraged, milestonesFor } from '../constants/mgsTracks';
+import type { MgsAsset } from '../constants/mgsTracks';
 
 /**
  * MGS execution engine.
  *
- *   Rule 1  QQQ3 may never be bought while it is at or above 25% of the
- *           portfolio. The whole deposit then goes to I500 and EQQS by their
- *           baseline ratio, and QQQ3 buying resumes once a dip takes it back
- *           under the cap.
- *   De-risk In a leveraged track's final years every holding and every new
- *           deposit goes to MWRD.
- *   Rule 2  From retirement, 4% a year is drawn monthly, sold from a chosen
- *           order of assets rather than pro rata.
- *
- * Two spec points contradict each other, so they are options rather than
- * baked in — see `withdrawOrder` and `deRiskMode`.
+ *   Allocation   The leveraged target is a function of the investor's current
+ *                age: 50% at 20, −1pp a year, 30% from 40 on. The rest splits
+ *                evenly between the two unleveraged synthetics.
+ *   Rebalancing  Asymmetric, and by deposit only — nothing is ever sold to
+ *                rebalance. Below target, the deposit buys the leveraged asset
+ *                back toward target; at or above target, not one shekel of it
+ *                may go to leverage.
+ *   De-risk      At the shift milestone the whole portfolio and every later
+ *                deposit move to MWRD.
+ *   Withdrawal   4% of the portfolio measured once, at the withdrawal
+ *                milestone, paid monthly and held flat from then on. Each
+ *                payment is raised from the asset holding the largest absolute
+ *                gain at that moment.
  */
 
 const ASSETS = Object.keys(MGS_ASSETS) as MgsAsset[];
@@ -29,59 +31,68 @@ export const emptyBook = (): Book =>
 const total = (b: Book) => ASSETS.reduce((s, a) => s + b[a].value, 0);
 const totalBasis = (b: Book) => ASSETS.reduce((s, a) => s + b[a].basis, 0);
 
-/** QQQ3's share of the portfolio right now, 0..1. */
-export function qqq3Weight(book: Book): number {
+/** The leveraged asset's share of the portfolio right now, 0..1. */
+export function leveragedWeight(book: Book): number {
   const t = total(book);
   return t > 0 ? book.QQQ3.value / t : 0;
 }
 
-/** Which phase a given month (1-based) falls in. */
-export function phaseOf(track: MgsTrack, horizonYears: number, month: number): Phase {
-  if (month > horizonYears * 12) return 'withdraw';
-  const year = Math.ceil(month / 12);
-  if (track.deRiskYears > 0 && year > horizonYears - track.deRiskYears) return 'derisk';
+/** Age at a given plan month (1-based), given the age at the start. */
+export const ageAtMonth = (startAge: number, month: number) =>
+  startAge + Math.floor((month - 1) / 12);
+
+/** Which phase a plan month (1-based) falls in, for a plan started at `startAge`. */
+export function phaseOf(startAge: number, month: number): Phase {
+  const { shiftYears, withdrawYears } = milestonesFor(startAge);
+  if (month > withdrawYears * 12) return 'withdraw';
+  if (month > shiftYears * 12) return 'derisk';
   return 'accumulate';
 }
 
-// ── Rule 1 ───────────────────────────────────────────────────────────────────
+// ── Deposit routing ──────────────────────────────────────────────────────────
+
 export interface DepositRouting {
   split: Partial<Record<MgsAsset, number>>;
-  /** true when QQQ3 buying was halted by the cap */
-  qqq3Capped: boolean;
-  /** QQQ3 weight measured before the deposit */
-  qqq3Weight: number;
+  /** true when the leveraged asset was at or above target, so none was bought */
+  leverageHalted: boolean;
+  /** the leveraged weight measured BEFORE this deposit */
+  weightBefore: number;
+  /** the target it was measured against */
+  target: number;
 }
 
 /**
- * Route one deposit.
+ * Route one monthly deposit.
  *
- * The cap is tested against the weight BEFORE the deposit, with a plain `>=`
- * and no rounding, so 25.0% halts and 24.9999…% does not. Buying at the
- * baseline 25% share can never lift QQQ3 over the cap from below — a mix of a
- * weight under 25% and new money at exactly 25% stays under 25% — so only
- * price appreciation can trigger a halt, which is what the rule intends.
+ * The asymmetry is the point. Leverage above its target means the market has
+ * run up, and buying more there is buying high — so the whole deposit goes to
+ * the unleveraged pair instead. Below target means a drawdown has cheapened
+ * it, and the deposit buys it back, but only as far as the target: never past
+ * it, so a deposit can't itself create an overweight.
  */
-export function routeDeposit(amount: number, book: Book, track: MgsTrack, phase: Phase): DepositRouting {
-  const w = qqq3Weight(book);
-  if (amount <= 0 || phase === 'withdraw') return { split: {}, qqq3Capped: false, qqq3Weight: w };
-  if (phase === 'derisk') return { split: { MWRD: amount }, qqq3Capped: false, qqq3Weight: w };
+export function routeDeposit(
+  amount: number, book: Book, startAge: number, month: number,
+): DepositRouting {
+  const w = leveragedWeight(book);
+  const age = ageAtMonth(startAge, month);
+  const target = targetLeveraged(age);
+  const phase = phaseOf(startAge, month);
+  const base = { split: {} as Partial<Record<MgsAsset, number>>, weightBefore: w, target };
 
-  let weights = { ...track.weights };
-  const capped = track.leveraged && w >= QQQ3_CAP;
-  if (capped) delete weights.QQQ3; // I500:EQQS keep their 37.5:37.5 ratio → 50/50
+  if (amount <= 0 || phase === 'withdraw') return { ...base, leverageHalted: false };
+  if (phase === 'derisk') return { ...base, split: { MWRD: amount }, leverageHalted: false };
 
-  const sum = Object.values(weights).reduce((s, v) => s + (v ?? 0), 0);
-  if (sum <= 0) weights = { MWRD: 1 };
-
-  const split: Partial<Record<MgsAsset, number>> = {};
-  for (const [a, wt] of Object.entries(weights) as [MgsAsset, number][]) {
-    split[a] = amount * (wt / (sum || 1));
+  if (w >= target) {
+    // Scenario B — above target: block leverage entirely, split the rest evenly.
+    return { ...base, leverageHalted: true, split: { I500: amount / 2, EQQS: amount / 2 } };
   }
-  return { split, qqq3Capped: capped, qqq3Weight: w };
+
+  // Scenario A — below target: the whole contribution buys the leveraged asset,
+  // which a drawdown has just made cheaper.
+  return { ...base, leverageHalted: false, split: { QQQ3: amount } };
 }
 
-// ── Rule 2 ───────────────────────────────────────────────────────────────────
-export type WithdrawOrder = 'highestGain' | 'lowestGain';
+// ── Withdrawal ───────────────────────────────────────────────────────────────
 
 export interface WithdrawalPlan {
   sales: Array<{ asset: MgsAsset; amount: number; gain: number }>;
@@ -89,25 +100,24 @@ export interface WithdrawalPlan {
   gain: number;
   tax: number;
   net: number;
+  /** the asset the engine advises drawing from this month */
+  from: MgsAsset | null;
 }
 
 /**
- * Raise `amount` by selling assets in order of profit margin.
- *
- * 'highestGain' is the spec as written: sell the asset with the highest profit
- * margin first. That realises the MOST gain per shekel and therefore the most
- * tax, which works against the spec's stated aim of tax efficiency.
- * 'lowestGain' does the opposite and minimises tax now. Selling within an
- * asset is proportional, so its margin is unchanged by the sale.
+ * Raise `amount`, taking it from the asset sitting on the largest absolute
+ * gain and working down. Selling within an asset is proportional, so each
+ * shekel raised carries that asset's own profit margin and only that part is
+ * taxed.
  */
-export function planWithdrawal(amount: number, book: Book, order: WithdrawOrder, taxRate: number): WithdrawalPlan {
-  const margin = (a: MgsAsset) => (book[a].value > 0 ? (book[a].value - book[a].basis) / book[a].value : 0);
-  const candidates = ASSETS.filter(a => book[a].value > 0)
-    .sort((x, y) => order === 'highestGain' ? margin(y) - margin(x) : margin(x) - margin(y));
+export function planWithdrawal(amount: number, book: Book, taxRate: number): WithdrawalPlan {
+  const gainOf = (a: MgsAsset) => book[a].value - book[a].basis;
+  const margin = (a: MgsAsset) => (book[a].value > 0 ? gainOf(a) / book[a].value : 0);
+  const order = ASSETS.filter(a => book[a].value > 0).sort((x, y) => gainOf(y) - gainOf(x));
 
   const sales: WithdrawalPlan['sales'] = [];
   let remaining = amount;
-  for (const a of candidates) {
+  for (const a of order) {
     if (remaining <= 0) break;
     const take = Math.min(book[a].value, remaining);
     sales.push({ asset: a, amount: take, gain: take * margin(a) });
@@ -116,7 +126,7 @@ export function planWithdrawal(amount: number, book: Book, order: WithdrawOrder,
   const gross = amount - Math.max(0, remaining);
   const gain = sales.reduce((s, x) => s + x.gain, 0);
   const tax = Math.max(0, gain) * taxRate;
-  return { sales, gross, gain, tax, net: gross - tax };
+  return { sales, gross, gain, tax, net: gross - tax, from: order[0] ?? null };
 }
 
 function applySales(book: Book, plan: WithdrawalPlan): void {
@@ -129,36 +139,27 @@ function applySales(book: Book, plan: WithdrawalPlan): void {
 }
 
 // ── Projection ───────────────────────────────────────────────────────────────
-export type DeRiskMode = 'shiftHoldings' | 'depositsOnly';
 
 export interface ProjectionParams {
-  track: MgsTrack;
-  horizonYears: number;
+  /** age when the plan starts — it sets both the mix and the milestones */
+  startAge: number;
   monthlyDeposit: number;
   /** one-off amounts by month (1-based), replacing that month's deposit */
   overrides?: Record<number, number>;
   /** expected annual return per asset, % */
   returns: Record<MgsAsset, number>;
-  /** years of withdrawals to project after the horizon */
+  /** years of withdrawals to project past the withdrawal milestone */
   withdrawYears?: number;
   withdrawRate?: number;
   taxRate?: number;
-  withdrawOrder?: WithdrawOrder;
-  /**
-   * 'shiftHoldings' is the spec as written: at de-risk start every holding is
-   * sold into MWRD. That is a sale, and a taxable one, which contradicts the
-   * rule that nothing is sold during accumulation. 'depositsOnly' keeps the
-   * holdings and routes only new money to MWRD.
-   */
-  deRiskMode?: DeRiskMode;
   /** project from this month of the plan (1-based) instead of the start */
   startMonth?: number;
   /** holdings today, by market value */
   startBook?: Partial<Record<MgsAsset, number>>;
   /**
    * What was originally paid for those holdings. Without it every holding is
-   * assumed bought at today's price, i.e. no gain — which zeroes the de-risk
-   * tax and makes Rule 2's profit-margin ordering meaningless.
+   * assumed bought at today's price, i.e. no gain — which zeroes the shift tax
+   * and makes the profit ordering meaningless.
    */
   startBasis?: Partial<Record<MgsAsset, number>>;
 }
@@ -166,31 +167,34 @@ export interface ProjectionParams {
 export interface ProjectionRow {
   month: number;
   year: number;
+  age: number;
   phase: Phase;
   deposit: number;
   deposited: number;
   value: number;
   basis: number;
   byAsset: Record<MgsAsset, number>;
-  qqq3Weight: number;
-  qqq3Capped: boolean;
+  leveragedWeight: number;
+  leveragedTarget: number;
+  leverageHalted: boolean;
   gross: number;
   tax: number;
   net: number;
+  /** which asset this month's withdrawal came from */
+  drawnFrom: MgsAsset | null;
   /** gain realised by the de-risk shift, in the month it happens */
   shiftGain: number;
-  /** tax paid on that gain, taken out of the portfolio */
   shiftTax: number;
 }
 
 export function projectMgs(p: ProjectionParams): ProjectionRow[] {
   const {
-    track, horizonYears, monthlyDeposit, overrides = {}, returns,
+    startAge, monthlyDeposit, overrides = {}, returns,
     withdrawYears = 10, withdrawRate = 0.04, taxRate = 0.25,
-    withdrawOrder = 'highestGain', deRiskMode = 'shiftHoldings',
     startMonth = 1, startBook = {}, startBasis = {},
   } = p;
 
+  const { withdrawYears: wy } = milestonesFor(startAge);
   const rate = Object.fromEntries(
     ASSETS.map(a => [a, Math.pow(1 + returns[a] / 100, 1 / 12) - 1])
   ) as Record<MgsAsset, number>;
@@ -201,14 +205,17 @@ export function projectMgs(p: ProjectionParams): ProjectionRow[] {
   }
   let deposited = totalBasis(book);
   let shifted = false;
+  /** Fixed once, at the withdrawal milestone, and held flat thereafter. */
+  let monthlyDraw = 0;
   const rows: ProjectionRow[] = [];
 
-  for (let m = Math.max(1, startMonth); m <= (horizonYears + withdrawYears) * 12; m++) {
-    const phase = phaseOf(track, horizonYears, m);
+  for (let m = Math.max(1, startMonth); m <= (wy + withdrawYears) * 12; m++) {
+    const phase = phaseOf(startAge, m);
     let shiftGain = 0;
     let shiftTax = 0;
 
-    if (phase === 'derisk' && deRiskMode === 'shiftHoldings' && !shifted) {
+    if (phase !== 'accumulate' && !shifted) {
+      // The guillotine: everything is sold into MWRD and the gain is taxed.
       for (const a of ASSETS) {
         if (a === 'MWRD' || book[a].value <= 0) continue;
         shiftGain += book[a].value - book[a].basis;
@@ -216,8 +223,6 @@ export function projectMgs(p: ProjectionParams): ProjectionRow[] {
         book.MWRD.basis += book[a].value; // re-bought at market value
         book[a] = { value: 0, basis: 0 };
       }
-      // The shift is a real sale, so its gain is taxed now. Resetting basis
-      // without charging this would count the tax as never paid.
       shiftTax = Math.max(0, shiftGain) * taxRate;
       book.MWRD.value -= shiftTax;
       book.MWRD.basis -= shiftTax;
@@ -225,10 +230,10 @@ export function projectMgs(p: ProjectionParams): ProjectionRow[] {
     }
 
     let deposit = 0;
-    let routing: DepositRouting = { split: {}, qqq3Capped: false, qqq3Weight: qqq3Weight(book) };
+    let routing = routeDeposit(0, book, startAge, m);
     if (phase !== 'withdraw') {
       deposit = overrides[m] ?? monthlyDeposit;
-      routing = routeDeposit(deposit, book, track, phase);
+      routing = routeDeposit(deposit, book, startAge, m);
       for (const [a, amt] of Object.entries(routing.split) as [MgsAsset, number][]) {
         book[a].value += amt;
         book[a].basis += amt;
@@ -238,59 +243,53 @@ export function projectMgs(p: ProjectionParams): ProjectionRow[] {
 
     for (const a of ASSETS) book[a].value *= 1 + rate[a];
 
-    let gross = 0, tax = 0, net = 0;
+    let gross = 0, tax = 0, net = 0, drawnFrom: MgsAsset | null = null;
     if (phase === 'withdraw') {
-      const plan = planWithdrawal(total(book) * withdrawRate / 12, book, withdrawOrder, taxRate);
+      // Measured once, on the portfolio as it stood entering the phase.
+      if (monthlyDraw === 0) monthlyDraw = total(book) * withdrawRate / 12;
+      const plan = planWithdrawal(monthlyDraw, book, taxRate);
       applySales(book, plan);
       ({ gross, tax, net } = plan);
+      drawnFrom = plan.from;
     }
 
     rows.push({
-      month: m, year: m / 12, phase, deposit, deposited,
-      value: total(book), basis: totalBasis(book),
+      month: m, year: m / 12, age: ageAtMonth(startAge, m), phase,
+      deposit, deposited, value: total(book), basis: totalBasis(book),
       byAsset: Object.fromEntries(ASSETS.map(a => [a, book[a].value])) as Record<MgsAsset, number>,
-      qqq3Weight: qqq3Weight(book), qqq3Capped: routing.qqq3Capped,
-      gross, tax, net, shiftGain, shiftTax,
+      leveragedWeight: leveragedWeight(book),
+      leveragedTarget: routing.target,
+      leverageHalted: routing.leverageHalted,
+      gross, tax, net, drawnFrom, shiftGain, shiftTax,
     });
   }
   return rows;
 }
 
 // ── Insight footer ───────────────────────────────────────────────────────────
+
 export interface Insight {
   avgMonthlyDeposit: number;
   totalContributions: number;
-  valueAtRetirement: number;
-  grossMonthlyWithdrawal: number;
-  netMonthlyWithdrawal: number;
+  terminalValue: number;
+  netMonthlyPayout: number;
+  shiftAge: number;
+  withdrawAge: number;
 }
 
-/**
- * "If you continue with your current average deposit…" — contributions over
- * the horizon and the net 4% payout at retirement, taxed on the profit
- * portion only.
- */
-export function insightFrom(
-  rows: ProjectionRow[], horizonYears: number,
-  opts: { withdrawRate?: number; taxRate?: number } = {},
-): Insight | null {
-  const { withdrawRate = 0.04, taxRate = 0.25 } = opts;
-  const atRetirement = rows.find(r => r.month === horizonYears * 12);
-  if (!atRetirement || rows.length === 0) return null;
-
-  // Rows may start mid-plan from real holdings, so average only the deposits
-  // that are still to come.
-  const startingContributions = rows[0].deposited - rows[0].deposit;
-  const months = rows.filter(r => r.phase !== 'withdraw').length;
-  const v = atRetirement.value;
-  const gross = v * withdrawRate / 12;
-  const profitRatio = v > 0 ? Math.max(0, Math.min(1, (v - atRetirement.basis) / v)) : 0;
-
+export function insightFrom(rows: ProjectionRow[], startAge: number): Insight | null {
+  const { shiftYears, withdrawYears } = milestonesFor(startAge);
+  const at = rows.find(r => r.month === withdrawYears * 12);
+  if (!at) return null;
+  const future = rows.filter(r => r.phase !== 'withdraw' && r.deposit > 0);
+  const avg = future.length ? future.reduce((s, r) => s + r.deposit, 0) / future.length : 0;
+  const first = rows.find(r => r.phase === 'withdraw');
   return {
-    avgMonthlyDeposit: months > 0 ? (atRetirement.deposited - startingContributions) / months : 0,
-    totalContributions: atRetirement.deposited,
-    valueAtRetirement: v,
-    grossMonthlyWithdrawal: gross,
-    netMonthlyWithdrawal: gross * (1 - taxRate * profitRatio),
+    avgMonthlyDeposit: avg,
+    totalContributions: at.deposited,
+    terminalValue: at.value,
+    netMonthlyPayout: first?.net ?? 0,
+    shiftAge: startAge + shiftYears,
+    withdrawAge: startAge + withdrawYears,
   };
 }
