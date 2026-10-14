@@ -5,7 +5,7 @@ import { Icon } from '../shared/Icon';
 import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
-export type Tab = 'dashboard' | 'mgs' | 'kids' | 'academy';
+export type Tab = 'month' | 'dashboard' | 'mgs' | 'kids' | 'academy';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -19,6 +19,8 @@ const GROUPS: NavGroup[] = [
   {
     key: 'navGroupMain',
     items: [
+      // the one screen the plan cannot be run without
+      { id: 'month', key: 'tabMonth', icon: 'cash' },
       { id: 'dashboard', key: 'tabHome', icon: 'home' },
       // MGS is the only method, so it is one tab carrying track, buys,
       // projection, withdrawals and tracking together.

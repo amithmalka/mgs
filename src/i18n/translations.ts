@@ -262,6 +262,7 @@ export const translations = {
   tabHome: { en: 'Home', he: 'בית' },
   tabMgs: { en: 'MGS', he: 'MGS' },
   tabTracks: { en: 'Tracks', he: 'מסלולים' },
+  tabMonth: { en: 'This month', he: 'החודש' },
   tabKids: { en: 'MGS Kids', he: 'MGS Kids' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
   navGroupMoney: { en: 'My money', he: 'הכסף שלי' },

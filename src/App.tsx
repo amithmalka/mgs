@@ -3,6 +3,7 @@ import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { AcademyPage } from './pages/AcademyPage';
+import { MonthPage } from './pages/MonthPage';
 import { TracksPage } from './pages/TracksPage';
 import { KidsPage } from './pages/KidsPage';
 import { ContextBar } from './components/layout/ContextBar';
@@ -13,6 +14,7 @@ import { Onboarding } from './components/onboarding/Onboarding';
 import { useOnboardingStore } from './store/onboardingStore';
 
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
+  month: MonthPage,
   dashboard: HomePage,
   // MGS is the projection page; the month's buy list lives in MgsPage and is
   // kept in the repo, ready to be routed again.
@@ -22,7 +24,7 @@ const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('month');
   const [menuOpen, setMenuOpen] = useState(false);
   const { allocations, addNotification, transitionThreshold } = useStore();
   const { lang } = useLangStore();
