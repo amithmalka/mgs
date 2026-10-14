@@ -71,7 +71,7 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
         <h2 className="text-xl font-bold text-gold-gradient">MGS</h2>
         <p className="text-[12px] text-text-muted mt-1.5 leading-relaxed">
           {he
-            ? 'שיטה אחת, שתי דלתות: לאן המסלול מגיע, ואיך אותו מנוע עובד עבור ילד. כל המספרים נטו אחרי מס רווחי הון של 25%.'
+            ? 'שיטה אחת, שתי דלתות: לאן המסלול מגיע, ו-MGS Kids — אותו מנוע עבור ילד. כל המספרים נטו אחרי מס רווחי הון של 25%.'
             : 'One method, three doors: what to buy this month, where the track lands, and the same engine run for a child. Every figure is net of 25% capital gains tax.'}
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-[12px]">
@@ -102,7 +102,7 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
         />
         <Door
           icon="sparkle"
-          title={he ? 'השקעות לילדים' : 'Investing for a child'}
+          title="MGS Kids"
           body={he
             ? 'כמה להפקיד כל חודש לפי גיל הילד, כמה הוא יקבל בגיל 20, וכמה ימשוך מזה בחודש.'
             : 'How much a month by the child’s age, what they receive at twenty, and the monthly draw from it.'}

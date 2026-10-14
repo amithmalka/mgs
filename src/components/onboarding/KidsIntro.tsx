@@ -29,7 +29,7 @@ export function KidsIntro() {
 
   return (
     <QuizShell
-      title="השקעות לילדים — שתי שאלות"
+      title="MGS Kids — שתי שאלות"
       sub="בן כמה הילד היום, וכמה מפקידים עבורו כל חודש. אפשר לשנות הכל אחר כך."
     >
       <Question step={1} of={2} title="בן כמה הילד היום?"
