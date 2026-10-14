@@ -9,7 +9,8 @@ import type { IconName } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import { MarketSection } from '../components/market/MarketSection';
 import { MarketTiles } from '../components/market/MarketTiles';
-import { milestonesFor, cohortLabel } from '../constants/mgsTracks';
+
+import { cohortFor, milestonesFor } from '../constants/mgsScenarios';
 import { projectTrack } from '../utils/trackProject';
 import { projectKid } from '../utils/kidsProject';
 import { formatCurrency } from '../utils/format';
@@ -59,7 +60,7 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
   const { simulationParams } = useStore();
   const { age } = useMgsStore();
   const deposit = simulationParams.monthlyDeposit;
-  const { shiftYears, withdrawYears } = milestonesFor(age);
+  const { shiftAtAge, withdrawAtAge } = milestonesFor(age);
 
   // the conservative case on the doors: the landing page should under-promise
   const track = useMemo(() => projectTrack('pess', 2, age, deposit), [age, deposit]);
@@ -75,9 +76,9 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
             : 'One method, three doors: what to buy this month, where the track lands, and the same engine run for a child. Every figure is net of 25% capital gains tax.'}
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-[12px]">
-          <span className="text-text-muted">{he ? 'קבוצת גיל:' : 'Cohort:'} <b className="text-gold">{cohortLabel(age)}</b></span>
-          <span className="text-text-muted">{he ? 'מעבר למדד עולמי בגיל' : 'Shift to world index at'} <b className="text-text">{age + shiftYears}</b></span>
-          <span className="text-text-muted">{he ? 'משיכה מגיל' : 'Withdraw from age'} <b className="text-text">{age + withdrawYears}</b></span>
+          <span className="text-text-muted">{he ? 'קבוצת גיל:' : 'Cohort:'} <b className="text-gold">{cohortFor(age)}</b></span>
+          <span className="text-text-muted">{he ? 'חיתוך למדד עולמי בגיל' : 'Shift to world index at'} <b className="text-text">{shiftAtAge}</b></span>
+          <span className="text-text-muted">{he ? 'משיכה מגיל' : 'Withdraw from age'} <b className="text-text">{withdrawAtAge}</b></span>
           <span className="text-text-muted">{he ? 'הפקדה:' : 'Deposit:'} <b className="text-text">{formatCurrency(deposit)}</b></span>
         </div>
       </Card>

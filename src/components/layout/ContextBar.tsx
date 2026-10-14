@@ -1,8 +1,7 @@
 import { useStore } from '../../store';
 import { useLangStore } from '../../store/langStore';
 import { useMgsStore, currentPlanMonth } from '../../store/mgsStore';
-import { cohortLabel, milestonesFor, targetLeveraged } from '../../constants/mgsTracks';
-import { phaseOf, ageAtMonth } from '../../utils/mgsEngine';
+import { cohortFor, milestonesFor } from '../../constants/mgsScenarios';
 import { formatCurrency } from '../../utils/format';
 import { Icon } from '../shared/Icon';
 
@@ -18,21 +17,22 @@ export function ContextBar({ onEdit }: { onEdit: () => void }) {
   const { age, startMonth } = useMgsStore();
 
   const month = currentPlanMonth(startMonth);
-  const phase = phaseOf(age, month);
-  const { withdrawYears } = milestonesFor(age);
-  const target = targetLeveraged(ageAtMonth(age, month));
+  const { totalYears, shiftAtAge, withdrawAtAge } = milestonesFor(age);
 
-  const phaseLabel = {
-    accumulate: { he: 'צבירה', en: 'Accumulation', color: '#F87171' },
-    derisk: { he: 'מעבר למדד עולמי', en: 'Shift to world index', color: '#FBBF24' },
-    withdraw: { he: 'משיכה', en: 'Withdrawal', color: '#34D399' },
-  }[phase];
+  // which of the three windows the plan is in right now
+  const yearsIn = Math.floor((month - 1) / 12);
+  const phase = age + yearsIn >= withdrawAtAge
+    ? { he: 'משיכה', en: 'Withdrawal', color: '#34D399' }
+    : age + yearsIn >= shiftAtAge
+      ? { he: 'חיתוך למדד עולמי', en: 'Shift to world index', color: '#FBBF24' }
+      : { he: 'צבירה', en: 'Accumulation', color: '#F87171' };
 
   const items = [
-    { label: he ? 'קבוצת גיל' : 'Cohort', value: cohortLabel(age) },
-    { label: he ? 'שלב' : 'Phase', value: he ? phaseLabel.he : phaseLabel.en, color: phaseLabel.color },
-    { label: he ? 'יעד מינוף' : 'Leverage target', value: `${(target * 100).toFixed(0)}%` },
-    { label: he ? 'משיכה מגיל' : 'Withdraw at', value: String(age + withdrawYears) },
+    { label: he ? 'קבוצת גיל' : 'Cohort', value: cohortFor(age) },
+    { label: he ? 'שלב' : 'Phase', value: he ? phase.he : phase.en, color: phase.color },
+    { label: he ? 'אופק' : 'Horizon', value: `${totalYears} ${he ? 'שנה' : 'yrs'}` },
+    { label: he ? 'חיתוך בגיל' : 'Shift at', value: String(shiftAtAge) },
+    { label: he ? 'משיכה מגיל' : 'Withdraw at', value: String(withdrawAtAge) },
     { label: he ? 'הפקדה חודשית' : 'Monthly', value: formatCurrency(simulationParams.monthlyDeposit) },
   ];
 

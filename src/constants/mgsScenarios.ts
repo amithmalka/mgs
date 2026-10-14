@@ -86,6 +86,33 @@ export function btcRate(sc: ScenarioId, yearsIn: number): number {
   return st[st.length - 1][0];
 }
 
+/** The bands `horizonFor` actually draws, named for the context strip. */
+export const COHORTS: Array<{ label: string; from: number; to: number }> = [
+  { label: '20–29', from: 0,  to: 29 },
+  { label: '30–39', from: 30, to: 39 },
+  { label: '40–49', from: 40, to: 49 },
+  { label: '50–59', from: 50, to: 59 },
+  { label: '60+',   from: 60, to: 200 },
+];
+
+export function cohortFor(age: number): string {
+  return (COHORTS.find(c => age >= c.from && age <= c.to) ?? COHORTS[0]).label;
+}
+
+/** The three dates an age implies, in the tracks' own terms. */
+export function milestonesFor(age: number) {
+  const [depositYears, shiftYears] = horizonFor(age);
+  return {
+    depositYears,
+    shiftYears,
+    totalYears: depositYears + shiftYears,
+    /** deposits move to the world index at this age */
+    shiftAtAge: age + depositYears,
+    /** withdrawals begin at this age */
+    withdrawAtAge: age + depositYears + shiftYears,
+  };
+}
+
 /** plain allocations, for the comparison strip */
 export const WORLD_MODELS: Array<[string, number]> = [
   ['S&P 500', 0.088], ['מדד עולמי', 0.070], ['60/40', 0.065], ['All Weather', 0.060],
