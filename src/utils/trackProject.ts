@@ -17,6 +17,21 @@ export const JEPQ_CAP = 0.50;
 
 export type TrackModel = 1 | 2;
 
+/** the age from which the growing side no longer has time to build an engine */
+export const INCOME_AGE = 55;
+
+/**
+ * Which track an age should be on.
+ *
+ * Measured: at 60, model 2's JEPQ reaches only 22,577 and pays 140 a month —
+ * ten years and two harvest cycles do not build an income engine. Model 1 pays
+ * 1,051 at the same age, because it routes deposits there instead of waiting
+ * for harvests. So from 55 the cash-flow track is the honest answer.
+ */
+export function recommendModel(age: number): TrackModel {
+  return age >= INCOME_AGE ? 1 : 2;
+}
+
 export interface TrackYear {
   year: number;
   age: number;

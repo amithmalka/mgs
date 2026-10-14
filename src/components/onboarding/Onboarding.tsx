@@ -3,14 +3,15 @@ import { Question, QuizShell } from './Quiz';
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { useMgsStore } from '../../store/mgsStore';
 import { useStore } from '../../store';
-import { projectTrack } from '../../utils/trackProject';
+import { projectTrack, recommendModel, INCOME_AGE } from '../../utils/trackProject';
 import { horizonFor } from '../../constants/mgsScenarios';
 
 const AGES = [
   { value: 20, label: '20–29', sub: '30 שנות מסלול' },
   { value: 30, label: '30–39', sub: '25 שנות מסלול' },
   { value: 40, label: '40–49', sub: '20 שנות מסלול' },
-  { value: 50, label: '50–59', sub: '15 שנות מסלול' },
+  { value: 50, label: '50–54', sub: '15 שנות מסלול' },
+  { value: 55, label: '55–59', sub: '15 שנות מסלול' },
   { value: 60, label: '60 ומעלה', sub: '10 שנות מסלול' },
 ];
 
@@ -21,10 +22,17 @@ const DEPOSITS = [
   { value: 10000, label: '10,000 ₪' },
 ];
 
-const GOALS = [
-  { value: 2, label: 'צמיחה ותזרים', sub: 'התיק גדל, ובמקביל נבנה תזרים חודשי שמתחזק עם השנים' },
-  { value: 1, label: 'תזרים בלבד', sub: 'מזומן ביד כבר מהשנים הראשונות, על חשבון הגודל בסוף' },
-];
+const GOAL_2 = { value: 2, label: 'צמיחה ותזרים', sub: 'התיק גדל, ובמקביל נבנה תזרים חודשי שמתחזק עם השנים' };
+const GOAL_1 = { value: 1, label: 'תזרים בלבד', sub: 'מזומן ביד כבר מהשנים הראשונות, על חשבון הגודל בסוף' };
+
+/** From 55 the cash-flow track is the recommendation, and it says so. */
+function goalsFor(age: number | null) {
+  if (age !== null && age >= INCOME_AGE) {
+    return [{ ...GOAL_1, sub: 'מומלץ בגיל הזה — באופק של 10–15 שנה רק המסלול הזה בונה תזרים אמיתי' },
+            { ...GOAL_2, sub: 'אפשרי, אבל התזרים בסוף יהיה זניח: מחזורי הקציר לא מספיקים' }];
+  }
+  return [GOAL_2, GOAL_1];
+}
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
 
@@ -42,6 +50,8 @@ export function Onboarding() {
   const finish = useOnboardingStore(s => s.finish);
   const setStoreAge = useMgsStore(s => s.setAge);
   const setParams = useStore(s => s.setSimulationParams);
+
+  const pickAge = (a: number) => { setAge(a); setGoal(recommendModel(a)); };
 
   const ready = age !== null && deposit !== null && goal !== null;
   const preview = ready ? projectTrack('pess', goal as 1 | 2, age, deposit) : null;
@@ -61,7 +71,7 @@ export function Onboarding() {
     >
       <Question step={1} of={3} title="בן כמה אתה?"
         hint="הגיל קובע כמה שנים המסלול רץ ומתי מתחילים למשוך."
-        choices={AGES} value={age} onPick={setAge} />
+        choices={AGES} value={age} onPick={pickAge} />
 
       <Question step={2} of={3} title="כמה אפשר להפקיד כל חודש?"
         hint="אפשר להתחיל קטן ולהעלות בהמשך — התוצאה גדלה ביחס ישר."
@@ -79,7 +89,7 @@ export function Onboarding() {
 
       <Question step={3} of={3} title="מה העיקר בשבילך?"
         hint="שני המסלולים מחזיקים את אותם נכסים — ההבדל הוא מתי הכסף יוצא."
-        choices={GOALS} value={goal} onPick={setGoal} columns={2} />
+        choices={goalsFor(age)} value={goal} onPick={setGoal} columns={2} />
 
       {preview && age !== null && deposit !== null && (
         <div className="rounded-xl border border-gold-border p-4" style={{ background: 'rgba(212,175,55,0.05)' }}>

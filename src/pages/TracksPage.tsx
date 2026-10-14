@@ -3,13 +3,13 @@ import { useStore } from '../store';
 import { useMgsStore } from '../store/mgsStore';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { GrowthChart } from '../components/mgs/GrowthChart';
-import { projectTrack, projectPlain, type TrackModel } from '../utils/trackProject';
+import { projectTrack, projectPlain, recommendModel, INCOME_AGE, type TrackModel } from '../utils/trackProject';
 import {
   SCENARIOS, SLEEVE_HE, WORLD_MODELS, horizonFor,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
 
-const AGES = [20, 30, 40, 50, 60];
+const AGES = [20, 30, 40, 50, 55, 60];
 const DEPOSITS = [2000, 3000, 4000, 5000, 7500, 10000];
 const SLEEVE_ORDER: SleeveId[] = ['BTC', 'SMH', 'XLK', 'SPMO', 'SYN', 'WORLD'];
 
@@ -96,6 +96,17 @@ export function TracksPage() {
         </p>
       </header>
 
+      {recommendModel(age) !== model && age >= INCOME_AGE && (
+        <p className="note" style={{ borderInlineStartColor: 'var(--gold)' }}>
+          בגיל {age} האופק הוא {years} שנה, ובזמן הזה מסלול 2 מספיק רק לשני מחזורי
+          קציר — ה-JEPQ שלו מגיע ל-{n0(projectTrack(scenario, 2, age, deposit).jepq)} ₪
+          ומחלק {n0(projectTrack(scenario, 2, age, deposit).monthlyFromJepq)} ₪ בחודש.
+          מסלול 1 מנתב הפקדות ישר ל-JEPQ ולכן מחלק
+          {' '}{n0(projectTrack(scenario, 1, age, deposit).monthlyFromJepq)} ₪.
+          זה המסלול שמתאים לגיל הזה.
+        </p>
+      )}
+
       <div className="panel">
         <div className="grp"><span className="glab">ההערכה</span>
           {(['pess', 'real'] as ScenarioId[]).map(sc => (
@@ -104,7 +115,9 @@ export function TracksPage() {
         </div>
         <div className="grp"><span className="glab">המסלול</span>
           {([1, 2] as TrackModel[]).map(m => (
-            <Opt key={m} on={model === m} onClick={() => setModel(m)}>{MODELS[m].name}</Opt>
+            <Opt key={m} on={model === m} onClick={() => setModel(m)}>
+              {MODELS[m].name}{recommendModel(age) === m ? ' · מומלץ' : ''}
+            </Opt>
           ))}
         </div>
         <div className="grp"><span className="glab">הפקדה</span>
