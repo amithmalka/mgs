@@ -63,10 +63,26 @@ export interface MonthPlan {
   income: number;
 }
 
-/** how much of the volatile half moves to the complements each year of life */
-export const GLIDE = 0.02;
 /** the age the glide is measured from: a 20-year-old is all volatile */
 export const BASE_AGE = 20;
+/** the glide runs at one point a year up to this age, two points after it */
+export const GLIDE_BREAK = 35;
+export const GLIDE_EARLY = 0.01;
+export const GLIDE_LATE = 0.02;
+
+/**
+ * How much of the volatile half has moved to the complements by this age.
+ *
+ * One point a year while the horizon is long, two points a year once it is
+ * not: the slow half is where the extra return sits, and the fast half is
+ * where the risk has to come down.
+ */
+export function glideAt(age: number): number {
+  const a = Math.max(BASE_AGE, age);
+  const early = Math.min(a, GLIDE_BREAK) - BASE_AGE;
+  const late = Math.max(0, a - GLIDE_BREAK);
+  return Math.min(1, early * GLIDE_EARLY + late * GLIDE_LATE);
+}
 
 /**
  * The mix an age calls for — and the point is that it depends on the age
@@ -78,7 +94,7 @@ export const BASE_AGE = 20;
  * the same age hold the same mix, whichever of them joined first.
  */
 export function mixForAge(age: number): Partial<Record<SleeveId, number>> {
-  const vol = Math.min(1, Math.max(0, 1 - GLIDE * (age - BASE_AGE)));
+  const vol = 1 - glideAt(age);
   const core = 1 - vol;
   return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
 }

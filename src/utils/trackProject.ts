@@ -10,7 +10,7 @@ import {
   SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, JEPQ_YIELD, horizonFor, btcRate,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
-import { GLIDE, BASE_AGE, mixForAge } from './monthPlan';
+import { glideAt, mixForAge } from './monthPlan';
 
 /** the most of a single deposit model 1 will route to JEPQ, reached at age 45 */
 export const JEPQ_CAP = 0.50;
@@ -53,6 +53,9 @@ export interface TrackResult {
   monthlyFromJepq: number;
   monthly: number;
   multiple: number;
+  /** what each sleeve is worth at the end, gross — for composition and stress */
+  final: Record<SleeveId, number>;
+  finalJepq: number;
 }
 
 const SLEEVES: SleeveId[] = ['BTC', 'SMH', 'SPMO', 'XLK', 'WORLD', 'SYN'];
@@ -64,6 +67,8 @@ export function projectTrack(
   model: TrackModel,
   startAge: number,
   monthlyDeposit = 4000,
+  /** false keeps depositing by the age mix instead of landing in the world index */
+  land = true,
 ): TrackResult {
   const S = SCENARIOS[scenario];
   const [depositYears, shiftYears] = horizonFor(startAge);
@@ -95,14 +100,14 @@ export function projectTrack(
 
     deposited += monthlyDeposit;
     const age = startAge + yrs;
-    if (m > depositYears * 12) {
+    if (land && m > depositYears * 12) {
       g.WORLD.v += monthlyDeposit; g.WORLD.c += monthlyDeposit;
     } else {
       // Model 1 sends a growing share of every deposit straight to JEPQ — a
       // change of address for new money, never a sale, so it costs no tax. What
       // stays on the growing side follows the same age mix as model 2, which
       // means SPMO and XLK are the complements in both tracks.
-      const toJepq = model === 1 ? Math.min(JEPQ_CAP, GLIDE * (age - BASE_AGE)) : 0;
+      const toJepq = model === 1 ? Math.min(JEPQ_CAP, glideAt(age)) : 0;
       if (toJepq > 0) {
         jepq.v += monthlyDeposit * toJepq; jepq.c += monthlyDeposit * toJepq;
       }
@@ -163,6 +168,8 @@ export function projectTrack(
     tax: tax + taxIfSold,
     monthlyFromGrowth, monthlyFromJepq, monthly: monthlyFromGrowth + monthlyFromJepq,
     multiple: deposited ? total / deposited : 0,
+    final: Object.fromEntries(SLEEVES.map(k => [k, g[k].v])) as Record<SleeveId, number>,
+    finalJepq: jepq.v,
   };
 }
 
