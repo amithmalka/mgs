@@ -1,26 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLangStore } from '../../store/langStore';
-import { ASSET_META } from '../../constants/defaults';
+import { BOARD, FX } from '../../constants/mgsBoard';
 import { fetchPrices } from '../../lib/marketData';
 import type { PriceInfo } from '../../lib/marketData';
 import { Icon } from '../shared/Icon';
 
 interface Tile { symbol: string; label: string; sub: string; color: string }
 
-/** The same eight the board shows, kept at eight for the data plan's budget. */
+/** What the method holds, plus the rate it is all quoted against. */
 function tiles(he: boolean): Tile[] {
-  const a = (k: keyof typeof ASSET_META): Tile => ({
-    symbol: ASSET_META[k].proxyTicker,
-    label: he ? ASSET_META[k].label : ASSET_META[k].index,
-    sub: ASSET_META[k].index,
-    color: ASSET_META[k].color,
-  });
   return [
-    { symbol: 'USD/ILS', label: he ? 'דולר / שקל' : 'USD / ILS', sub: 'FX', color: '#D4AF37' },
-    a('p500'), a('eqqs'), a('xmwo'), a('dbxb'),
-    { symbol: 'BTC/USD', label: he ? 'ביטקוין' : 'Bitcoin', sub: 'Crypto', color: '#F59E0B' },
-    { symbol: 'GLD', label: he ? 'זהב' : 'Gold', sub: 'SPDR Gold', color: '#FFD700' },
-    { symbol: 'SCHD', label: he ? 'דיבידנדים' : 'Dividends', sub: 'Schwab', color: '#F472B6' },
+    { symbol: FX.symbol, label: he ? FX.he : FX.en, sub: FX.sub, color: FX.color },
+    ...BOARD.map(a => ({ symbol: a.symbol, label: he ? a.he : a.en, sub: a.sub, color: a.color })),
   ];
 }
 
@@ -69,7 +60,7 @@ export function MarketTiles() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {list.map(t => {
           const p = prices[t.symbol];
           const pct = p?.changePct;

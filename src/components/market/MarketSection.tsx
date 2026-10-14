@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLangStore } from '../../store/langStore';
 import { Card } from '../layout/Card';
-import { ASSET_META } from '../../constants/defaults';
+import { BOARD, FX } from '../../constants/mgsBoard';
 import { fetchPrices } from '../../lib/marketData';
 import type { PriceInfo } from '../../lib/marketData';
 import { Icon } from '../shared/Icon';
@@ -16,29 +16,15 @@ const DOWN = '#F87171';
 /**
  * The market screen.
  *
- * Split out of the home page, which was answering six unrelated questions at
- * once. Home now answers only "what do I do this month"; this answers "what is
- * the market doing".
- *
- * Kept at 8 symbols on purpose: Twelve Data's free tier bills one credit per
- * symbol against an ~8/minute budget, so a wider board would rate-limit itself.
+ * It lists what the method holds and nothing else: the two volatile sleeves,
+ * the two core ones, the income engine, the synthetics and the landing index —
+ * plus the shekel rate, which is not a holding but is what everything here is
+ * quoted against.
  */
 function buildBoard(he: boolean): BoardRow[] {
-  const asset = (k: keyof typeof ASSET_META): BoardRow => ({
-    symbol: ASSET_META[k].proxyTicker,
-    label: he ? ASSET_META[k].label : ASSET_META[k].index,
-    sub: ASSET_META[k].index,
-    color: ASSET_META[k].color,
-  });
   return [
-    { symbol: 'USD/ILS', label: he ? 'דולר / שקל' : 'USD / ILS', sub: 'FX', color: '#D4AF37' },
-    asset('p500'),
-    asset('eqqs'),
-    asset('xmwo'),
-    asset('dbxb'),
-    { symbol: 'BTC/USD', label: he ? 'ביטקוין' : 'Bitcoin', sub: 'Crypto', color: '#F59E0B' },
-    { symbol: 'GLD', label: he ? 'זהב' : 'Gold', sub: 'SPDR Gold', color: '#FFD700' },
-    { symbol: 'SCHD', label: he ? 'דיבידנדים' : 'Dividends', sub: 'Schwab Dividend', color: '#F472B6' },
+    { symbol: FX.symbol, label: he ? FX.he : FX.en, sub: FX.sub, color: FX.color },
+    ...BOARD.map(a => ({ symbol: a.symbol, label: he ? a.he : a.en, sub: a.sub, color: a.color })),
   ];
 }
 
@@ -51,7 +37,7 @@ export function MarketSection() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [updatedAt, setUpdatedAt] = useState<string>('');
-  const [focus, setFocus] = useState('SPY');
+  const [focus, setFocus] = useState('BTC/USD');
 
   const refresh = useCallback(async () => {
     setLoading(true); setErr('');
@@ -147,6 +133,29 @@ export function MarketSection() {
           title={`${he ? 'גרף נרות' : 'Candlestick'} — ${focusRow.label}`}
           subtitle={he ? 'כל נר הוא יום מסחר אחד' : 'Each candle is one trading day'}
         >
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {board.map(r => {
+              const on = r.symbol === focus;
+              const pct = prices[r.symbol]?.changePct;
+              return (
+                <button key={r.symbol} type="button" onClick={() => setFocus(r.symbol)}
+                  aria-pressed={on}
+                  className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-colors
+                              inline-flex items-center gap-1.5 ${
+                    on ? 'border-gold bg-gold-muted text-gold font-semibold'
+                       : 'border-surface-4 text-text-muted hover:border-gold-border hover:text-text'}`}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: r.color }} />
+                  {r.label}
+                  {typeof pct === 'number' && (
+                    <span className="tabular-nums" dir="ltr"
+                          style={{ color: pct >= 0 ? UP : DOWN }}>
+                      {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
           {focusPrice?.candles && focusPrice.candles.length > 1 ? (
             <CandleChart candles={focusPrice.candles} />
           ) : (
