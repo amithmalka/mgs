@@ -3,7 +3,7 @@ import { useMgsStore } from '../store/mgsStore';
 import { useStore } from '../store';
 import { usePlanStore, planMonth, thisMonth } from '../store/planStore';
 import { buildMonth, applyMonth, type Reason } from '../utils/monthPlan';
-import { SLEEVE_HE, type SleeveId } from '../constants/mgsScenarios';
+import { SLEEVE_HE, cohortFor, milestonesFor, type SleeveId } from '../constants/mgsScenarios';
 import { fetchPrices } from '../lib/marketData';
 import type { PriceInfo } from '../lib/marketData';
 import { Icon } from '../components/shared/Icon';
@@ -115,6 +115,8 @@ export function MonthPage() {
     );
   }
 
+  const ms = useMemo(() => milestonesFor(age), [age]);
+
   return (
     <div className="term">
       <div className="tape">
@@ -154,7 +156,8 @@ export function MonthPage() {
 
       <section>
         <h2>החלוקה של החודש</h2>
-        <div className="scroll">
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div className="scroll" style={{ flex: '3 1 440px' }}>
           <table>
             <thead><tr>
               {['הרכיב', 'קונים', 'דרך', 'למה', 'כמה מחזיקים', 'חלק בתיק', 'היעד', 'מתחת לשיא']
@@ -179,6 +182,33 @@ export function MonthPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <aside className="f" style={{ flex: '1 1 250px', alignSelf: 'stretch' }}>
+          <span className="fk">הוראות ההפעלה שלכם · גיל {cohortFor(age)}</span>
+          <table style={{ fontSize: 13 }}>
+            <tbody>
+              <tr><td className="dim">שנות הפקדה</td>
+                  <td className="v">{ms.depositYears}</td></tr>
+              <tr><td className="dim">הסטה למדד עולמי בגיל</td>
+                  <td className="v gold">{ms.shiftAtAge}</td></tr>
+              <tr><td className="dim">תחילת משיכה בגיל</td>
+                  <td className="v gold">{ms.withdrawAtAge}</td></tr>
+              <tr><td className="dim">החודש בתוכנית</td>
+                  <td className="v">{month} מתוך {ms.totalYears * 12}</td></tr>
+            </tbody>
+          </table>
+          <p style={{ marginTop: 10 }}>
+            <b>ב-1 בכל חודש:</b> מפקידים {n0(deposit)} ₪ בדיוק לפי העמודה
+            ״קונים״, ואז מסמנים ״ביצעתי״. התמהיל זז לבד — שתי נקודות בשנה
+            יוצאות מביטקוין וממוליכים ועוברות לליבה, בהפקדות ולא במכירות,
+            ולכן אין בדרך הזאת אף אירוע מס.
+          </p>
+          <p>
+            רכיב שנפל יותר מ-50% מהשיא שלו לוקח 70% מההפקדה באותו חודש.
+            מכירה נדרשת רק כשהשורה האדומה מופיעה למעלה.
+          </p>
+        </aside>
         </div>
       </section>
 

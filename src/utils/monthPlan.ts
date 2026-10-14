@@ -201,12 +201,16 @@ export function applyMonth(
     next[l.sleeve].units += l.amount / p;
     next[l.sleeve].cost += l.amount;
   }
-  // the high and the arming flag move with the price, whatever happened above
+  // The bar freezes the moment a sleeve arms. Her rule is that bitcoin, having
+  // reached 128k and fallen to 60k, is harvested when it passes 128k by 10% —
+  // so the high it must clear is the one that stood *before* the fall, and it
+  // must not creep upward with the recovery. Let it creep and the price can
+  // never get 10% ahead of it, and the harvest never fires at all.
   for (const k of Object.keys(next) as SleeveId[]) {
     const p = price[k]; if (!p) continue;
     const reset = RESET[k];
-    if (p > next[k].ath) next[k].ath = p;
-    else if (reset && next[k].ath > 0 && p < next[k].ath * (1 - reset)) next[k].armed = true;
+    if (!next[k].armed && p > next[k].ath) next[k].ath = p;
+    if (reset && next[k].ath > 0 && p < next[k].ath * (1 - reset)) next[k].armed = true;
   }
   return { lots: next, jepq: nextJepq };
 }
