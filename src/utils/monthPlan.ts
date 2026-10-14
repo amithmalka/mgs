@@ -63,14 +63,32 @@ export interface MonthPlan {
   income: number;
 }
 
+/** how much of the volatile half moves to the complements each year of life */
+export const GLIDE = 0.02;
+/** the age the glide is measured from: a 20-year-old is all volatile */
+export const BASE_AGE = 20;
+
+/**
+ * The mix an age calls for — and the point is that it depends on the age
+ * itself, not on how long this person has been depositing.
+ *
+ * Someone joining at 60 does not start where a 20-year-old starts. He starts
+ * where the 20-year-old arrived after forty years of gliding: the volatile
+ * half has already come down to 20%, and bitcoin with it to 10%. Two people of
+ * the same age hold the same mix, whichever of them joined first.
+ */
+export function mixForAge(age: number): Partial<Record<SleeveId, number>> {
+  const vol = Math.min(1, Math.max(0, 1 - GLIDE * (age - BASE_AGE)));
+  const core = 1 - vol;
+  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+}
+
 /** The mix the age calls for, in this plan month. */
 export function targetMix(startAge: number, month: number): Partial<Record<SleeveId, number>> {
   const years = (month - 1) / 12;
   const [depositYears] = horizonFor(startAge);
   if (years >= depositYears) return { WORLD: 1 };
-  const vol = Math.max(0, 1 - 0.02 * years);
-  const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+  return mixForAge(startAge + years);
 }
 
 export function buildMonth(

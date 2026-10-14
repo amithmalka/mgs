@@ -49,8 +49,10 @@ export function projectKid(
     bv *= Math.pow(1 + btcRate(scenario, y), 1 / 12);
     sv *= Math.pow(1 + syn, 1 / 12);
 
-    // the volatile half fades out at two points a year, by deposit only
-    const share = Math.max(0, 0.5 - 0.02 * y);
+    // The volatile half fades out at two points a year, by deposit only — and
+    // it is measured from the child's own age, not from the day the account
+    // opened. A fifteen-year-old starts where a newborn arrived at fifteen.
+    const share = Math.max(0, 0.5 - 0.02 * (childAge + y));
     bv += monthlyDeposit * share; bc += monthlyDeposit * share;
     sv += monthlyDeposit * (1 - share); sc += monthlyDeposit * (1 - share);
 

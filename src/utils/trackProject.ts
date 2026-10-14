@@ -10,6 +10,10 @@ import {
   SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, JEPQ_YIELD, horizonFor, btcRate,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
+import { GLIDE, BASE_AGE, mixForAge } from './monthPlan';
+
+/** the most of a single deposit model 1 will route to JEPQ, reached at age 45 */
+export const JEPQ_CAP = 0.50;
 
 export type TrackModel = 1 | 2;
 
@@ -90,26 +94,26 @@ export function projectTrack(
     tax += pay * TAX; yearTax += pay * TAX;
 
     deposited += monthlyDeposit;
-    if (model === 1) {
-      // one point of each volatile sleeve a year is redirected to JEPQ; this is
-      // a change of address for new money, never a sale, so it costs no tax
-      const sh = Math.min(1, 0.02 * Math.floor(yrs));
-      for (const k of ['BTC', 'SMH'] as SleeveId[]) {
-        const amt = (monthlyDeposit * (1 - sh)) / 2;
-        g[k].v += amt; g[k].c += amt;
-      }
-      jepq.v += monthlyDeposit * sh; jepq.c += monthlyDeposit * sh;
-    } else if (m > depositYears * 12) {
+    const age = startAge + yrs;
+    if (m > depositYears * 12) {
       g.WORLD.v += monthlyDeposit; g.WORLD.c += monthlyDeposit;
     } else {
-      const vol = Math.max(0, 1 - 0.02 * yrs), core = 1 - vol;
-      const mix: Array<[SleeveId, number]> =
-        [['BTC', vol / 2], ['SMH', vol / 2], ['SPMO', core / 2], ['XLK', core / 2]];
-      for (const [k, w] of mix) { g[k].v += monthlyDeposit * w; g[k].c += monthlyDeposit * w; }
+      // Model 1 sends a growing share of every deposit straight to JEPQ — a
+      // change of address for new money, never a sale, so it costs no tax. What
+      // stays on the growing side follows the same age mix as model 2, which
+      // means SPMO and XLK are the complements in both tracks.
+      const toJepq = model === 1 ? Math.min(JEPQ_CAP, GLIDE * (age - BASE_AGE)) : 0;
+      if (toJepq > 0) {
+        jepq.v += monthlyDeposit * toJepq; jepq.c += monthlyDeposit * toJepq;
+      }
+      const left = monthlyDeposit * (1 - toJepq);
+      for (const [k, w] of Object.entries(mixForAge(age)) as Array<[SleeveId, number]>) {
+        g[k].v += left * w; g[k].c += left * w;
+      }
     }
 
     // the harvest fires once a cycle, not on every new high
-    const keys: SleeveId[] = model === 1 ? ['BTC', 'SMH'] : ['BTC', 'SMH', 'SPMO', 'XLK'];
+    const keys: SleeveId[] = ['BTC', 'SMH', 'SPMO', 'XLK'];
     for (const k of keys) {
       const since = m - (lastHarvest[k] ?? 0);
       if (since < CYCLE_YEARS[k] * 12 || g[k].v <= g[k].c) continue;
