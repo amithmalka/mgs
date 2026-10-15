@@ -101,31 +101,9 @@ export function MonthPage() {
     }, next.lots, next.jepq);
   };
 
-  if (!started) {
-    return (
-      <div className="term">
-        <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="eyebrow">MONEY GROWTH SYSTEM</span>
-          <h1>נתחיל את התוכנית</h1>
-          <p className="lede">
-            מכאן והלאה המערכת זוכרת מה אתה מחזיק, מה העלות של כל רכיב, מה השיא שלו,
-            ומתי קצרת ממנו לאחרונה — ואומרת לך בכל חודש בדיוק לאן ההפקדה הולכת.
-          </p>
-        </header>
-        <div className="panel" style={{ gap: 14 }}>
-          <p style={{ fontSize: 13, color: 'var(--mid)' }}>
-            מתחילים מאפס, או ממה שכבר מוחזק? אפשר להזין אחזקות קיימות אחרי הכניסה.
-          </p>
-          <button className="opt" type="button" aria-pressed
-            onClick={() => start(thisMonth())}
-            style={{ alignSelf: 'flex-start', padding: '9px 20px', fontSize: 13.5 }}>
-            להתחיל ב{monthName(thisMonth())}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // Every hook has to run on every render, so all of these sit above the
+  // "not started yet" return below. Putting one after it changes the hook count
+  // between renders the moment the plan starts, and React tears the tree down.
   const ms = useMemo(() => milestonesFor(age), [age]);
   const [remindMsg, setRemindMsg] = useState('');
   const [remindBusy, setRemindBusy] = useState(false);
@@ -160,6 +138,32 @@ export function MonthPage() {
 
   const next = useMemo(() => nextDepositDate(depositDay), [depositDay]);
   const due = useMemo(() => daysUntilDeposit(depositDay), [depositDay]);
+
+  if (!started) {
+    return (
+      <div className="term">
+        <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span className="eyebrow">MONEY GROWTH SYSTEM</span>
+          <h1>נתחיל את התוכנית</h1>
+          <p className="lede">
+            מכאן והלאה המערכת זוכרת מה אתה מחזיק, מה העלות של כל רכיב, מה השיא שלו,
+            ומתי קצרת ממנו לאחרונה — ואומרת לך בכל חודש בדיוק לאן ההפקדה הולכת.
+          </p>
+        </header>
+        <div className="panel" style={{ gap: 14 }}>
+          <p style={{ fontSize: 13, color: 'var(--mid)' }}>
+            מתחילים מאפס, או ממה שכבר מוחזק? אפשר להזין אחזקות קיימות אחרי הכניסה.
+          </p>
+          <button className="opt" type="button" aria-pressed
+            onClick={() => start(thisMonth())}
+            style={{ alignSelf: 'flex-start', padding: '9px 20px', fontSize: 13.5 }}>
+            להתחיל ב{monthName(thisMonth())}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="term">
