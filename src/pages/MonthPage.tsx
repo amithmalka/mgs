@@ -190,7 +190,10 @@ export function MonthPage() {
         )}
       </header>
 
-      <section className="f" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
+      {/* .f sets flex-direction: column, so the row direction has to be stated
+          here or the wrapped children stack into columns and spill sideways */}
+      <section className="f" style={{ display: 'flex', flexDirection: 'row',
+        flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
         <span className="fk" style={{ flexBasis: '100%' }}>יום ההפקדה שלכם</span>
         <div className="grp" style={{ margin: 0 }}>
           {DAY_CHOICES.map(d => (
