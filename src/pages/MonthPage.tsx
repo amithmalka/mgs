@@ -21,10 +21,10 @@ const BUY_AS: Partial<Record<SleeveId, string>> = {
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
-  onTarget: { label: 'מנה מלאה לפי הגיל', tone: 'var(--muted)' },
-  under:    { label: 'מתחת ליעד — מנה מלאה', tone: 'var(--up)' },
-  deep:     { label: 'ירד מעל 50% מהשיא — מנה מוגדלת', tone: 'var(--gold)' },
-  landing:  { label: 'שנות הנחיתה — הכל למדד עולמי', tone: 'var(--muted)' },
+  high:    { label: 'על השיא שלו — רבע מנה', tone: 'var(--muted)' },
+  fallen:  { label: 'ירד מהשיא — חצי מנה, פי שתיים', tone: 'var(--up)' },
+  deep:    { label: 'ירד מעל 50% — מנה מוגדלת, פי 2.8', tone: 'var(--gold)' },
+  landing: { label: 'שנות הנחיתה — הכל למדד עולמי', tone: 'var(--muted)' },
 };
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
@@ -256,6 +256,7 @@ export function MonthPage() {
                   <td style={{ color: REASON[l.reason].tone, whiteSpace: 'normal' }}>
                     {REASON[l.reason].label}
                   </td>
+                  <td className="v dim">×{l.tier.toFixed(2)}</td>
                   <td className="v">{ready ? n0(l.value) : '—'}</td>
                   <td className="v dim">{ready ? `${(l.share * 100).toFixed(0)}%` : '—'}</td>
                   <td className="v dim">{(l.target * 100).toFixed(0)}%</td>
@@ -289,9 +290,9 @@ export function MonthPage() {
             ולכן אין בדרך הזאת אף אירוע מס.
           </p>
           <p>
-            כל רכיב מקבל את המנה המלאה שלו בכל חודש, בלי קשר למה שהוא עשה —
-            חוץ מחריג אחד: רכיב שנפל יותר מ-50% מהשיא שלו לוקח 70% מההפקדה.
-            מכירה נדרשת רק כשהשורה האדומה מופיעה למעלה.
+            המנה של כל רכיב נקבעת מהגיל, ואז מוכפלת לפי מה שהוא עשה: על השיא
+            שלו ×0.25, ירד ממנו ×0.50, ירד מעל 50% ×0.70. כלומר רכיב שירד
+            מקבל פי שתיים מרכיב שעלה. מכירה נדרשת רק כשהשורה האדומה למעלה.
           </p>
         </aside>
         </div>

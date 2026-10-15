@@ -14,14 +14,30 @@ export const RESET: Partial<Record<SleeveId, number>> =
   { BTC: 0.50, SMH: 0.30, SPMO: 0.30, XLK: 0.30 };
 /** a new high must clear the old one by this much before it counts */
 export const BREAKOUT = 0.10;
-/** a sleeve this far below its own high takes most of the month's money */
+/** a sleeve this far below its own high is in the deepest buying tier */
 export const DEEP = 0.50;
-export const DEEP_SHARE = 0.70;
+/** and this close to its high counts as being at it */
+export const NEAR_HIGH = 0.02;
+
+/**
+ * The three buying tiers, applied to each sleeve's own portion of the month.
+ *
+ * A sleeve at its high is bought at a quarter weight, one that has fallen at a
+ * half, and one more than 50% down at seven tenths — so a faller gets twice
+ * what a riser gets and a crash gets 2.8 times.
+ *
+ * The multiplier scales the share the AGE asks for and the result is
+ * renormalised, which is the whole point: taking 25/50/70 percent of the whole
+ * deposit instead would hand the two volatile sleeves the entire month between
+ * them, leave the core nothing, and erase the glide — measured, a 65-year-old
+ * then ends up holding exactly the portfolio of a 20-year-old.
+ */
+export const TIER = { high: 0.25, fallen: 0.50, deep: 0.70 } as const;
 /** what JEPQ hands over a year, as a share of its value */
 export const JEPQ_YIELD = 0.09;
 
 export type Reason =
-  | 'onTarget' | 'under' | 'deep' | 'landing';
+  | 'high' | 'fallen' | 'deep' | 'landing';
 
 export interface Line {
   sleeve: SleeveId;
@@ -32,8 +48,10 @@ export interface Line {
   value: number;
   /** share of the portfolio now */
   share: number;
-  /** share the age says it should be */
+  /** share the age says it should be, before the tier multiplier */
   target: number;
+  /** the multiplier this month's tier applied */
+  tier: number;
   /** how far below its own high, 0..1 */
   fromHigh: number;
 }
@@ -233,44 +251,41 @@ export function buildMonth(
     return p && ath > 0 ? Math.max(0, 1 - p / ath) : 0;
   };
 
-  // a sleeve far enough below its high takes most of the month off the top
-  const deep = keys.filter(k => fromHigh(k) > DEEP);
-  let left = deposit;
+  // Which tier each sleeve is in this month, from its distance below its own
+  // high — never from its share of the portfolio. "Above its share" means
+  // "did well", and cutting the deposit to whatever did well cost 1,125,578
+  // over the measured decade.
+  const tierOf = (k: SleeveId): Reason => {
+    if (phase !== 'accumulate') return 'landing';
+    const d = fromHigh(k);
+    return d > DEEP ? 'deep' : d <= NEAR_HIGH ? 'high' : 'fallen';
+  };
+
   const amounts: Partial<Record<SleeveId, number>> = {};
   const reasons: Partial<Record<SleeveId, Reason>> = {};
-
-  if (deep.length) {
-    const pot = deposit * DEEP_SHARE;
-    const depth = deep.reduce((s, k) => s + fromHigh(k), 0);
-    for (const k of deep) { amounts[k] = pot * (fromHigh(k) / depth); reasons[k] = 'deep'; }
-    left -= pot;
-  }
-
-  // Every sleeve gets its full portion, whatever it did this month. The code
-  // used to halve the portion of any sleeve sitting above its target and hand
-  // the other half to the core, which in effect cut the deposit to whatever had
-  // risen. Measured on the real decade — 4,000 a month from October 2015 — it
-  // fired in 81 of 132 months, took 965,432 out of bitcoin, put 233,035 into
-  // momentum and technology, and cost 1,125,578 in total. The glide is the
-  // brake on a sleeve growing too large, and it does not need the price's help.
+  const weight: Partial<Record<SleeveId, number>> = {};
+  let total = 0;
   for (const k of keys) {
-    const share = portfolio > 0 ? value(k) / portfolio : 0;
-    const want = mix[k] ?? 0;
-    if (reasons[k] === 'deep') continue;
-    amounts[k] = (amounts[k] ?? 0) + left * want;
-    reasons[k] = phase !== 'accumulate' ? 'landing'
-      : portfolio > 0 && share < want * 0.98 ? 'under' : 'onTarget';
+    const r = tierOf(k);
+    reasons[k] = r;
+    const w = (mix[k] ?? 0) * (r === 'landing' ? 1 : TIER[r]);
+    weight[k] = w; total += w;
   }
+  for (const k of keys) amounts[k] = total > 0 ? deposit * ((weight[k] ?? 0) / total) : 0;
 
-  const lines: Line[] = keys.map(k => ({
-    sleeve: k,
-    amount: amounts[k] ?? 0,
-    reason: reasons[k] ?? 'onTarget',
-    value: value(k),
-    share: portfolio > 0 ? value(k) / portfolio : 0,
-    target: mix[k] ?? 0,
-    fromHigh: fromHigh(k),
-  }));
+  const lines: Line[] = keys.map(k => {
+    const r = reasons[k] ?? 'high';
+    return {
+      sleeve: k,
+      amount: amounts[k] ?? 0,
+      reason: r,
+      value: value(k),
+      share: portfolio > 0 ? value(k) / portfolio : 0,
+      target: mix[k] ?? 0,
+      tier: r === 'landing' ? 1 : TIER[r],
+      fromHigh: fromHigh(k),
+    };
+  });
 
   // a harvest fires only on a real high: armed by a fall, then clearing the old
   // high by the breakout margin
