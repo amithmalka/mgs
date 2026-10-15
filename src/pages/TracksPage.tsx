@@ -3,9 +3,11 @@ import { useStore } from '../store';
 import { useMgsStore } from '../store/mgsStore';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { GrowthChart } from '../components/mgs/GrowthChart';
-import { projectTrack, projectPlain, recommendModel, INCOME_AGE, type TrackModel } from '../utils/trackProject';
+import { projectTrack, projectPlain, recommendModel, INCOME_AGE, JEPQ_CAP,
+         type TrackModel } from '../utils/trackProject';
+import { mixForAge, glideAt } from '../utils/monthPlan';
 import {
-  SCENARIOS, SLEEVE_HE, WORLD_MODELS, horizonFor,
+  SCENARIOS, SLEEVE_HE, WORLD_MODELS, CYCLE_YEARS, CYCLE_SEEN, horizonFor, btcRate,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
 
@@ -25,6 +27,19 @@ const MODELS: Record<TrackModel, { name: string; sub: string }> = {
 };
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
+const pc = (v: number, d = 1) => `${(v * 100).toFixed(d)}%`;
+/** the annual rate that turns a stream of equal deposits into this result */
+function cagrOnDeposits(total: number, monthly: number, years: number): number {
+  let lo = -0.5, hi = 1.0;
+  for (let i = 0; i < 200; i++) {
+    const r = (lo + hi) / 2;
+    const m = Math.pow(1 + r, 1 / 12) - 1;
+    let v = 0;
+    for (let k = 0; k < years * 12; k++) v = (v + monthly) * (1 + m);
+    if (v > total) hi = r; else lo = r;
+  }
+  return (lo + hi) / 2;
+}
 
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
@@ -169,6 +184,8 @@ export function TracksPage() {
         <Stat label="מתוכו JEPQ, נטו" value={n0(p.jepq)} />
         <Stat label="התקבל במזומן בדרך" value={n0(p.received)} sub="חלוקות JEPQ, נטו" tone="up" />
         <Stat label="סה״כ לכל החיים" value={n0(p.total)} sub={`×${p.multiple.toFixed(2)}`} tone="gold" />
+        <Stat label="תשואה שנתית אפקטיבית" value={pc(cagrOnDeposits(p.total, deposit, p.years))}
+              sub="הריבית שהופכת את ההפקדות לסכום הזה" tone="up" />
         <Stat label="מס, סך הכל" value={n0(p.tax)}
               sub={`בדרך ועל התיק · ${Math.round((p.tax / p.deposited) * 100)}% מההפקדות`} />
         <Stat label="משכורת חודשית" value={n0(p.monthly)}
@@ -197,6 +214,98 @@ export function TracksPage() {
               הזרם השני. <b>אף שקל לא נספר פעמיים.</b></p>
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2>לאן הולכת ההפקדה, שנה אחר שנה</h2>
+        <p className="lede">
+          התמהיל נקבע מהגיל, לא מהוותק — ויורד נקודה בשנה עד גיל 35 ושתיים משם.
+          {model === 1 && ' ובמסלול התזרים, חלק מההפקדה נכנס ישר ל-JEPQ.'}
+        </p>
+        <div className="scroll">
+          <table>
+            <thead><tr>
+              {['שנה', 'גיל', ...SLEEVE_ORDER.filter(k => k !== 'SYN' && k !== 'WORLD')
+                  .map(k => SLEEVE_HE[k].split(' · ')[0]),
+                ...(model === 1 ? ['JEPQ'] : []), 'ובשקלים'].map((h, i) => <th key={i}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {stageYears.map(y => {
+                const at = age + y - 1;
+                const landing = y > p.depositYears;
+                const toJepq = model === 1 ? Math.min(JEPQ_CAP, glideAt(at)) : 0;
+                const mix = mixForAge(at);
+                const keys = SLEEVE_ORDER.filter(k => k !== 'SYN' && k !== 'WORLD') as SleeveId[];
+                const shares = keys.map(k => (landing ? 0 : (mix[k] ?? 0) * (1 - toJepq)));
+                return (
+                  <tr key={y}>
+                    <td className="v dim">{y}{landing ? ' · נחיתה' : ''}</td>
+                    <td className="v dim">{at}</td>
+                    {keys.map((k, i) => (
+                      <td key={k} className={`v ${shares[i] > 0.2 ? 'gold' : 'dim'}`}>
+                        {landing ? '—' : pc(shares[i], 0)}
+                      </td>
+                    ))}
+                    {model === 1 && <td className="v up">{pc(toJepq, 0)}</td>}
+                    <td className="v dim">
+                      {landing ? `${n0(deposit)} למדד עולמי`
+                        : shares.map(v => n0(deposit * v)).join(' / ')}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="note">
+          בשנות הנחיתה — {p.years - p.depositYears} השנים האחרונות — כל ההפקדה עוברת למדד
+          עולמי, בלי למכור כלום ובלי אירוע מס.
+        </p>
+      </section>
+
+      <section>
+        <h2>הרכב התיק ביום המשיכה</h2>
+        <div className="scroll">
+          <table>
+            <thead><tr>
+              {['הרכיב', 'שווי', 'חלק בתיק', 'ההנחה השנתית', 'שובר שיא כל', 'קצירות באופק']
+                .map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {(() => {
+                const gross = SLEEVE_ORDER.reduce((t, k) => t + (p.final[k] ?? 0), 0) + p.finalJepq;
+                const rows = [...SLEEVE_ORDER.map(k => ({
+                  k, label: SLEEVE_HE[k], v: p.final[k] ?? 0,
+                  rate: k === 'BTC' && S.btcStages.length
+                    ? `${pc(btcRate(scenario, 1))} → ${pc(btcRate(scenario, 15))} → ${pc(btcRate(scenario, 25))}`
+                    : pc(S.rate[k]),
+                  cyc: CYCLE_YEARS[k],
+                })), {
+                  k: 'JEPQ' as string, label: 'JEPQ · מנוע ההכנסה', v: p.finalJepq,
+                  rate: pc(SCENARIOS[scenario].jepqTotal), cyc: undefined as number | undefined,
+                }];
+                return rows.filter(r => r.v > 0.5).map(r => (
+                  <tr key={r.k} className={r.k === 'JEPQ' ? 'fin' : ''}>
+                    <td>{r.label}</td>
+                    <td className="v">{n0(r.v)}</td>
+                    <td className="v gold">{pc(gross ? r.v / gross : 0)}</td>
+                    <td className="v dim" dir="ltr">{r.rate}</td>
+                    <td className="v dim">{r.cyc ? `${r.cyc.toFixed(1)} שנים` : '—'}</td>
+                    <td className="v dim">
+                      {r.cyc ? Math.floor(p.years / r.cyc) : '—'}
+                      {r.cyc && CYCLE_SEEN[r.k]
+                        ? ` (נמדדו ${CYCLE_SEEN[r.k][0]} ב-${CYCLE_SEEN[r.k][1]} שנים)` : ''}
+                    </td>
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+        <p className="note">
+          השווי כאן ברוטו, לפני המס שעוד רובץ עליו — הוא מוצג כך כדי שהאחוזים יסתכמו
+          ל-100%. תדירות שבירת השיא נמדדה על סגירות יומיות של כל רכיב בנפרד.
+        </p>
       </section>
 
       <section>
@@ -241,7 +350,8 @@ export function TracksPage() {
           <table>
             <thead><tr>
               {['שנה', 'גיל', 'הופקד', 'צומח, נטו', 'JEPQ, נטו', 'חלוקה החודש',
-                'התקבל מצטבר', 'נקצר השנה', 'מס השנה', 'סה״כ', ''].map((h, i) => <th key={i}>{h}</th>)}
+                'התקבל מצטבר', 'נקצר השנה', 'מס השנה', 'סה״כ', 'מול ההפקדות',
+                'צמיחה השנה', ''].map((h, i) => <th key={i}>{h}</th>)}
             </tr></thead>
             <tbody>
               {p.rows.map(r => (
@@ -256,6 +366,13 @@ export function TracksPage() {
                   <td className="v dim">{n0(r.harvested)}</td>
                   <td className="v dim">{n0(r.taxThisYear)}</td>
                   <td className="v">{n0(r.total)}</td>
+                  <td className={`v ${r.total >= r.deposited ? 'up' : 'dn'}`}>
+                    {pc(r.total / r.deposited - 1, 0)}
+                  </td>
+                  <td className="v dim">
+                    {r.year === 1 ? '—'
+                      : pc(r.total / p.rows[r.year - 2].total - 1, 0)}
+                  </td>
                   <td className="meterwrap">
                     <span className="meter" style={{ width: `${Math.max(2, (r.total / last) * 100)}%` }} />
                   </td>
@@ -272,7 +389,8 @@ export function TracksPage() {
           <div className="c you">
             <span className="nm">{MODELS[model].name}</span>
             <span className="vv">{n0(p.total)}</span>
-            <span className="mm">{n0(p.monthly)} ₪ בחודש</span>
+            <span className="mm">{n0(p.monthly)} ₪ בחודש · ×{p.multiple.toFixed(2)}
+              {' · '}{pc(cagrOnDeposits(p.total, deposit, p.years))} בשנה</span>
           </div>
           {WORLD_MODELS.map(([name, rate]) => {
             const w = projectPlain(rate, years, deposit);
@@ -280,7 +398,8 @@ export function TracksPage() {
               <div className="c" key={name}>
                 <span className="nm">{name}</span>
                 <span className="vv">{n0(w.total)}</span>
-                <span className="mm">{n0(w.monthly)} ₪ בחודש</span>
+                <span className="mm">{n0(w.monthly)} ₪ בחודש · ×{(w.total / p.deposited).toFixed(2)}
+                  {' · '}MGS ×{(p.total / w.total).toFixed(2)} מזה</span>
               </div>
             );
           })}

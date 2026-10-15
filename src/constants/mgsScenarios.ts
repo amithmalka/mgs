@@ -60,9 +60,22 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
 };
 
-/** how often a real peak fires, measured from twelve years of daily closes */
+/**
+ * How often a cycle-armed peak actually fires, measured on each sleeve's own
+ * daily closes: the price must first fall below its reset depth (bitcoin 50%,
+ * equities 30%), and then clear the high that stood before the fall by 10%.
+ *
+ * Measured over each sleeve's full history — bitcoin 12.1 years, semiconductors
+ * 26.3, momentum 11.0, technology 27.8 — and the same counts come out at a 20%
+ * breakout, only later. Semiconductors fire every 6.6 years and technology
+ * every 9.3, not the 4 and 6 this file used to claim.
+ */
 export const CYCLE_YEARS: Record<string, number> =
-  { BTC: 4.0, SMH: 4.0, SPMO: 11.0, XLK: 6.0, SYN: 6.0 };
+  { BTC: 4.0, SMH: 6.6, SPMO: 11.0, XLK: 9.3, SYN: 9.3 };
+
+/** how many times each sleeve broke out over the measured history */
+export const CYCLE_SEEN: Record<string, [number, number]> =
+  { BTC: [3, 12.1], SMH: [4, 26.3], SPMO: [1, 11.0], XLK: [3, 27.8] };
 
 export const SLEEVE_HE: Record<SleeveId, string> = {
   BTC: 'ביטקוין', SMH: 'שבבים · SMH', SPMO: 'מומנטום · SPMO',
