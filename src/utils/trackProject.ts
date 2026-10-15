@@ -10,7 +10,7 @@ import {
   SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, JEPQ_YIELD, horizonFor, btcRate,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
-import { glideAt, mixForAge } from './monthPlan';
+import { glideFor, glideHeld, glideInvert, mixForAgeIn, type GlideMode } from './monthPlan';
 
 /** the most of a single deposit model 1 will route to JEPQ, reached at age 45 */
 export const JEPQ_CAP = 0.50;
@@ -84,6 +84,10 @@ export function projectTrack(
   monthlyDeposit = 4000,
   /** false keeps depositing by the age mix instead of landing in the world index */
   land = true,
+  /** which glide the deposit mix follows */
+  glide: GlideMode = 'continuous',
+  /** for the 'held' glide: how many years stay at full weight */
+  holdYears?: number,
 ): TrackResult {
   const S = SCENARIOS[scenario];
   const [depositYears, shiftYears] = horizonFor(startAge);
@@ -122,14 +126,20 @@ export function projectTrack(
       // change of address for new money, never a sale, so it costs no tax. What
       // stays on the growing side follows the same age mix as model 2, which
       // means SPMO and XLK are the complements in both tracks.
-      const toJepq = model === 1 ? Math.min(JEPQ_CAP, glideAt(age)) : 0;
+      // the held glide is measured from the plan's own start, the others from age
+      const g0 = glide === 'held' ? glideHeld(yrs, holdYears)
+        : glide === 'invert' ? glideInvert(yrs, startAge)
+        : glideFor(glide)(age);
+      const toJepq = model === 1 ? Math.min(JEPQ_CAP, g0) : 0;
       if (toJepq > 0) {
         jepq.v += monthlyDeposit * toJepq; jepq.c += monthlyDeposit * toJepq;
       }
       const left = monthlyDeposit * (1 - toJepq);
-      for (const [k, w] of Object.entries(mixForAge(age)) as Array<[SleeveId, number]>) {
-        g[k].v += left * w; g[k].c += left * w;
-      }
+      const vol = 1 - g0, core = 1 - vol;
+      const mix: Array<[SleeveId, number]> = glide === 'held' || glide === 'invert'
+        ? [['BTC', vol / 2], ['SMH', vol / 2], ['SPMO', core / 2], ['XLK', core / 2]]
+        : Object.entries(mixForAgeIn(age, glide)) as Array<[SleeveId, number]>;
+      for (const [k, w] of mix) { g[k].v += left * w; g[k].c += left * w; }
     }
 
     // the harvest fires once a cycle, not on every new high

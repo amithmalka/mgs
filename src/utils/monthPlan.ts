@@ -21,7 +21,7 @@ export const DEEP_SHARE = 0.70;
 export const JEPQ_YIELD = 0.09;
 
 export type Reason =
-  | 'onTarget' | 'over' | 'under' | 'deep' | 'landing';
+  | 'onTarget' | 'under' | 'deep' | 'landing';
 
 export interface Line {
   sleeve: SleeveId;
@@ -82,6 +82,84 @@ export function glideAt(age: number): number {
   const early = Math.min(a, GLIDE_BREAK) - BASE_AGE;
   const late = Math.max(0, a - GLIDE_BREAK);
   return Math.min(1, early * GLIDE_EARLY + late * GLIDE_LATE);
+}
+
+/** the stepped alternative: the volatile share loses this much at each step */
+export const STEP_CUT = 0.05;
+export const STEP_EVERY = 5;
+
+/**
+ * The same glide taken in steps instead of continuously: every five years of
+ * life the volatile share loses five per cent of itself, which is a cut that
+ * never reaches zero — bitcoin stays in the portfolio for good.
+ */
+export function glideStepped(age: number): number {
+  const steps = Math.floor(Math.max(0, age - BASE_AGE) / STEP_EVERY);
+  return Math.min(1, 1 - Math.pow(1 - STEP_CUT, steps));
+}
+
+/**
+ * the 'hold' glide: nothing moves for ten years, and then each of the two
+ * volatile sleeves loses three points a year — six points of the volatile half
+ * together — all of it by redirecting new deposits, never by selling
+ */
+export const HOLD_YEARS = 10;
+export const HOLD_RATE = 0.03;
+
+/**
+ * Ten years at full weight, and only then the glide — five points of the
+ * volatile half a year, measured from the day the plan opened rather than from
+ * the age. Bitcoin and semiconductors keep their whole share through the first
+ * decade, which is where the compounding they are there for actually happens.
+ */
+export function glideHeld(yearsIn: number, hold = HOLD_YEARS, rate = HOLD_RATE): number {
+  // each sleeve starts at half the portfolio and loses `rate` a year, so the
+  // volatile half loses twice that
+  const each = Math.max(0, 0.5 - Math.max(0, yearsIn - hold) * rate);
+  return 1 - 2 * each;
+}
+
+/**
+ * The inversion: every age opens at the full volatile weight and the mix turns
+ * over during the plan, at a rate the entry cohort sets. The older the entrant,
+ * the faster the turn — a sixty-year-old inverts inside three and a half years,
+ * a twenty-year-old takes the whole twenty-five.
+ */
+export const INVERT_RATE: Array<[number, number]> = [
+  [30, 0.02], [40, 0.04], [50, 0.08], [60, 0.16], [200, 0.30],
+];
+export function invertRate(startAge: number): number {
+  for (const [to, r] of INVERT_RATE) if (startAge < to) return r;
+  return 0.30;
+}
+/** how much of the volatile half has turned over by this year of the plan */
+export function glideInvert(yearsIn: number, startAge: number): number {
+  return Math.min(1, Math.max(0, yearsIn * invertRate(startAge)));
+}
+
+/**
+ * The steep glide, stated per component: each of bitcoin and semiconductors
+ * loses one point a year up to 35 and three points a year after it. Each sleeve
+ * is half the volatile part, so the volatile part itself loses twice that.
+ */
+export const STEEP_EARLY = 0.02;
+export const STEEP_LATE = 0.06;
+export function glideSteep(age: number): number {
+  const a = Math.max(BASE_AGE, age);
+  const early = Math.min(a, GLIDE_BREAK) - BASE_AGE;
+  const late = Math.max(0, a - GLIDE_BREAK);
+  return Math.min(1, early * STEEP_EARLY + late * STEEP_LATE);
+}
+
+export type GlideMode = 'continuous' | 'stepped' | 'held' | 'invert' | 'steep';
+export const glideFor = (mode: GlideMode) =>
+  mode === 'stepped' ? glideStepped : mode === 'steep' ? glideSteep : glideAt;
+
+/** The mix an age calls for under either glide. */
+export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<SleeveId, number>> {
+  const vol = 1 - glideFor(mode)(age);
+  const core = 1 - vol;
+  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
 }
 
 /**
@@ -146,22 +224,20 @@ export function buildMonth(
     left -= pot;
   }
 
+  // Every sleeve gets its full portion, whatever it did this month. The code
+  // used to halve the portion of any sleeve sitting above its target and hand
+  // the other half to the core, which in effect cut the deposit to whatever had
+  // risen. Measured on the real decade — 4,000 a month from October 2015 — it
+  // fired in 81 of 132 months, took 965,432 out of bitcoin, put 233,035 into
+  // momentum and technology, and cost 1,125,578 in total. The glide is the
+  // brake on a sleeve growing too large, and it does not need the price's help.
   for (const k of keys) {
     const share = portfolio > 0 ? value(k) / portfolio : 0;
     const want = mix[k] ?? 0;
-    const base = left * want;
     if (reasons[k] === 'deep') continue;
-    if (phase !== 'accumulate') { amounts[k] = (amounts[k] ?? 0) + base; reasons[k] = 'landing'; continue; }
-    if (portfolio > 0 && share > want * 1.02) {
-      // over its target: half the portion, the other half to the core sleeves
-      amounts[k] = (amounts[k] ?? 0) + base / 2;
-      reasons[k] = 'over';
-      const core = (['SPMO', 'XLK'] as SleeveId[]).filter(c => keys.includes(c) && c !== k);
-      for (const c of core) amounts[c] = (amounts[c] ?? 0) + base / 2 / core.length;
-    } else {
-      amounts[k] = (amounts[k] ?? 0) + base;
-      reasons[k] = portfolio > 0 && share < want * 0.98 ? 'under' : 'onTarget';
-    }
+    amounts[k] = (amounts[k] ?? 0) + left * want;
+    reasons[k] = phase !== 'accumulate' ? 'landing'
+      : portfolio > 0 && share < want * 0.98 ? 'under' : 'onTarget';
   }
 
   const lines: Line[] = keys.map(k => ({

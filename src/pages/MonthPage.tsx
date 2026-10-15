@@ -18,8 +18,7 @@ const BUY_AS: Partial<Record<SleeveId, string>> = {
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
-  onTarget: { label: 'על היעד', tone: 'var(--muted)' },
-  over:     { label: 'מעל היעד — חצי מנה', tone: 'var(--down)' },
+  onTarget: { label: 'מנה מלאה לפי הגיל', tone: 'var(--muted)' },
   under:    { label: 'מתחת ליעד — מנה מלאה', tone: 'var(--up)' },
   deep:     { label: 'ירד מעל 50% מהשיא — מנה מוגדלת', tone: 'var(--gold)' },
   landing:  { label: 'שנות הנחיתה — הכל למדד עולמי', tone: 'var(--muted)' },
@@ -205,7 +204,8 @@ export function MonthPage() {
             ולכן אין בדרך הזאת אף אירוע מס.
           </p>
           <p>
-            רכיב שנפל יותר מ-50% מהשיא שלו לוקח 70% מההפקדה באותו חודש.
+            כל רכיב מקבל את המנה המלאה שלו בכל חודש, בלי קשר למה שהוא עשה —
+            חוץ מחריג אחד: רכיב שנפל יותר מ-50% מהשיא שלו לוקח 70% מההפקדה.
             מכירה נדרשת רק כשהשורה האדומה מופיעה למעלה.
           </p>
         </aside>
