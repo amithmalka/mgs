@@ -22,7 +22,7 @@ export type ExplainKey =
   | 'track' | 'trackAlpha' | 'trackShield' | 'trackCompound'
   | 'ageMatrix' | 'decay' | 'milestones' | 'progress'
   | 'buyThisMonth' | 'holdings' | 'projection'
-  | 'harvest' | 'options' | 'jepq' | 'dipEngine' | 'returns'
+  | 'harvest' | 'jepq' | 'dipEngine' | 'returns'
   | 'BTC' | 'SMH' | 'SPMO' | 'QQQA' | 'I500' | 'EQQS' | 'WORLD';
 
 export const EXPLAIN: Record<ExplainKey, Explanation> = {
@@ -57,8 +57,8 @@ export const EXPLAIN: Record<ExplainKey, Explanation> = {
     body: 'לא מוכר כדי לאזן, אף פעם. כל מה שנקנה ממשיך לצבור עד סוף התקופה, '
       + 'והקטנת הסיכון נעשית אך ורק על ידי הפניית ההפקדות החדשות. זה המסלול '
       + 'שדוחה את המס הכי הרבה — ברוב השנים לא משלמים עליו כלום.',
-    note: 'לא ״אפס מס״: אם נכתבת אופציית קול על ביטקוין והיא ממומשת, יש מכירה '
-      + 'ויש מס. המסלול ממזער אירועי מס, הוא לא מבטל אותם.',
+    note: 'לא ״אפס מס״: קצירה בשיא היא מכירה, ועל מכירה יש מס. המסלול '
+      + 'ממזער אירועי מס, הוא לא מבטל אותם.',
   },
 
   // ── the mechanics ──────────────────────────────────────────────────────────
@@ -127,13 +127,6 @@ export const EXPLAIN: Record<ExplainKey, Explanation> = {
       + 'מהכלל לירות בשוק דובי — נייר שנמצא 15% מתחת לשיא ישן הוא לא רווח '
       + 'לקצור, הוא ירידה, ועל ירידה עונים בהפקדה ולא במכירה.',
     note: 'פעיל במסלולים 1 ו-2 בלבד. מסלול 3 לא מוכר כלום.',
-  },
-  options: {
-    title: 'למה לא כותבים אופציות על הכול',
-    body: 'אופציית קול שממומשת מכריחה אתכם למכור — וזה בדיוק אירוע המס '
-      + 'שהמסלולים הסינתטיים נבנו כדי למנוע. לכן כותבים אופציות רק על '
-      + 'ביטקוין ועל קרנות המומנטום, ולעולם לא על הקרנות הסינתטיות ולא '
-      + 'על SMH.',
   },
   dipEngine: {
     title: 'קנייה בירידות',
