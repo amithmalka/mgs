@@ -33,6 +33,12 @@ create index if not exists push_subscriptions_day_idx  on public.push_subscripti
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.push_subscriptions to authenticated;
 
+-- The cron job and the subscribe endpoint both act as service_role. A table
+-- created by hand does not inherit the project's default privileges, so the
+-- grant has to be explicit or every server-side read returns 42501.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.push_subscriptions to service_role;
+
 alter table public.push_subscriptions enable row level security;
 
 drop policy if exists "push_subscriptions_read"   on public.push_subscriptions;
