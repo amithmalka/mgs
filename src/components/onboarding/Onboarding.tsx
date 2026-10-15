@@ -28,7 +28,7 @@ const GOAL_1 = { value: 1, label: 'תזרים בלבד', sub: 'מזומן ביד
 /** From 55 the cash-flow track is the recommendation, and it says so. */
 function goalsFor(age: number | null) {
   if (age !== null && age >= INCOME_AGE) {
-    return [{ ...GOAL_1, sub: 'מומלץ בגיל הזה — באופק של 10–15 שנה רק המסלול הזה בונה תזרים אמיתי' },
+    return [{ ...GOAL_1, sub: 'למי שמחפש תזרים בגיל הזה — באופק של 10–15 שנה רק המסלול הזה בונה תזרים משמעותי' },
             { ...GOAL_2, sub: 'אפשרי, אבל התזרים בסוף יהיה זניח: מחזורי הקציר לא מספיקים' }];
   }
   return [GOAL_2, GOAL_1];

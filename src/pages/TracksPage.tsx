@@ -118,7 +118,7 @@ export function TracksPage() {
           ומחלק {n0(projectTrack(scenario, 2, age, deposit).monthlyFromJepq)} ₪ בחודש.
           מסלול 1 מנתב הפקדות ישר ל-JEPQ ולכן מחלק
           {' '}{n0(projectTrack(scenario, 1, age, deposit).monthlyFromJepq)} ₪.
-          זה המסלול שמתאים לגיל הזה.
+          מי שמחפש תזרים בגיל הזה — זה המסלול שמייצר אותו.
         </p>
       )}
 
@@ -131,7 +131,7 @@ export function TracksPage() {
         <div className="grp"><span className="glab">המסלול</span>
           {([1, 2] as TrackModel[]).map(m => (
             <Opt key={m} on={model === m} onClick={() => setModel(m)}>
-              {MODELS[m].name}{recommendModel(age) === m ? ' · מומלץ' : ''}
+              {MODELS[m].name}{recommendModel(age) === m ? ' · לתזרים בגיל הזה' : ''}
             </Opt>
           ))}
         </div>

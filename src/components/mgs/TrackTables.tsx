@@ -60,7 +60,7 @@ export function TrackTables({ age, monthlyDeposit = 4000 }: { age: number; month
     <div dir="rtl" className="flex flex-col gap-5">
       {/* ── the choice ───────────────────────────────────────────────────── */}
       <Card glow explain="track" title={`בן ${age}, מפקיד ${formatCurrency(monthlyDeposit)} בחודש`}
-            subtitle={`המערכת ממליצה על ״${TRACKS[suggested].nameHe}״ — אפשר לשנות`}>
+            subtitle={`לגיל שהוזן מתאים ״${TRACKS[suggested].nameHe}״ — אפשר לבחור אחר`}>
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-3 gap-2">
             {(['alpha', 'shield', 'compound'] as TrackId[]).map(t => (
@@ -71,7 +71,7 @@ export function TrackTables({ age, monthlyDeposit = 4000 }: { age: number; month
                   {TRACKS[t].nameHe}
                 </p>
                 <p className="text-[9.5px] text-text-dim mt-0.5">
-                  {t === suggested ? 'מומלץ לגיל שלך' : TRACKS[t].sellsToRebalance ? 'מוכר כדי לאזן' : 'בלי מכירות'}
+                  {t === suggested ? 'תואם את הגיל שהוזן' : TRACKS[t].sellsToRebalance ? 'מוכר כדי לאזן' : 'בלי מכירות'}
                 </p>
               </button>
             ))}
