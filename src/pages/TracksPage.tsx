@@ -225,7 +225,7 @@ export function TracksPage() {
         <div className="scroll">
           <table>
             <thead><tr>
-              {['שנה', 'גיל', ...SLEEVE_ORDER.filter(k => k !== 'SYN' && k !== 'WORLD')
+              {['שנה', 'גיל', ...SLEEVE_ORDER.filter(k => k !== 'SYN')
                   .map(k => SLEEVE_HE[k].split(' · ')[0]),
                 ...(model === 1 ? ['JEPQ'] : []), 'ובשקלים'].map((h, i) => <th key={i}>{h}</th>)}
             </tr></thead>
@@ -235,21 +235,21 @@ export function TracksPage() {
                 const landing = y > p.depositYears;
                 const toJepq = model === 1 ? Math.min(JEPQ_CAP, glideAt(at)) : 0;
                 const mix = mixForAge(at);
-                const keys = SLEEVE_ORDER.filter(k => k !== 'SYN' && k !== 'WORLD') as SleeveId[];
-                const shares = keys.map(k => (landing ? 0 : (mix[k] ?? 0) * (1 - toJepq)));
+                const keys = SLEEVE_ORDER.filter(k => k !== 'SYN') as SleeveId[];
+                const shares = keys.map(k =>
+                  landing ? (k === 'WORLD' ? 1 - toJepq : 0) : (mix[k] ?? 0) * (1 - toJepq));
                 return (
                   <tr key={y}>
                     <td className="v dim">{y}{landing ? ' · נחיתה' : ''}</td>
                     <td className="v dim">{at}</td>
                     {keys.map((k, i) => (
                       <td key={k} className={`v ${shares[i] > 0.2 ? 'gold' : 'dim'}`}>
-                        {landing ? '—' : pc(shares[i], 0)}
+                        {shares[i] > 0 ? pc(shares[i], 0) : '—'}
                       </td>
                     ))}
                     {model === 1 && <td className="v up">{pc(toJepq, 0)}</td>}
                     <td className="v dim">
-                      {landing ? `${n0(deposit)} למדד עולמי`
-                        : shares.map(v => n0(deposit * v)).join(' / ')}
+                      {shares.map(v => n0(deposit * v)).join(' / ')}
                     </td>
                   </tr>
                 );
@@ -258,8 +258,10 @@ export function TracksPage() {
           </table>
         </div>
         <p className="note">
-          בשנות הנחיתה — {p.years - p.depositYears} השנים האחרונות — כל ההפקדה עוברת למדד
-          עולמי, בלי למכור כלום ובלי אירוע מס.
+          המדד העולמי נכנס לתמהיל מגיל 45 וגדל עד 40% — הוא הרכיב היחיד כאן עם פיזור
+          על אלפי חברות, בעוד שטכנולוגיה ירדה 82% בדוט-קום ולקחה לה 16.9 שנים לחזור.
+          ובשנות הנחיתה — {p.years - p.depositYears} השנים האחרונות — כל ההפקדה עוברת
+          אליו, בלי למכור כלום ובלי אירוע מס.
         </p>
       </section>
 

@@ -157,9 +157,11 @@ export const glideFor = (mode: GlideMode) =>
 
 /** The mix an age calls for under either glide. */
 export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<SleeveId, number>> {
-  const vol = 1 - glideFor(mode)(age);
-  const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+  const w = worldShare(age);
+  const rest = 1 - w;
+  const vol = rest * (1 - glideFor(mode)(age));
+  const core = rest - vol;
+  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2, WORLD: w };
 }
 
 /**
@@ -171,10 +173,30 @@ export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<Sleeve
  * half has already come down to 20%, and bitcoin with it to 10%. Two people of
  * the same age hold the same mix, whichever of them joined first.
  */
+/**
+ * The world index enters the mix from 45 and grows with the age.
+ *
+ * It is here because the core is not the safe half anyone assumes it is:
+ * technology fell 82% in the dot-com and took sixteen years and eleven months
+ * to come back, and momentum's gentle 31% is only gentle because the fund did
+ * not exist in 2008. The world index is the one sleeve in the method with real
+ * diversification across thousands of companies — and its own measured 34% is
+ * also flattered by a short history, so this is a reduction of risk and not an
+ * escape from it.
+ */
+export const WORLD_FROM = 45;
+export const WORLD_RATE = 0.03;
+export const WORLD_CAP = 0.40;
+export function worldShare(age: number): number {
+  return Math.min(WORLD_CAP, Math.max(0, (age - WORLD_FROM) * WORLD_RATE));
+}
+
 export function mixForAge(age: number): Partial<Record<SleeveId, number>> {
-  const vol = 1 - glideAt(age);
-  const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+  const w = worldShare(age);
+  const rest = 1 - w;
+  const vol = rest * (1 - glideAt(age));
+  const core = rest - vol;
+  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2, WORLD: w };
 }
 
 /** The mix the age calls for, in this plan month. */
