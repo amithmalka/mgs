@@ -17,6 +17,8 @@ export interface PriceInfo {
   currency?: string | null;
   exchange?: string | null;
   candles?: Candle[];
+  /** which provider served this symbol */
+  source?: 'fmp' | 'twelvedata';
   error?: string;
 }
 

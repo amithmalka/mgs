@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMgsStore } from '../store/mgsStore';
 import { useStore } from '../store';
-import { usePlanStore, planMonth, thisMonth } from '../store/planStore';
+import { usePlanStore, planMonth, thisMonth,
+         nextDepositDate, daysUntilDeposit } from '../store/planStore';
 import { buildMonth, applyMonth, type Reason } from '../utils/monthPlan';
 import { SLEEVE_HE, cohortFor, milestonesFor, type SleeveId } from '../constants/mgsScenarios';
 import { fetchPrices } from '../lib/marketData';
 import type { PriceInfo } from '../lib/marketData';
 import { Icon } from '../components/shared/Icon';
+import { pushSupported, pushStatus, subscribeToPush, unsubscribeFromPush } from '../lib/push';
+import { supabase } from '../lib/supabase';
 
 /** The instrument each sleeve is actually bought through. */
 const TICKER: Partial<Record<SleeveId, string>> = {
@@ -25,8 +28,10 @@ const REASON: Record<Reason, { label: string; tone: string }> = {
 };
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
+const DAY_CHOICES = [1, 5, 10, 15, 20, 25, 28];
 const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const monthName = (m: string) => `${MONTHS_HE[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
+const dayName = (d: Date) => `${d.getDate()} ב${MONTHS_HE[d.getMonth()]}`;
 
 /**
  * The month's instruction: where every shekel goes, and whether a harvest came
@@ -37,7 +42,8 @@ export function MonthPage() {
   const { age } = useMgsStore();
   const { simulationParams } = useStore();
   const deposit = simulationParams.monthlyDeposit;
-  const { started, startMonth, lots, jepq, log, start, recordMonth } = usePlanStore();
+  const { started, startMonth, depositDay, remind, lots, jepq, log,
+          start, setDepositDay, setRemind, recordMonth } = usePlanStore();
 
   const [prices, setPrices] = useState<Record<string, PriceInfo>>({});
   const [fx, setFx] = useState<number | undefined>();
@@ -79,6 +85,10 @@ export function MonthPage() {
 
   const confirm = () => {
     const next = applyMonth(lots, plan, priceIls, jepq, jepqIls);
+    // the month is stamped with what the portfolio was actually worth when it
+    // was confirmed, so the log reads as a history and not just a list of buys
+    const after = (Object.keys(next.lots) as SleeveId[])
+      .reduce((t, k) => t + next.lots[k].units * (priceIls[k] ?? 0), 0);
     recordMonth({
       month: current,
       bought: Object.fromEntries(plan.lines.filter(l => l.amount > 0).map(l => [l.sleeve, l.amount])),
@@ -86,6 +96,8 @@ export function MonthPage() {
       taxPaid: plan.harvests.reduce((s, h) => s + h.tax, 0),
       income: plan.income,
       deposit,
+      portfolio: after,
+      jepqValue: next.jepq.units * jepqIls,
     }, next.lots, next.jepq);
   };
 
@@ -115,6 +127,39 @@ export function MonthPage() {
   }
 
   const ms = useMemo(() => milestonesFor(age), [age]);
+  const [remindMsg, setRemindMsg] = useState('');
+  const [remindBusy, setRemindBusy] = useState(false);
+
+  // Turning the reminder on has to re-register whenever the day changes: the
+  // server sends on the day stored with the subscription, not the one on screen.
+  const toggleRemind = async (on: boolean) => {
+    setRemindBusy(true); setRemindMsg('');
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id ?? '';
+    const r = on ? await subscribeToPush(uid, depositDay) : await unsubscribeFromPush(uid);
+    setRemindBusy(false);
+    if (r.ok) {
+      setRemind(on);
+      setRemindMsg(on ? `תזכורת הופעלה — תגיע ב-${depositDay} בכל חודש.` : 'התזכורת כובתה.');
+    } else {
+      setRemindMsg(r.reason);
+      if (!on) setRemind(false);
+    }
+  };
+  useEffect(() => {
+    if (!remind) return;
+    void pushStatus().then(st => { if (st !== 'granted') setRemind(false); });
+  }, [remind, setRemind]);
+  useEffect(() => {
+    if (!remind) return;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.id) await subscribeToPush(data.user.id, depositDay);
+    })();
+  }, [depositDay, remind]);
+
+  const next = useMemo(() => nextDepositDate(depositDay), [depositDay]);
+  const due = useMemo(() => daysUntilDeposit(depositDay), [depositDay]);
 
   return (
     <div className="term">
@@ -122,6 +167,8 @@ export function MonthPage() {
         <span className="tk"><span className="sym">חודש {month}</span><b>{monthName(current)}</b></span>
         <span className="tk"><span className="sym">גיל</span><b>{plan.age}</b></span>
         <span className="tk"><span className="sym">הפקדה</span><b>{n0(deposit)} ₪</b></span>
+        <span className="tk"><span className="sym">יום ההפקדה</span>
+          <b className={due === 0 ? 'gold' : ''}>{due === 0 ? 'היום' : dayName(next)}</b></span>
         <span className="tk"><span className="sym">שווי התיק</span>
           <b>{ready ? `${n0(plan.portfolio)} ₪` : '—'}</b></span>
         <span className="tk"><span className="sym">JEPQ</span>
@@ -138,6 +185,40 @@ export function MonthPage() {
           </p>
         )}
       </header>
+
+      <section className="f" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
+        <span className="fk" style={{ flexBasis: '100%' }}>יום ההפקדה שלכם</span>
+        <div className="grp" style={{ margin: 0 }}>
+          {DAY_CHOICES.map(d => (
+            <button key={d} className="opt" type="button" aria-pressed={depositDay === d}
+              onClick={() => setDepositDay(d)}>{d} בחודש</button>
+          ))}
+          <label className="own">יום אחר
+            <input className="amt" type="number" min={1} max={28} value={depositDay}
+              inputMode="numeric" aria-label="יום בחודש להפקדה"
+              onChange={e => setDepositDay(Number(e.target.value) || 1)} />
+          </label>
+        </div>
+        <div style={{ flexBasis: '100%', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="opt" type="button" aria-pressed={remind} disabled={remindBusy}
+            onClick={() => void toggleRemind(!remind)}>
+            <Icon name="warning" size={11} />{' '}
+            {remindBusy ? 'רגע…' : remind ? 'תזכורת חודשית פעילה' : 'הזכירו לי כל חודש'}
+          </button>
+          {!pushSupported() && (
+            <span className="eqn" style={{ color: 'var(--muted)' }}>
+              בדפדפן הזה אין התראות. באייפון — הוסיפו את האפליקציה למסך הבית.
+            </span>
+          )}
+          {remindMsg && <span className="eqn" style={{ color: remind ? 'var(--up)' : 'var(--down)' }}>{remindMsg}</span>}
+        </div>
+        <p style={{ flexBasis: '100%', margin: 0 }}>
+          {due === 0
+            ? <b style={{ color: 'var(--gold)' }}>היום יום ההפקדה — החלוקה למטה מחושבת למחירים של עכשיו.</b>
+            : <>ההפקדה הבאה ב<b>{dayName(next)}</b> — בעוד {due} {due === 1 ? 'יום' : 'ימים'}.
+                {' '}החלוקה למטה מחושבת למחירים של עכשיו ותתעדכן ביום עצמו.</>}
+        </p>
+      </section>
 
       {plan.harvests.length > 0 && (
         <div className="final">
@@ -249,7 +330,8 @@ export function MonthPage() {
           <h2>מה כבר בוצע</h2>
           <div className="scroll">
             <table>
-              <thead><tr>{['חודש', 'הופקד', 'נקצר ל-JEPQ', 'התקבל מ-JEPQ', 'מס'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+              <thead><tr>{['חודש', 'הופקד', 'נקצר ל-JEPQ', 'התקבל מ-JEPQ', 'מס',
+                'שווי התיק אז', 'JEPQ אז'].map(h => <th key={h}>{h}</th>)}</tr></thead>
               <tbody>
                 {[...log].reverse().map(l => (
                   <tr key={l.month}>
@@ -258,6 +340,8 @@ export function MonthPage() {
                     <td className="v gold">{l.harvested ? n0(l.harvested) : '—'}</td>
                     <td className="v up">{l.income ? n0(l.income) : '—'}</td>
                     <td className="v dim">{l.taxPaid ? n0(l.taxPaid) : '—'}</td>
+                    <td className="v">{l.portfolio ? n0(l.portfolio) : '—'}</td>
+                    <td className="v gold">{l.jepqValue ? n0(l.jepqValue) : '—'}</td>
                   </tr>
                 ))}
               </tbody>

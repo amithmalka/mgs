@@ -1,5 +1,11 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "crons": [
+    {
+      "path": "/api/push-cron",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }

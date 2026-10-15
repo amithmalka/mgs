@@ -42,6 +42,10 @@ export interface MonthLog {
   deposit: number;
   /** JEPQ's own distribution that month, after tax */
   income: number;
+  /** what the growing side was worth when the month was confirmed */
+  portfolio?: number;
+  /** and what JEPQ was worth */
+  jepqValue?: number;
 }
 
 const empty = (): Lot => ({ units: 0, cost: 0, ath: 0, armed: false, lastHarvest: 0 });
@@ -51,10 +55,20 @@ interface PlanState {
   started: boolean;
   /** 'YYYY-MM' of the first month */
   startMonth: string;
+  /**
+   * Day of the month the deposit actually happens — payday, not the 1st.
+   * The month's instruction is prepared for that date and the reminder is
+   * sent on it, so the plan runs on the user's own calendar.
+   */
+  depositDay: number;
+  /** whether a monthly reminder has been asked for on this device */
+  remind: boolean;
   lots: Record<SleeveId, Lot>;
   jepq: Jepq;
   log: MonthLog[];
 
+  setDepositDay: (day: number) => void;
+  setRemind: (on: boolean) => void;
   start: (month: string) => void;
   setLot: (sleeve: SleeveId, patch: Partial<Lot>) => void;
   recordMonth: (entry: MonthLog, lots: Record<SleeveId, Lot>, jepq: Jepq) => void;
@@ -73,10 +87,14 @@ export const usePlanStore = create<PlanState>()(
     (set) => ({
       started: false,
       startMonth: thisMonth(),
+      depositDay: 1,
+      remind: false,
       lots: emptyLots(),
       jepq: { units: 0, cost: 0, received: 0 },
       log: [],
 
+      setDepositDay: (day) => set({ depositDay: Math.min(28, Math.max(1, Math.round(day))) }),
+      setRemind: (on) => set({ remind: on }),
       start: (month) => set({ started: true, startMonth: month }),
       setLot: (sleeve, patch) => set(s => ({
         lots: { ...s.lots, [sleeve]: { ...s.lots[sleeve], ...patch } },
@@ -93,6 +111,32 @@ export const usePlanStore = create<PlanState>()(
     { name: 'mgs-plan' },
   ),
 );
+
+/**
+ * The deposit date for a given month, and how far today is from it.
+ *
+ * A day past the end of a short month lands on its last day, so February with
+ * a 30th chosen still has exactly one deposit date.
+ */
+export function depositDate(day: number, ref = new Date()): Date {
+  const last = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+  return new Date(ref.getFullYear(), ref.getMonth(), Math.min(day, last));
+}
+
+/** The next deposit date from today — this month's if it has not passed. */
+export function nextDepositDate(day: number, ref = new Date()): Date {
+  const here = depositDate(day, ref);
+  if (here.getDate() >= ref.getDate()) return here;
+  const next = new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
+  return depositDate(day, next);
+}
+
+/** Days until the next deposit; 0 means today. */
+export function daysUntilDeposit(day: number, ref = new Date()): number {
+  const a = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+  const b = nextDepositDate(day, ref);
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
 
 /** How many months the plan has been running, 1-based. */
 export function planMonth(startMonth: string, now = thisMonth()): number {
