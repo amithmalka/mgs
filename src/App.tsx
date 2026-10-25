@@ -6,6 +6,7 @@ import { AcademyPage } from './pages/AcademyPage';
 import { MonthPage } from './pages/MonthPage';
 import { TracksPage } from './pages/TracksPage';
 import { KidsPage } from './pages/KidsPage';
+import { SystemPage } from './pages/SystemPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
@@ -19,6 +20,7 @@ const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   // MGS is the projection page; the month's buy list lives in MgsPage and is
   // kept in the repo, ready to be routed again.
   mgs: TracksPage,
+  system: SystemPage,
   kids: KidsPage,
   academy: AcademyPage,
 };

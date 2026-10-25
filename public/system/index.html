@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<style>:root{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+<title>MGS · מערכת ההפעלה</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="app.css">
+
+<div class="toasts" id="toasts"></div>
+
+<nav class="nav"><div class="navin">
+  <span class="brand">MGS<em>·</em></span>
+  <a href="#home" data-p="home">הבית</a>
+  <a href="#track" data-p="track">המסלול</a>
+  <a href="#setup" data-p="setup">ההגדרות</a>
+  <a href="#rates" data-p="rates">השערים</a>
+  <a href="#deposit" data-p="deposit">הפקדה</a>
+  <a href="#withdraw" data-p="withdraw">משיכה</a>
+  <a href="#portfolio" data-p="portfolio">התיק</a>
+  <a href="#history" data-p="history">היסטוריה</a>
+  <a href="#returns" data-p="returns">התשואות</a>
+  <a href="#scen" data-p="scen">התרחישים</a>
+  <span class="who" id="who">—</span>
+</div></nav>
+
+<div class="wrap">
+
+<!-- ═══ הבית ═══ -->
+<div class="pg" id="p-home">
+  <h1>מערכת <em>ההפעלה</em></h1>
+  <p class="l">כאן לא מריצים סימולציה — <b>כאן מנהלים את התיק בפועל</b>.
+  בוחרים מסלול, קובעים יום הפקדה, והמערכת מוציאה <b>אישור הפקדה לפי השער של אותו יום</b>,
+  עוקבת אחרי העלות הממוצעת, ואומרת בכל חודש כמה למשוך וכמה מס משולם.</p>
+  <div id="homeState"></div>
+  <h3>הצעד הבא</h3>
+  <div id="homeNext"></div>
+</div>
+
+<!-- ═══ המסלול ═══ -->
+<div class="pg" id="p-track">
+  <h1>המסלול</h1>
+  <p class="l">שלושה מסלולים, ולכל אחד <b>כלל הפקדה וכלל משיכה משלו</b>.
+  הבחירה נשמרת ואפשר לשנות אותה בכל עת — <b>אבל שינוי לא משנה אישורים שכבר הונפקו</b>.</p>
+  <div class="picks" id="picks"></div>
+  <div id="ageWrap" hidden>
+    <h3>קבוצת הגיל</h3>
+    <p class="l">קובעת את <b>שנת המעבר</b> — השנה שבה ההפקדה מתחילה לרדת והמשיכה מתחילה.
+    רלוונטי רק למסלול ״צמיחה בלבד״.</p>
+    <div class="seg" id="segAge"></div>
+  </div>
+  <div class="bar"><button class="btn" id="saveTrack">שמור את המסלול</button>
+    <span class="msg" id="mTrack"></span></div>
+  <div class="scroll"><table><thead><tr>
+    <th>המסלול</th><th>ההפקדה אחרי שנה 5</th><th>המשיכה מתחילה</th><th>השיעור בהתחלה</th><th>עובר ל-4%</th>
+  </tr></thead><tbody>
+    <tr><td style="font-weight:600">תזרים בלבד</td><td class="n d">יורדת 10% מהבסיס בשנה</td>
+      <td class="n amb">שנה 2</td><td class="n">1% שנתי ÷ 12</td><td class="n d">שנה 8</td></tr>
+    <tr><td style="font-weight:600">תזרים וצמיחה</td><td class="n d">יורדת 5% מהבסיס בשנה</td>
+      <td class="n amb">שנה 5</td><td class="n">1% שנתי ÷ 12</td><td class="n d">שנה 11</td></tr>
+    <tr><td style="font-weight:600">צמיחה בלבד</td><td class="n d">יורדת 10% משנת המעבר</td>
+      <td class="n amb">שנת המעבר</td><td class="n">4% מיד</td><td class="n d">—</td></tr>
+  </tbody></table></div>
+</div>
+
+<!-- ═══ ההגדרות ═══ -->
+<div class="pg" id="p-setup">
+  <h1>ההגדרות</h1>
+  <p class="l">ההפקדה החודשית, <b>היום בחודש שבו מפקידים</b>, ואחוז העליה השנתי.
+  המערכת תזכיר ביום הזה ותנפיק את האישור לפי השער שיהיה אז.</p>
+  <div class="form">
+    <div class="f"><label>הפקדה חודשית · שנה 1</label>
+      <input type="number" id="sD" min="0" step="100"><span class="u">שקלים</span></div>
+    <div class="f"><label>היום בחודש</label>
+      <input type="number" id="sDay" min="1" max="28" step="1"><span class="u">1 עד 28</span></div>
+    <div class="f"><label>עליה שנתית</label>
+      <input type="number" id="sG" min="0" max="20" step="0.5"><span class="u">אחוזים · 5 עד 10</span></div>
+    <div class="f"><label>תאריך תחילת התוכנית</label>
+      <input type="date" id="sStart"><span class="u">ממנו נספרות השנים</span></div>
+    <div class="f"><label>איפה קונים</label>
+      <div class="seg" id="segMkt">
+        <button data-v="fx">חו״ל</button><button data-v="il">ת״א בשקלים</button></div>
+      <span class="u">קובע <b>אילו ניירות</b> ו<b>איזה שער</b> — לכל בורסה שער נפרד</span></div>
+  </div>
+  <div class="bar"><button class="btn" id="saveSetup">שמור את ההגדרות</button>
+    <span class="msg" id="mSetup"></span></div>
+  <div class="note r"><div class="b"></div><p><b>השערים אינם מתעדכנים לבד.</b>
+  לדף אין גישה לאינטרנט — ולכן <b>מנהל המערכת מזין את שער הסגירה</b> בעמוד ״השערים״,
+  והמערכת שומרת אותו עם התאריך. כל אישור נבנה מהשער שהיה במערכת ביום ההנפקה.</p></div>
+</div>
+
+<!-- ═══ השערים ═══ -->
+<div class="pg" id="p-rates">
+  <h1>השערים</h1>
+  <p class="l">השער שלפיו ייבנה האישור הבא, <b>והשיא של כל נייר</b> — שממנו נמדד אחוז הירידה
+  שקובע את חלוקת ההפקדה.</p>
+  <div class="mktbar"></div>
+  <div class="cards" id="rateCards"></div>
+  <h3>עדכון שער · <span id="rateLbl"></span></h3>
+  <div class="form">
+    <div class="f"><label>תאריך השער</label><input type="date" id="rDate"></div>
+    <div class="f"><label>ביטקוין</label><input type="number" id="rBTC" step="0.0001" min="0"><span class="u" id="rlBTC"></span></div>
+    <div class="f"><label>שבבים</label><input type="number" id="rSEM" step="0.0001" min="0"><span class="u" id="rlSEM"></span></div>
+    <div class="f"><label>טכנולוגיה</label><input type="number" id="rTEC" step="0.0001" min="0"><span class="u" id="rlTEC"></span></div>
+  </div>
+  <div class="bar"><button class="btn" id="saveRates">עדכן שערים</button>
+    <button class="btn sec" id="resetPeaks">אפס שיאים לשער הנוכחי</button>
+    <span class="msg" id="mRates"></span></div>
+  <div class="note a"><div class="b"></div><p><b>השיא עולה לבד ולא יורד.</b>
+  בכל עדכון שער המערכת מרימה את השיא אם השער גבוה ממנו. <b>היא לא מורידה אותו אף פעם</b> —
+  כי אחוז הירידה נמדד מהשיא ההיסטורי, וזה מה שמזין את מנגנון הקנייה.</p></div>
+</div>
+
+<!-- ═══ הפקדה ═══ -->
+<div class="pg" id="p-deposit">
+  <h1>אישור הפקדה</h1>
+  <p class="l">המערכת מחשבת את חלוקת ההפקדה <b>לפי אחוז הירידה מהשיא של כל נייר</b>,
+  בשער שבמערכת. <b>בדקו, ואז אשרו</b> — מהרגע שאישרתם זה נכנס לתיק ולהיסטוריה.</p>
+  <div id="depBody"></div>
+  <h3>לוח הקניות · כמה מפקידים בכל שנה</h3>
+  <div id="depSched"></div>
+</div>
+
+<!-- ═══ משיכה ═══ -->
+<div class="pg" id="p-withdraw">
+  <h1>אישור משיכה</h1>
+  <p class="l">המערכת מחשבת כמה למשוך לפי השיעור של המסלול והשנה, <b>מאיזה נייר</b> —
+  רק ממה שמעל העלות הממוצעת — <b>וכמה מס</b> לפי הרווח הריאלי.</p>
+  <div id="wdBody"></div>
+  <h3>לוח המשיכות · השיעור בכל שנה וכמה זה</h3>
+  <div id="wdSched"></div>
+</div>
+
+<!-- ═══ התיק ═══ -->
+<div class="pg" id="p-portfolio">
+  <h1>התיק</h1>
+  <div id="pfBody"></div>
+</div>
+
+<!-- ═══ היסטוריה ═══ -->
+<div class="pg" id="p-history">
+  <h1>היסטוריה</h1>
+  <p class="l">כל אישור שהונפק, עם השער שלפיו נבנה. <b>זה הרישום הקובע</b> —
+  העלות הממוצעת והמס מחושבים ממנו.</p>
+  <div id="hsBody"></div>
+</div>
+
+<!-- ═══ התשואות ═══ -->
+<div class="pg" id="p-returns">
+  <h1>התשואות</h1>
+  <p class="l">הסימולציה רצה <b>על ההגדרות שלכם</b> — אותו מסלול, אותה הפקדה, אותה עליה —
+  ומראה מה זה אומר קדימה. <b>זו תחזית על הנחות מוצהרות, לא על התיק בפועל.</b></p>
+  <div class="mktbar"></div>
+  <div class="form">
+    <div class="f"><label>התרחיש</label>
+      <div class="seg" id="segSc">
+        <button data-v="pess">פסימי</button><button data-v="real">ריאלי</button></div>
+      <span class="u">ההפרש ביניהם הוא <b>הביטקוין בלבד</b></span></div>
+    <div class="f"><label>השקעה ראשונית</label>
+      <input type="number" id="qL" value="0" min="0" step="10000">
+      <span class="u">נכנסת ביום הראשון, שווה בשווה</span></div>
+    <div class="f"><label>אופק</label>
+      <input type="number" id="qY" value="40" min="6" max="60" step="1">
+      <span class="u">שנים</span></div>
+  </div>
+  <div class="bar"><button class="btn" id="runSim">הרץ</button>
+    <span class="stat" id="qStat"></span></div>
+  <div class="cards" id="qCards" style="margin-top:18px"></div>
+  <div class="charts" style="margin-top:16px">
+    <div class="chart"><div class="ct"><b>שווי התיק</b>
+      <span class="lg"><span><i style="background:#E0A33C"></i>חציון</span>
+      <span><i style="background:#C4604F"></i>אחוזון 10</span></span></div>
+      <canvas id="q1"></canvas></div>
+    <div class="chart"><div class="ct"><b>ההכנסה החודשית</b>
+      <span class="lg"><span><i style="background:#E0A33C"></i>לפי שנה</span></span></div>
+      <canvas id="q2"></canvas></div>
+  </div>
+  <h3>היעדים</h3>
+  <div id="qGoals"></div>
+  <div class="note r" style="margin-top:18px"><div class="b"></div><p><b>החציון רועד.</b>
+  על 1,500 מסלולים סטיית התקן של החציון היא <b>±5.5%</b> — <b>אין משמעות לספרות שמעבר לכך</b>.
+  ואי-הוודאות על ההנחות ועל המזל גדולה ממנה בסדר גודל.</p></div>
+</div>
+
+<!-- ═══ התרחישים ═══ -->
+<div class="pg" id="p-scen">
+  <h1>התרחישים</h1>
+  <p class="l">אין כאן מספר שהומצא. <b>לחצו על תרחיש</b> ותראו את ההנחה לכל רכיב,
+  את הגוף שפרסם אותה, את התאריך — <b>ומה שקיים ולא נלקח, לשני הכיוונים</b>.</p>
+  <div class="note a"><div class="b"></div><p><b>כל ההפרש בין שני התרחישים הוא הביטקוין.</b>
+  השבבים והטכנולוגיה <b>זהים בשניהם</b> — 10.72% ו-9.64% — כי אין בעולם מקור גבוה יותר
+  מדאמודראן. הפסימי לוקח את <b>הבסיס</b> של JPMorgan (10.0%), והריאלי את
+  <b>התרחיש השורי שלהם עצמם</b> (16.6%).</p></div>
+  <div class="scen" id="scenCards" style="margin-top:18px"></div>
+</div>
+
+<footer>
+  <p><b>איך זה מחושב.</b> חלוקת ההפקדה: אחוז הירידה מהשיא לכל נייר, תקרה של 10% בעליות,
+  והעודף למה שנפל העמוק ביותר. המשיכה: שיעור לפי מסלול ושנה, <b>רק מנייר שמחירו מעל
+  העלות הממוצעת שלו</b>, ואם כולם מתחת — לא נמשך כלום. מס 25% על <b>הרווח הריאלי</b>:
+  עלות הקנייה מוצמדת למדד 2% לשנה מתאריך הקנייה.</p>
+  <p><b>מה המערכת לא עושה.</b> אינה מבצעת פעולות בבורסה, אינה מתחברת לברוקר,
+  <b>ואינה שולפת שערים מהאינטרנט</b> — השער מוזן ידנית ונשמר עם התאריך.
+  האישורים הם <b>רישום פנימי</b>, לא אישור של גוף מפוקח.</p>
+  <p>אין בחומרים האלה המלצה להשקעה, ייעוץ השקעות, שיווק השקעות או ייעוץ מס.
+  שאלות מס — ובמיוחד הטיפול בהצמדה למדד מול רכיב שער החליפין בניירות זרים —
+  מחייבות יועץ מס.</p>
+</footer>
+</div>
+<script src="core.js"></script>
+<script src="sim.js"></script>
+<script src="chart.js"></script>
+<script src="ui.js"></script>
+
+</body></html>
