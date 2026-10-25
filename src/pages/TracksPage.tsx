@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import {
@@ -140,21 +140,38 @@ export function TracksPage() {
   const setBase = (v: number) => setSimulationParams({ monthlyDeposit: v });
 
   const paths = 1200;
+  // 1,200 paths twice is about a second and a half, so running it on every
+  // keystroke would freeze the field mid-number. The inputs settle first and
+  // the run follows; the figures carry a "מחשב" mark until it lands.
+  const live = { scenario, market, track, cohort, base, growth, years, lump };
+  const [settled, setSettled] = useState(live);
+  const pending = JSON.stringify(settled) !== JSON.stringify(live);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setSettled(live), 320);
+    return () => window.clearTimeout(timer.current);
+  }, [scenario, market, track, cohort, base, growth, years, lump]);
+
+  const q = settled;
   const r = useMemo(() => simulate({
-    scenario, market, track, cohort, base, growth: growth / 100, years,
-    lump, floor: 0, paths, targets: TARGETS,
-  }), [scenario, market, track, cohort, base, growth, years, lump]);
-  const noLump = useMemo(() => lump > 0 ? simulate({
-    scenario, market, track, cohort, base, growth: growth / 100, years,
+    scenario: q.scenario, market: q.market, track: q.track, cohort: q.cohort,
+    base: q.base, growth: q.growth / 100, years: q.years,
+    lump: q.lump, floor: 0, paths, targets: TARGETS,
+  }), [q]);
+  const noLump = useMemo(() => q.lump > 0 ? simulate({
+    scenario: q.scenario, market: q.market, track: q.track, cohort: q.cohort,
+    base: q.base, growth: q.growth / 100, years: q.years,
     lump: 0, floor: 0, paths, targets: TARGETS,
-  }) : r, [scenario, market, track, cohort, base, growth, years, lump, r]);
+  }) : r, [q, r]);
 
   const noise = medianNoise(paths);
   const last = r.rows[r.rows.length - 1];
+  const shownYears = q.years;
   const firstW = useMemo(() => {
-    for (let y = 1; y <= 60; y++) if (withdrawRate(track, cohort, y) > 0) return y;
+    for (let y = 1; y <= 60; y++) if (withdrawRate(q.track, q.cohort, y) > 0) return y;
     return null;
-  }, [track, cohort]);
+  }, [q.track, q.cohort]);
   const ym = (m: number | null) => m === null ? '—' : `שנה ${Math.floor(m / 12) + 1}, חודש ${m % 12 + 1}`;
 
   return (
@@ -217,26 +234,29 @@ export function TracksPage() {
           <div className="grp">
             <span className="glab">הפקדה חודשית</span>
             <Num value={base} min={0} max={1_000_000} step={500} unit="₪" onCommit={setBase} />
-            <span className="glab">עליה שנתית · 5 עד 10</span>
-            <Num value={growth} min={5} max={10} step={0.5} unit="%" onCommit={setGrowth} />
+            <span className="glab">עליה שנתית</span>
+            <Num value={growth} min={0} max={25} step={0.5} unit="%" onCommit={setGrowth} />
             <span className="glab">השקעה ראשונית</span>
             <Num value={lump} min={0} max={100_000_000} step={10000} unit="₪" onCommit={setLump} />
             <span className="glab">אופק</span>
             <Num value={years} min={6} max={60} step={1} unit="שנים" onCommit={setYears} />
           </div>
-          <p className="note">{TRACKS[track].rule}</p>
+          <p className="note">
+            {TRACKS[track].rule} <b>העליה פועלת בחמש השנים הראשונות בלבד</b> —
+            הטווח המתוכנן הוא 5% עד 10%, והשדה פתוח עד 25% כדי שיהיה אפשר לבדוק.
+          </p>
         </div>
       </section>
 
       <section>
         <div className="stats">
           <Stat label="הוכנס בסך הכל" value={n0(r.paid)}
-            sub={lump > 0 ? `${n0(lump)}₪ ראשוני + הפקדות` : 'הפקדות בלבד'} />
-          <Stat label={`ההכנסה בשנה ${years}`} value={`${n0(last.income)}₪`} tone="gold"
-            sub={`לחודש · ±${noise.toFixed(1)}% רעש חציון`} />
+            sub={q.lump > 0 ? `${n0(q.lump)}₪ ראשוני + הפקדות` : 'הפקדות בלבד'} />
+          <Stat label={`ההכנסה בשנה ${shownYears}`} value={`${n0(last.income)}₪`} tone="gold"
+            sub={pending ? "מחשב…" : `לחודש · ±${noise.toFixed(1)}% רעש חציון`} />
           <Stat label="אחוזון 10" value={`${n0(last.incomeP10)}₪`}
             sub="לחודש · אחד מכל עשרה" />
-          <Stat label="שווי התיק" value={n0(r.value)} sub={`בשנה ${years}`} />
+          <Stat label="שווי התיק" value={n0(r.value)} sub={`בשנה ${shownYears}`} />
           <Stat label="לכל שקל שהוכנס" value={`×${((r.cash + r.value) / Math.max(r.paid, 1)).toFixed(1)}`}
             tone="up" sub="תיק + מזומן, חלקי הכל" />
           <Stat label="ההפקדות נגמרות" value={r.depositsEnd ? `שנה ${r.depositsEnd}` : '—'}
@@ -290,7 +310,7 @@ export function TracksPage() {
               {TARGETS.map(T => {
                 const a = r.goals[T], b = noLump.goals[T];
                 let shorter = '—';
-                if (lump > 0 && a !== null && b !== null) {
+                if (q.lump > 0 && a !== null && b !== null) {
                   const d = b - a;
                   shorter = d <= 0 ? 'אין קיצור'
                     : d >= 12 ? `${Math.floor(d / 12)} שנים ו-${d % 12} חודשים` : `${d} חודשים`;
@@ -299,7 +319,7 @@ export function TracksPage() {
                   <tr key={T}>
                     <td style={{ fontWeight: 600 }}>{n0(T)}₪</td>
                     <td className="lead">{ym(a)}</td>
-                    <td className="n dim">{lump > 0 ? ym(b) : '—'}</td>
+                    <td className="n dim">{q.lump > 0 ? ym(b) : '—'}</td>
                     <td className="n">{shorter}</td>
                   </tr>
                 );
@@ -331,7 +351,7 @@ export function TracksPage() {
             <tbody>
               {r.rows.map((row, i) => {
                 const y = i + 1;
-                const rate = withdrawRate(track, cohort, y);
+                const rate = withdrawRate(q.track, q.cohort, y);
                 const cls = r.crossover && r.crossover[0] === y ? 'cross'
                   : r.depositsEnd === y ? 'zero'
                   : y === firstW ? 'mark' : '';
@@ -354,7 +374,7 @@ export function TracksPage() {
           <b>צהוב</b> — השנה שבה המשיכה נפתחת. <b>כחול</b> — החודש שבו המשיכה עוברת את ההפקדה
           {r.crossover ? ` (שנה ${r.crossover[0]}, חודש ${r.crossover[1]}: מפקידים ${n0(r.crossover[3])}₪ ומקבלים ${n0(r.crossover[2])}₪)` : ''}.
           <b> ירוק</b> — השנה שבה ההפקדות נגמרות. כלל ״רק מעל העלות הממוצעת״ חסם משיכה
-          ב-<b>{r.skipped}</b> חודשים מתוך {Math.max(0, (years - (firstW ?? years) + 1) * 12)}.
+          ב-<b>{r.skipped}</b> חודשים מתוך {Math.max(0, (shownYears - (firstW ?? shownYears) + 1) * 12)}.
         </p>
       </section>
 
