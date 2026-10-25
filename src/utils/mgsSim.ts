@@ -41,23 +41,30 @@ const RAMP: Record<'flow' | 'both', number[]> = {
   flow: [0, .01, .01, .01, .01, .02, .03, .04],
   both: [0, 0, 0, 0, .01, .01, .01, .01, .01, .01, .04],
 };
-export function withdrawRate(track: Track, cohort: Cohort, year: number): number {
-  if (track === 'growth') return year < COHORT_YEAR[cohort] ? 0 : 0.04;
+/** the growth track's transition year — the cohort's, unless one is given.
+ *  A child's plan sets it directly: deposits until the salary starts. */
+export const transitionYear = (cohort: Cohort, override?: number) =>
+  override ?? COHORT_YEAR[cohort];
+export function withdrawRate(track: Track, cohort: Cohort, year: number, startYear?: number): number {
+  if (track === 'growth') return year < transitionYear(cohort, startYear) ? 0 : 0.04;
   const r = RAMP[track];
   return r[Math.min(year - 1, r.length - 1)];
 }
 /** the deposit climbs for five years, then falls by a share of the base */
 export function depositFor(
   track: Track, cohort: Cohort, year: number, base: number, growth: number,
+  startYear?: number,
 ): number {
   const down = track === 'both' ? 0.05 : 0.10;
-  const start = track === 'growth' ? COHORT_YEAR[cohort] : 5;
+  const start = track === 'growth' ? transitionYear(cohort, startYear) : 5;
   if (year <= Math.min(5, start)) return base * Math.pow(1 + growth, Math.min(year, 5) - 1);
   if (year <= start) return base * Math.pow(1 + growth, 4);
   return Math.max(0, base * Math.pow(1 + growth, Math.min(start, 5) - 1) - base * down * (year - start));
 }
-export function depositsEndYear(track: Track, cohort: Cohort, base: number, growth: number) {
-  for (let y = 2; y <= 200; y++) if (depositFor(track, cohort, y, base, growth) <= 0) return y;
+export function depositsEndYear(
+  track: Track, cohort: Cohort, base: number, growth: number, startYear?: number,
+) {
+  for (let y = 2; y <= 200; y++) if (depositFor(track, cohort, y, base, growth, startYear) <= 0) return y;
   return null;
 }
 
@@ -112,6 +119,8 @@ export interface SimInput {
   base: number; growth: number; years: number;
   lump?: number; floor?: number; paths?: number; seed?: number;
   targets?: number[];
+  /** growth track only: the year withdrawals open, instead of the cohort's */
+  startYear?: number;
 }
 export interface YearRow {
   deposit: number; value: number; income: number; incomeP10: number;
@@ -140,7 +149,7 @@ function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) 
     const year = Math.floor(m / 12) + 1;
     if (m % 12 === 0) yearCash = 0;
     const idx = Math.pow(cm, m);
-    let dep = depositFor(o.track, o.cohort, year, o.base, o.growth);
+    let dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.startYear);
     for (const t of SLEEVES) peak[t] = peak[t] > 0 ? Math.max(peak[t], px[t][m]) : px[t][m];
     if (lump > 0 && m === 0) {
       // nothing is below its peak on day one, so the rule has nothing to read:
@@ -175,7 +184,7 @@ function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) 
     let value = 0;
     for (const t of SLEEVES) value += sh[t] * px[t][m];
     let net = 0;
-    const rate = withdrawRate(o.track, o.cohort, year);
+    const rate = withdrawRate(o.track, o.cohort, year, o.startYear);
     if (rate > 0 && value > 0) {
       const gross = value * rate / 12;
       if (gross < floor) belowFloor++;
@@ -247,7 +256,7 @@ export function simulate(o: SimInput): SimResult {
     paid: runs[0].paid, skipped: Math.round(median(runs.map(x => x.skipped))),
     belowFloor: Math.round(median(runs.map(x => x.belowFloor))),
     firstWithdrawal: mid(x => x.first), crossover, goals,
-    depositsEnd: depositsEndYear(o.track, o.cohort, o.base, o.growth),
+    depositsEnd: depositsEndYear(o.track, o.cohort, o.base, o.growth, o.startYear),
   };
 }
 /** the median of a skewed distribution moves between runs; this is how much */

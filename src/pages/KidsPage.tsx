@@ -1,214 +1,267 @@
-import { useMemo, useState } from 'react';
-import { GrowthChart } from '../components/mgs/GrowthChart';
-import { projectKid, depositFor, HANDOVER_AGE } from '../utils/kidsProject';
-import { SCENARIOS, type ScenarioId } from '../constants/mgsScenarios';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { KidsIntro } from '../components/onboarding/KidsIntro';
+import { Disclaimer } from '../components/shared/Disclaimer';
+import {
+  simulate, medianNoise,
+  SLEEVES, SLEEVE_HE, VOL, ASSUMPTION,
+  type Scenario, type Market,
+} from '../utils/mgsSim';
 
-const TARGETS = [250000, 500000, 1000000, 2000000];
-const QUICK_DEPOSITS = [250, 500, 1000, 1500, 2000];
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
+/** the ages a child's income can open at */
+const SALARY_AGES = [20, 25] as const;
+const QUICK_DEPOSITS = [250, 500, 1000, 1500, 2000];
+const TARGETS = [3000, 5000, 10000, 20000];
+const SCN: Record<Scenario, string> = { pess: 'פסימי', real: 'ריאלי' };
 
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
 }
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'gold' | 'up' }) {
+  return (
+    <div className={`stat ${tone ?? ''}`}>
+      <span className="k">{label}</span>
+      <span className="n" dir="ltr">{value}</span>
+      <span className="s">{sub ?? ' '}</span>
+    </div>
+  );
+}
+/** lets a number be typed out before it is clamped */
+function Num({ value, min, max, step, unit, onCommit }: {
+  value: number; min: number; max: number; step: number; unit: string;
+  onCommit: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <label className="own">
+      <input className="amt" type="number" min={min} max={max} step={step}
+        value={draft ?? String(value)}
+        onChange={e => {
+          const t = e.target.value;
+          setDraft(t);
+          const n = Number(t);
+          if (t !== '' && Number.isFinite(n) && n >= min && n <= max) onCommit(n);
+        }}
+        onBlur={() => {
+          const t = (draft ?? '').trim();
+          if (t !== '') {
+            const n = Number(t);
+            if (Number.isFinite(n)) onCommit(Math.min(max, Math.max(min, n)));
+          }
+          setDraft(null);
+        }} />
+      <span>{unit}</span>
+    </label>
+  );
+}
 
 /**
- * Investing for a child, solved in both directions: a monthly amount into what
- * the child receives at twenty, or a target into the amount it needs. Nothing
- * is sold on the way, so there is no tax event until the handover.
+ * A child's plan on the growth track: deposits run until the income opens, and
+ * from that birthday it pays 4% a year a twelfth at a time — a salary, not a
+ * lump handed over. Nothing is sold on the way, so the first tax event is the
+ * first withdrawal.
  */
 export function KidsPage() {
   const { kidsDone, childAge: savedAge, childDeposit } = useOnboardingStore();
-  const [scenario, setScenario] = useState<ScenarioId>('real');
+  const [scenario, setScenario] = useState<Scenario>('real');
+  const [market, setMarket] = useState<Market>('il');
   const [childAge, setChildAge] = useState(savedAge);
   const [deposit, setDeposit] = useState(childDeposit);
+  const [salaryAge, setSalaryAge] = useState<number>(20);
+  const [growth, setGrowth] = useState(7);
+  /** how long the plan is watched past the day the income opens */
+  const [after, setAfter] = useState(30);
 
-  const p = useMemo(() => projectKid(scenario, childAge, deposit), [scenario, childAge, deposit]);
-  const S = SCENARIOS[scenario];
+  // the transition year is the child's own: deposits until the salary starts
+  const startYear = Math.max(1, salaryAge - childAge);
+  const years = Math.min(60, startYear + after);
 
-  /** typing a target resolves back to the monthly amount that reaches it */
-  const setTarget = (target: number) => {
-    if (target > 0) setDeposit(Math.max(1, depositFor(scenario, childAge, target)));
-  };
+  const live = { scenario, market, childAge, deposit, salaryAge, growth, years, startYear };
+  const [settled, setSettled] = useState(live);
+  const pending = JSON.stringify(settled) !== JSON.stringify(live);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setSettled(live), 320);
+    return () => window.clearTimeout(timer.current);
+  }, [scenario, market, childAge, deposit, salaryAge, growth, years, startYear]);
+  const runNow = () => { window.clearTimeout(timer.current); setSettled(live); };
 
-  const chartRows = useMemo(
-    () => p.rows.map(r => ({ year: r.year, age: r.age, net: r.net, deposited: r.deposited })),
-    [p],
-  );
+  const paths = 1200;
+  const q = settled;
+  const r = useMemo(() => simulate({
+    scenario: q.scenario, market: q.market, track: 'growth', cohort: '20-30',
+    base: q.deposit, growth: q.growth / 100, years: q.years,
+    startYear: q.startYear, floor: 0, paths, targets: TARGETS,
+  }), [q]);
 
   if (!kidsDone) return <KidsIntro />;
 
-  const lastNet = p.rows.length ? p.rows[p.rows.length - 1].net : 1;
+  const noise = medianNoise(paths);
+  const atOpen = r.rows[q.startYear - 1];
+  const last = r.rows[r.rows.length - 1];
+  const ageAt = (year: number) => q.childAge + year;
+  const ym = (m: number | null) => m === null ? '—' : `גיל ${ageAt(Math.floor(m / 12))}`;
 
   return (
     <div className="term">
       <div className="tape">
-        <span className="tk"><span className="sym">הערכה {S.label}</span></span>
-        <span className="tk"><span className="sym">BTC</span>
-          <b>{S.btcStages.length ? '20→12→7' : `${(S.rate.BTC * 100).toFixed(0)}%`}</b></span>
-        <span className="tk"><span className="sym">SYNTH</span>
-          <b>{(S.rate.SYN * 100).toFixed(1)}%</b></span>
-        <span className="tk"><span className="sym">מס</span><b className="dn">25%</b></span>
-        <span className="tk"><span className="sym">עד גיל</span><b>{HANDOVER_AGE}</b></span>
-        <span className="tk"><span className="sym">אופק</span><b>{p.years} שנה</b></span>
+        {SLEEVES.map(k => (
+          <span className="tk" key={k}>
+            <span className="sym">{SLEEVE_HE[k]}</span>
+            <b>{(ASSUMPTION[q.scenario][k] * 100).toFixed(2)}%</b>
+          </span>
+        ))}
+        <span className="tk"><span className="sym">תנודתיות ביטקוין</span>
+          <b className="dn">{(VOL.BTC * 100).toFixed(1)}%</b></span>
+        <span className="tk"><span className="sym">המשכורת נפתחת</span>
+          <b className="gold">גיל {q.salaryAge}</b></span>
+        <span className="tk"><span className="sym">מס · רווח ריאלי</span><b className="dn">25%</b></span>
       </div>
 
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <span className="eyebrow">MONEY GROWTH SYSTEM</span>
-        <h1>MGS Kids</h1>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <span className="eyebrow">MGS KIDS</span>
+        <h1>משכורת לילד, לא סכום ביד</h1>
         <p className="lede">
-          השקעה לילד: מנוע הצמיחה, מגיל הילד היום ועד גיל 20. בלי למכור כלום
-          בדרך, ולכן בלי אירוע מס אחד עד הסוף. בגיל 20 הילד מתחיל למשוך 4% בשנה, חודשי, והקרן
-          נשארת שלו.
+          אותו <b>מסלול הצמיחה</b> של המערכת, בגרסה של ילד: מפקידים עד הגיל שבו ההכנסה נפתחת,
+          ומאותו יום התיק משלם <b>4% בשנה, חלקי 12, בכל חודש</b> — ורק מרכיב שמחירו מעל
+          עלות הקנייה הממוצעת שלו. <b>לא מוכרים כלום בדרך</b>, ולכן אירוע המס הראשון הוא
+          המשיכה הראשונה.
         </p>
       </header>
 
-      <div className="panel">
-        <div className="grp"><span className="glab">ההערכה</span>
-          {(['pess', 'real'] as ScenarioId[]).map(sc => (
-            <Opt key={sc} on={scenario === sc} onClick={() => setScenario(sc)}>{SCENARIOS[sc].label}</Opt>
-          ))}
-        </div>
-        <div className="agebar">
-          <span className="glab">גיל הילד</span>
-          <span className="agebig">{childAge}</span>
-          <input type="range" min={0} max={20} step={1} value={childAge}
-            aria-label="גיל הילד היום"
-            onChange={e => setChildAge(Number(e.target.value))} />
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-            נשארו <b style={{ color: 'var(--ink)' }}>{p.years}</b> שנות הפקדה עד גיל 20
-          </span>
-        </div>
-        <div className="two">
-          <div className="side">
-            <span className="q">כמה אנחנו מפקידים כל חודש?</span>
-            <div className="field">
-              <input type="number" min={1} step={50} value={Math.round(deposit)}
-                inputMode="numeric" aria-label="הפקדה חודשית"
-                onChange={e => setDeposit(Math.max(1, Number(e.target.value) || 1))} />
-              <span className="cur">₪ בחודש</span>
-            </div>
-            <div className="chips">
-              {QUICK_DEPOSITS.map(d => (
-                <button className="chip" type="button" key={d} onClick={() => setDeposit(d)}>{n0(d)}</button>
-              ))}
-            </div>
+      <section>
+        <div className="panel">
+          <div className="grp">
+            <span className="glab">המשכורת נפתחת בגיל</span>
+            {SALARY_AGES.map(a => (
+              <Opt key={a} on={q.salaryAge === a} onClick={() => setSalaryAge(a)}>{a}</Opt>
+            ))}
+            <span className="glab">גיל הילד היום</span>
+            <Num value={childAge} min={0} max={17} step={1} unit="שנים" onCommit={setChildAge} />
           </div>
-          <div className="side">
-            <span className="q">או — כמה שהילד יקבל בגיל 20?</span>
-            <div className="field">
-              <input type="number" min={1000} step={1000} value={Math.round(p.net)}
-                inputMode="numeric" aria-label="סכום יעד"
-                onChange={e => setTarget(Number(e.target.value))} />
-              <span className="cur">₪ נטו</span>
-            </div>
-            <div className="chips">
-              {TARGETS.map(t => (
-                <button className="chip" type="button" key={t} onClick={() => setTarget(t)}>
-                  {t >= 1e6 ? `${t / 1e6} מיליון` : n0(t)}
-                </button>
-              ))}
-            </div>
+          <div className="grp">
+            <span className="glab">הפקדה חודשית</span>
+            {QUICK_DEPOSITS.map(d => (
+              <Opt key={d} on={deposit === d} onClick={() => setDeposit(d)}>{n0(d)}</Opt>
+            ))}
+            <Num value={deposit} min={0} max={100000} step={100} unit="₪" onCommit={setDeposit} />
+          </div>
+          <div className="grp">
+            <span className="glab">עליה שנתית</span>
+            <Num value={growth} min={0} max={25} step={0.5} unit="%" onCommit={setGrowth} />
+            <span className="glab">לראות עד</span>
+            <Num value={after} min={5} max={50} step={5} unit="שנים אחרי" onCommit={setAfter} />
+            <span className="glab">התרחיש</span>
+            {(['pess', 'real'] as Scenario[]).map(s => (
+              <Opt key={s} on={q.scenario === s} onClick={() => setScenario(s)}>{SCN[s]}</Opt>
+            ))}
+            <span className="glab">איפה קונים</span>
+            <Opt on={q.market === 'il'} onClick={() => setMarket('il')}>ת״א בשקלים</Opt>
+            <Opt on={q.market === 'fx'} onClick={() => setMarket('fx')}>חו״ל</Opt>
+          </div>
+          <p className="note">
+            מפקידים <b>{startYear} שנים</b>, מגיל {childAge} עד גיל {q.salaryAge}, והעליה
+            פועלת בחמש הראשונות. מגיל {q.salaryAge} ההפקדה יורדת 10% מסכום הבסיס בכל שנה
+            עד שהיא מתאפסת — <b>והתיק ממשיך לשלם בלי שנכנס אליו עוד שקל</b>.
+          </p>
+          <div className="grp" style={{ marginTop: 4 }}>
+            <button className="opt" type="button" onClick={runNow} disabled={!pending}
+              style={{ padding: '9px 22px', fontSize: 13.5, fontWeight: 700 }}>
+              {pending ? 'הרץ סימולציה' : 'מעודכן'}
+            </button>
+            <span className="glab" style={{ paddingInlineStart: 4 }}>
+              {pending ? 'הקלט השתנה · ההרצה תצא לדרך לבד, או עכשיו בלחיצה'
+                : `${n0(paths)} מסלולי מחיר · החציון רועד ±${noise.toFixed(1)}%`}
+            </span>
           </div>
         </div>
-      </div>
-
-      <div className="stats">
-        <div className="stat"><span className="k">סך ההפקדות</span>
-          <span className="n" dir="ltr">{n0(p.deposited)}</span>
-          <span className="s">{n0(deposit)} ₪ × {p.years * 12} חודשים</span></div>
-        <div className="stat gold"><span className="k">מה שהילד יקבל בגיל 20</span>
-          <span className="n" dir="ltr">{n0(p.net)}</span>
-          <span className="s">נטו אחרי מס</span></div>
-        <div className="stat up"><span className="k">הרווח</span>
-          <span className="n" dir="ltr">{n0(p.net - p.deposited)}</span>
-          <span className="s">פי {p.multiple.toFixed(2)} על הכסף</span></div>
-        <div className="stat gold"><span className="k">משכורת חודשית מגיל 20</span>
-          <span className="n" dir="ltr">{n0(p.monthly)}</span>
-          <span className="s">לפי כלל ה-4%</span></div>
-      </div>
-
-      <section className="chart">
-        <div className="clg">
-          <span><i style={{ background: 'var(--gold)' }} />שווי נטו</span>
-          <span><i style={{ background: 'var(--bar)' }} />סך ההפקדות</span>
-        </div>
-        <GrowthChart rows={chartRows} series={[
-          { key: 'net', color: 'var(--gold)', fill: true },
-          { key: 'deposited', color: 'var(--bar)', width: 1.5, dashed: true },
-        ]} />
       </section>
 
-      <div className="final">
-        <span className="fl2">מגיל 20, הילד מושך כל חודש לפי כלל ה-4% מרכיב הרווח</span>
-        <span className="big">{n0(p.monthly)} ₪</span>
-        <span className="eqn">בחודש · מתוך תיק של {n0(p.net)} ₪</span>
-        <span className="fl2">והקרן נשארת שלו וממשיכה לעבוד.</span>
-      </div>
+      <section>
+        <div className="stats">
+          <Stat label="הופקד בסך הכל" value={n0(r.paid)}
+            sub={`${n0(q.deposit)}₪ בחודש, ${startYear} שנים ומעלה`} />
+          <Stat label={`המשכורת בגיל ${q.salaryAge}`} value={`${n0(atOpen?.income ?? 0)}₪`} tone="gold"
+            sub={pending ? 'מחשב…' : 'לחודש · בחודש הראשון'} />
+          <Stat label="אחוזון 10 אז" value={`${n0(atOpen?.incomeP10 ?? 0)}₪`}
+            sub="לחודש · אחד מכל עשרה" />
+          <Stat label={`המשכורת בגיל ${ageAt(q.years)}`} value={`${n0(last.income)}₪`}
+            sub="לחודש · היא עולה עם התיק" />
+          <Stat label={`התיק בגיל ${q.salaryAge}`} value={n0(atOpen?.value ?? 0)}
+            sub={`בגיל ${ageAt(q.years)}: ${n0(r.value)}`} />
+          <Stat label="לכל שקל שהוכנס" value={`×${((r.cash + r.value) / Math.max(r.paid, 1)).toFixed(1)}`}
+            tone="up" sub="תיק + מזומן, חלקי ההפקדות" />
+        </div>
+      </section>
 
       <section>
-        <h2>כמה להפקיד כל חודש — לפי גיל הילד</h2>
-        <p className="lede">
-          הסכום החודשי שצריך, כדי שהילד יקבל את הסכום הזה נטו בגיל 20. ככל
-          שמתחילים מאוחר יותר, החודשי קופץ.
+        <h2>מתי המשכורת מגיעה לכל סכום</h2>
+        <div className="scroll">
+          <table>
+            <thead><tr>
+              <th>משכורת חודשית</th><th className="lead">באיזה גיל</th><th>כמה שנים מהיום</th>
+            </tr></thead>
+            <tbody>
+              {TARGETS.map(T => {
+                const m = r.goals[T];
+                return (
+                  <tr key={T}>
+                    <td style={{ fontWeight: 600 }}>{n0(T)}₪</td>
+                    <td className="lead">{ym(m)}</td>
+                    <td className="n dim">
+                      {m === null ? '—' : `${Math.floor(m / 12) + 1} שנים`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="note">
+          לכל מסלול מחיר נמדד החודש הראשון שבו המשכורת מגיעה לסכום, ואז נלקח
+          <b> חציון זמני ההגעה</b>. ‏״—״ פירושו שהסכום לא הושג ברוב המסלולים
+          עד גיל {ageAt(q.years)}.
         </p>
-        <div className="scroll">
-          <table>
-            <thead><tr>
-              <th>גיל הילד</th><th>שנות הפקדה</th>
-              {TARGETS.map(t => (
-                <th key={t}>כדי שיקבל {t >= 1e6 ? `${t / 1e6}M` : `${t / 1000}K`}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {Array.from({ length: 21 }, (_, a) => a).map(a => (
-                <tr key={a} className={a === childAge ? 'fin' : ''}>
-                  <td className="v dim">{a}</td>
-                  <td className="v dim">{Math.max(1, HANDOVER_AGE - a)}</td>
-                  {TARGETS.map(t => (
-                    <td className="v" key={t}>{n0(depositFor(scenario, a, t))}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
 
       <section>
-        <h2>שנה אחר שנה</h2>
+        <h2>גיל אחר גיל</h2>
         <div className="scroll">
           <table>
             <thead><tr>
-              {['שנה', 'גיל הילד', 'הופקד', 'ביטקוין', 'סינתטיות', 'שווי נטו', '']
-                .map((h, i) => <th key={i}>{h}</th>)}
+              <th>גיל</th><th className="lead">המשכורת החודשית</th><th>אחוזון 10</th>
+              <th>ההפקדה החודשית</th><th>שווי התיק</th><th>נמשך מצטבר</th>
             </tr></thead>
             <tbody>
-              {p.rows.map(r => (
-                <tr key={r.year}>
-                  <td className="v dim">{r.year}</td>
-                  <td className="v dim">{r.age}</td>
-                  <td className="v dim">{n0(r.deposited)}</td>
-                  <td className="v">{n0(r.btc)}</td>
-                  <td className="v">{n0(r.synthetic)}</td>
-                  <td className="v gold">{n0(r.net)}</td>
-                  <td className="meterwrap">
-                    <span className="meter" style={{ width: `${Math.max(2, (r.net / lastNet) * 100)}%` }} />
-                  </td>
-                </tr>
-              ))}
+              {r.rows.map((row, i) => {
+                const y = i + 1;
+                const open = y === q.startYear;
+                const cls = open ? 'mark' : r.depositsEnd === y ? 'zero' : '';
+                return (
+                  <tr key={y} className={cls}>
+                    <td className="n" style={{ fontWeight: 600 }}>{ageAt(y)}</td>
+                    <td className="lead">{row.income < 1 ? '—' : `${n0(row.income)}₪`}</td>
+                    <td className="n dim">{row.income < 1 ? '—' : `${n0(row.incomeP10)}₪`}</td>
+                    <td className="n dim">{row.deposit < 1 ? 'אפס' : `${n0(row.deposit)}₪`}</td>
+                    <td className="n">{n0(row.value)}</td>
+                    <td className="n dim">{n0(row.cash)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+        <p className="note">
+          <b>צהוב</b> — הגיל שבו המשכורת נפתחת. <b>ירוק</b> — הגיל שבו ההפקדות נגמרות
+          {r.depositsEnd ? ` (גיל ${ageAt(r.depositsEnd)})` : ''}.
+          כלל ״רק מעל העלות הממוצעת״ חסם משיכה ב-<b>{r.skipped}</b> חודשים.
+          <b> וזה לא סכום קבוע</b>: אם התיק יורד 30%, המשכורת באותו חודש יורדת 30% איתו.
+        </p>
       </section>
 
-      <p className="note">
-        המנוע: 50% ביטקוין בתחילת הדרך, יורד שתי נקודות בשנה אל התעודות הסינתטיות,
-        והכל דרך ההפקדה החודשית בלבד — לא נמכר שום נכס, ולכן אין אירוע מס לאורך כל
-        הדרך. <b>כל הסכומים נטו אחרי מס רווחי הון של 25%</b> על הרווח שהצטבר. בגיל 20
-        מתחילה משיכה של 4% בשנה, משולמת חודשית מרכיב הרווח, נטו. אין כאן המלצה להשקעה.
-      </p>
+      <Disclaimer />
     </div>
   );
 }
