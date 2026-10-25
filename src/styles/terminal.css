@@ -175,3 +175,24 @@
   padding:3px 9px;cursor:pointer}
 .term .chip:hover{border-color:var(--gold);color:var(--ink)}
 @media (max-width:620px){ .term .glab{min-width:100%} }
+
+/* ── the tracks table · the income column leads, the rest supports ── */
+.term th.lead{background:var(--surface);color:var(--ink);font-size:10.5px;
+  border-inline:1px solid var(--rule)}
+.term td.lead{background:rgba(201,162,76,.06);border-inline:1px solid var(--rule);
+  font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:15px;
+  font-weight:700;color:var(--gold)}
+.term tr.mark td{background:rgba(201,162,76,.09);font-weight:600}
+.term tr.zero td{background:rgba(110,155,116,.11);font-weight:600}
+.term tr.cross td{background:rgba(127,163,201,.12);font-weight:600}
+.term .why{background:var(--surface);border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.term .why > summary{cursor:pointer;list-style:none;padding:15px 16px;display:flex;
+  flex-direction:column;gap:7px}
+.term .why > summary::-webkit-details-marker{display:none}
+.term .why[open] > summary{border-bottom:1px solid var(--rule)}
+.term .why .bd{padding:4px 16px 18px;display:flex;flex-direction:column;gap:11px}
+.term .why .bd h4{margin:12px 0 0;font-size:12.5px;font-weight:700;color:var(--ink)}
+.term .why .bd p{margin:0;font-size:12.5px;line-height:1.66;color:var(--mid)}
+.term .why .more{font-family:var(--mono);font-size:9.5px;letter-spacing:1.2px;color:var(--muted)}
+.term .why[open] .more::after{content:"סגור ▲"}
+.term .why:not([open]) .more::after{content:"למה זה המספר ▼"}
