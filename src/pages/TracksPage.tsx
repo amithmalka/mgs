@@ -152,6 +152,8 @@ export function TracksPage() {
     timer.current = window.setTimeout(() => setSettled(live), 320);
     return () => window.clearTimeout(timer.current);
   }, [scenario, market, track, cohort, base, growth, years, lump]);
+  /** the button runs it now, without waiting for the field to settle */
+  const runNow = () => { window.clearTimeout(timer.current); setSettled(live); };
 
   const q = settled;
   const r = useMemo(() => simulate({
@@ -245,6 +247,17 @@ export function TracksPage() {
             {TRACKS[track].rule} <b>העליה פועלת בחמש השנים הראשונות בלבד</b> —
             הטווח המתוכנן הוא 5% עד 10%, והשדה פתוח עד 25% כדי שיהיה אפשר לבדוק.
           </p>
+          <div className="grp" style={{ marginTop: 4 }}>
+            <button className="opt" type="button" onClick={runNow} disabled={!pending}
+              style={{ padding: '9px 22px', fontSize: 13.5, fontWeight: 700 }}>
+              {pending ? 'הרץ סימולציה' : 'מעודכן'}
+            </button>
+            <span className="glab" style={{ paddingInlineStart: 4 }}>
+              {pending
+                ? 'הקלט השתנה · ההרצה תצא לדרך לבד, או עכשיו בלחיצה'
+                : `${n0(1200)} מסלולי מחיר · החציון רועד ±${noise.toFixed(1)}%`}
+            </span>
+          </div>
         </div>
       </section>
 
