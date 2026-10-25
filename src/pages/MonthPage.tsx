@@ -20,10 +20,10 @@ const BUY_AS: Partial<Record<SleeveId, string>> = {
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
-  high:    { label: 'על השיא שלו — רבע מנה', tone: 'var(--muted)' },
-  fallen:  { label: 'ירד מהשיא — חצי מנה, פי שתיים', tone: 'var(--up)' },
-  deep:    { label: 'ירד מעל 50% — מנה מוגדלת, פי 2.8', tone: 'var(--gold)' },
-  landing: { label: 'שנות הנחיתה — הכל למדד עולמי', tone: 'var(--muted)' },
+  high:    { label: 'על השיא שלו או מעליו — 10% מההפקדה', tone: 'var(--muted)' },
+  fallen:  { label: 'מתחת לשיא — אחוז הירידה מההפקדה', tone: 'var(--up)' },
+  deepest: { label: 'נפל הכי עמוק — ועוד כל מה שנשאר', tone: 'var(--gold)' },
+  landing: { label: 'שנות הנחיתה — לפי תמהיל הגיל', tone: 'var(--muted)' },
 };
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');

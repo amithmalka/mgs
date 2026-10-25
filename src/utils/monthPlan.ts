@@ -27,12 +27,21 @@ export const NEAR_HIGH = 0.02;
  * them, leave the core nothing, and erase the glide — measured, a 65-year-old
  * then ends up holding exactly the portfolio of a 20-year-old.
  */
-export const TIER = { high: 0.25, fallen: 0.50, deep: 0.70 } as const;
+/** above its own previous high a holding takes this share of the deposit,
+ *  however far above it has gone */
+export const UP_CAP = 0.10;
 /** the withdrawal: 4% a year, taken a twelfth at a time */
 export const WITHDRAW_RATE = 0.04;
 
 export type Reason =
-  | 'high' | 'fallen' | 'deep' | 'landing';
+  /** at or above its own previous high — capped at UP_CAP of the deposit */
+  | 'high'
+  /** below its high — takes that fall, as a share of the deposit */
+  | 'fallen'
+  /** the deepest faller, which also takes everything left over */
+  | 'deepest'
+  /** past the deposit years, everything goes to the landing sleeve */
+  | 'landing';
 
 export interface Line {
   sleeve: SleeveId;
@@ -45,7 +54,7 @@ export interface Line {
   share: number;
   /** share the age says it should be, before the tier multiplier */
   target: number;
-  /** the multiplier this month's tier applied */
+  /** the share of the deposit the fall asked for, before the overflow */
   tier: number;
   /** how far below its own high, 0..1 */
   fromHigh: number;
@@ -231,27 +240,53 @@ export function buildMonth(
     return p && ath > 0 ? Math.max(0, 1 - p / ath) : 0;
   };
 
-  // Which tier each sleeve is in this month, from its distance below its own
-  // high — never from its share of the portfolio. "Above its share" means
-  // "did well", and cutting the deposit to whatever did well cost 1,125,578
-  // over the measured decade.
-  const tierOf = (k: SleeveId): Reason => {
-    if (phase !== 'accumulate') return 'landing';
-    const d = fromHigh(k);
-    return d > DEEP ? 'deep' : d <= NEAR_HIGH ? 'high' : 'fallen';
-  };
-
+  // The rule, as it runs on the day the deposit lands.
+  //
+  // A holding at or above its own previous high takes 10% of the deposit,
+  // however far above it has gone. A holding below its high takes the fall
+  // itself: down 30% takes 30% of the deposit. If those shares come to less
+  // than the whole deposit, every shekel left over goes to whichever holding
+  // fell the furthest — and that one line is the strongest parameter in the
+  // system: sending the remainder to the deepest faller rather than splitting
+  // it evenly measured 5.7 million apart over the tested history. If the
+  // shares come to more than the deposit, they are scaled back in proportion
+  // and there is nothing left over.
+  //
+  // Nothing here reads a target weight or a share of the portfolio. The mix is
+  // an outcome of where the falls were, not an allocation anyone chose.
   const amounts: Partial<Record<SleeveId, number>> = {};
   const reasons: Partial<Record<SleeveId, Reason>> = {};
-  const weight: Partial<Record<SleeveId, number>> = {};
-  let total = 0;
-  for (const k of keys) {
-    const r = tierOf(k);
-    reasons[k] = r;
-    const w = (mix[k] ?? 0) * (r === 'landing' ? 1 : TIER[r]);
-    weight[k] = w; total += w;
+  const share: Partial<Record<SleeveId, number>> = {};
+
+  if (phase !== 'accumulate') {
+    // past the deposit years the age mix lands it, and the rule steps aside
+    for (const k of keys) {
+      reasons[k] = 'landing';
+      amounts[k] = deposit * (mix[k] ?? 0);
+    }
+  } else {
+    let asked = 0, deepest: SleeveId = keys[0], worst = -1;
+    for (const k of keys) {
+      const d = fromHigh(k);
+      share[k] = d > 0 ? d : UP_CAP;
+      reasons[k] = d > 0 ? 'fallen' : 'high';
+      asked += share[k] ?? 0;
+      if (d > worst) { worst = d; deepest = k; }
+    }
+    if (asked >= 1 || worst <= 0) {
+      // Two cases scale back in proportion instead of leaving a remainder.
+      // More was asked for than there is — or nothing is below its peak at
+      // all, and then there is no deepest faller to hand the rest to. Sending
+      // it to whichever holding happens to be first in the list would put most
+      // of the deposit somewhere nobody chose, so when every holding is at its
+      // high the deposit splits evenly between them.
+      for (const k of keys) amounts[k] = deposit * ((share[k] ?? 0) / asked);
+    } else {
+      for (const k of keys) amounts[k] = deposit * (share[k] ?? 0);
+      amounts[deepest] = (amounts[deepest] ?? 0) + deposit * (1 - asked);
+      reasons[deepest] = 'deepest';
+    }
   }
-  for (const k of keys) amounts[k] = total > 0 ? deposit * ((weight[k] ?? 0) / total) : 0;
 
   const lines: Line[] = keys.map(k => {
     const r = reasons[k] ?? 'high';
@@ -262,7 +297,8 @@ export function buildMonth(
       value: value(k),
       share: portfolio > 0 ? value(k) / portfolio : 0,
       target: mix[k] ?? 0,
-      tier: r === 'landing' ? 1 : TIER[r],
+      /** the share of the deposit the rule asked for, before any overflow */
+      tier: share[k] ?? 0,
       fromHigh: fromHigh(k),
     };
   });
