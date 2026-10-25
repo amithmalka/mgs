@@ -13,11 +13,10 @@ import { supabase } from '../lib/supabase';
 
 /** The instrument each sleeve is actually bought through. */
 const TICKER: Partial<Record<SleeveId, string>> = {
-  BTC: 'BTC/USD', SMH: 'SMH', SPMO: 'SPMO', XLK: 'XLK', WORLD: 'URTH',
+  BTC: 'BTC/USD', SMH: 'SMH', XLK: 'XLK', WORLD: 'URTH',
 };
-const JEPQ_TICKER = 'JEPQ';
 const BUY_AS: Partial<Record<SleeveId, string>> = {
-  BTC: 'IBIT', SMH: 'SMH', SPMO: 'SPMO', XLK: 'XLK', WORLD: 'URTH',
+  BTC: 'IBIT', SMH: 'SMH', XLK: 'XLK', WORLD: 'URTH',
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
@@ -34,15 +33,15 @@ const monthName = (m: string) => `${MONTHS_HE[Number(m.slice(5, 7)) - 1]} ${m.sl
 const dayName = (d: Date) => `${d.getDate()} ב${MONTHS_HE[d.getMonth()]}`;
 
 /**
- * The month's instruction: where every shekel goes, and whether a harvest came
+ * The month's instruction: where every shekel goes, and what the withdrawal
  * due. This is the screen the plan cannot be run without, because it is the
  * only place that knows what is held and what each sleeve has already done.
  */
-export function MonthPage() {
+export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs') => void } = {}) {
   const { age } = useMgsStore();
   const { simulationParams } = useStore();
   const deposit = simulationParams.monthlyDeposit;
-  const { started, startMonth, depositDay, remind, lots, jepq, log,
+  const { started, startMonth, depositDay, remind, lots, log,
           start, setDepositDay, setRemind, recordMonth } = usePlanStore();
 
   const [prices, setPrices] = useState<Record<string, PriceInfo>>({});
@@ -54,7 +53,7 @@ export function MonthPage() {
     setLoading(true); setErr('');
     try {
       const syms = [...new Set(Object.values(TICKER))] as string[];
-      const p = await fetchPrices([...syms, JEPQ_TICKER, 'USD/ILS']);
+      const p = await fetchPrices([...syms, 'USD/ILS']);
       setPrices(p); setFx(p['USD/ILS']?.price);
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setLoading(false); }
@@ -76,29 +75,26 @@ export function MonthPage() {
   const doneThisMonth = log.some(l => l.month === current);
   const ready = Object.keys(priceIls).length > 0;
 
-  const jepqIls = (prices[JEPQ_TICKER]?.price ?? 0) * (fx ?? 0);
-
   const plan = useMemo(
-    () => buildMonth(age, month, deposit, lots, priceIls, jepq, jepqIls),
-    [age, month, deposit, lots, priceIls, jepq, jepqIls],
+    () => buildMonth(age, month, deposit, lots, priceIls),
+    [age, month, deposit, lots, priceIls],
   );
 
   const confirm = () => {
-    const next = applyMonth(lots, plan, priceIls, jepq, jepqIls);
+    const next = applyMonth(lots, plan, priceIls);
     // the month is stamped with what the portfolio was actually worth when it
     // was confirmed, so the log reads as a history and not just a list of buys
-    const after = (Object.keys(next.lots) as SleeveId[])
-      .reduce((t, k) => t + next.lots[k].units * (priceIls[k] ?? 0), 0);
+    const after = (Object.keys(next) as SleeveId[])
+      .reduce((t, k) => t + next[k].units * (priceIls[k] ?? 0), 0);
     recordMonth({
       month: current,
       bought: Object.fromEntries(plan.lines.filter(l => l.amount > 0).map(l => [l.sleeve, l.amount])),
-      harvested: plan.harvests.reduce((s, h) => s + h.net, 0),
-      taxPaid: plan.harvests.reduce((s, h) => s + h.tax, 0),
+      withdrawn: plan.withdrawals.reduce((t, w) => t + w.net, 0),
+      taxPaid: plan.withdrawals.reduce((t, w) => t + w.tax, 0),
       income: plan.income,
       deposit,
       portfolio: after,
-      jepqValue: next.jepq.units * jepqIls,
-    }, next.lots, next.jepq);
+    }, next);
   };
 
   // Every hook has to run on every render, so all of these sit above the
@@ -175,8 +171,10 @@ export function MonthPage() {
           <b className={due === 0 ? 'gold' : ''}>{due === 0 ? 'היום' : dayName(next)}</b></span>
         <span className="tk"><span className="sym">שווי התיק</span>
           <b>{ready ? `${n0(plan.portfolio)} ₪` : '—'}</b></span>
-        <span className="tk"><span className="sym">JEPQ</span>
-          <b>{plan.jepqValue ? `${n0(plan.jepqValue)} ₪` : '—'}</b></span>
+        <span className="tk"><span className="sym">המשיכה החודש</span>
+          <b className={plan.income > 0 ? 'gold' : ''}>
+            {plan.phase === 'withdraw' ? (plan.income > 0 ? `${n0(plan.income)} ₪` : 'נחסמה') : '—'}
+          </b></span>
         {fx && <span className="tk"><span className="sym">דולר</span><b>{fx.toFixed(3)}</b></span>}
       </div>
 
@@ -227,17 +225,28 @@ export function MonthPage() {
         </p>
       </section>
 
-      {plan.harvests.length > 0 && (
+      {plan.withdrawals.length > 0 && (
         <div className="final">
-          <span className="fl2">שיא חדש אחרי נפילה — הגיעה קצירה</span>
-          {plan.harvests.map(h => (
-            <span key={h.sleeve} style={{ flexBasis: '100%' }}>
-              <span className="big" style={{ fontSize: 26 }}>{n0(h.net)} ₪</span>{' '}
+          <span className="fl2">המשיכה החודש · רק ממה שמעל העלות הממוצעת</span>
+          {plan.withdrawals.map(w => (
+            <span key={w.sleeve} style={{ flexBasis: '100%' }}>
+              <span className="big" style={{ fontSize: 26 }}>{n0(w.net)} ₪</span>{' '}
               <span className="eqn">
-                מ{SLEEVE_HE[h.sleeve]} ל-JEPQ · מס {n0(h.tax)} ₪ · עבר את {n0(h.bar)} ₪
+                מ{SLEEVE_HE[w.sleeve]} · מס {n0(w.tax)} ₪ · עלות ממוצעת {n0(w.avg)} ₪
               </span>
             </span>
           ))}
+        </div>
+      )}
+      {plan.allBelowAverage && (
+        <div className="final">
+          <span className="fl2">לא מושכים החודש</span>
+          <span style={{ flexBasis: '100%' }}>
+            <span className="eqn">
+              כל האחזקות מתחת לעלות הקנייה הממוצעת שלהן, והכלל חוסם משיכה.
+              זה לא תקלה — זה מה שמונע מכירה בהפסד כדי לשלם הכנסה.
+            </span>
+          </span>
         </div>
       )}
 
@@ -303,13 +312,20 @@ export function MonthPage() {
 
       <div className="fl">
         <div className="f">
-          <span className="fk">מנוע ההכנסה</span>
-          <span className="ft">JEPQ · {plan.jepqValue ? `${n0(plan.jepqValue)} ₪` : 'עוד לא נבנה'}</span>
+          <span className="fk">ההכנסה</span>
+          <span className="ft">
+            {plan.phase === 'withdraw'
+              ? (plan.income > 0 ? `${n0(plan.income)} ₪ החודש` : 'נחסמה החודש')
+              : 'עוד לא נפתחה'}
+          </span>
           <p>
-            {plan.jepqValue > 0
-              ? <>מחלקת <b style={{ color: 'var(--up)' }}>{n0(plan.income)} ₪</b> החודש, נטו אחרי מס.
-                  עד היום התקבלו <b>{n0(jepq.received)} ₪</b>.</>
-              : <>JEPQ נבנית רק מקצירות — היא תתחיל לשלם אחרי הקצירה הראשונה.</>}
+            {plan.phase !== 'withdraw'
+              ? <>המשיכה נפתחת בשלב המשיכה. עד אז כל שקל נשאר בתיק ומרכיב —
+                  <b> אין קרן מחלקת ואין קציר לשיאים</b>.</>
+              : plan.income > 0
+                ? <>‏<b>4% בשנה, חלקי 12</b> משווי התיק — נטו אחרי מס על הרווח.
+                    נמשך רק מאחזקה שמחירה <b>מעל העלות הממוצעת</b> שלה.</>
+                : <>כל האחזקות מתחת לעלות הממוצעת שלהן, ולכן לא נמשך כלום החודש.</>}
           </p>
         </div>
         <div className="f tot" style={{ flex: '1 1 260px' }}>
@@ -329,6 +345,11 @@ export function MonthPage() {
             <button className="opt" type="button" onClick={() => void refresh()} disabled={loading}>
               <Icon name="chart" size={11} /> {loading ? 'טוען…' : 'רענון מחירים'}
             </button>
+            {onNavigate && (
+              <button className="opt" type="button" onClick={() => onNavigate('mgs')}>
+                <Icon name="target" size={11} /> בנה הערכת תשואה
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -338,18 +359,16 @@ export function MonthPage() {
           <h2>מה כבר בוצע</h2>
           <div className="scroll">
             <table>
-              <thead><tr>{['חודש', 'הופקד', 'נקצר ל-JEPQ', 'התקבל מ-JEPQ', 'מס',
-                'שווי התיק אז', 'JEPQ אז'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+              <thead><tr>{['חודש', 'הופקד', 'נמשך', 'מס', 'שווי התיק אז']
+                .map(h => <th key={h}>{h}</th>)}</tr></thead>
               <tbody>
                 {[...log].reverse().map(l => (
                   <tr key={l.month}>
                     <td className="dim">{monthName(l.month)}</td>
                     <td className="v">{n0(l.deposit)}</td>
-                    <td className="v gold">{l.harvested ? n0(l.harvested) : '—'}</td>
                     <td className="v up">{l.income ? n0(l.income) : '—'}</td>
                     <td className="v dim">{l.taxPaid ? n0(l.taxPaid) : '—'}</td>
                     <td className="v">{l.portfolio ? n0(l.portfolio) : '—'}</td>
-                    <td className="v gold">{l.jepqValue ? n0(l.jepqValue) : '—'}</td>
                   </tr>
                 ))}
               </tbody>

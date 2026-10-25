@@ -7,11 +7,10 @@
  * than the world, so it decelerates as the asset matures.
  */
 export type ScenarioId = 'pess' | 'real';
-export type SleeveId = 'BTC' | 'SMH' | 'SPMO' | 'XLK' | 'WORLD' | 'SYN';
+export type SleeveId = 'BTC' | 'SMH' | 'XLK' | 'WORLD' | 'SYN';
 
 export const TAX = 0.25;
 export const WITHDRAW = 0.04;
-export const JEPQ_YIELD = 0.09;
 
 interface Scenario {
   label: string;
@@ -19,7 +18,6 @@ interface Scenario {
   rate: Record<SleeveId, number>;
   /** bitcoin only: [rate, how many years it lasts] — empty means the flat rate */
   btcStages: Array<[number, number]>;
-  jepqTotal: number;
   /** what each sleeve returned over the measured decade, for the table */
   decade: Record<SleeveId, string>;
   why: Record<SleeveId, string>;
@@ -28,15 +26,13 @@ interface Scenario {
 export const SCENARIOS: Record<ScenarioId, Scenario> = {
   pess: {
     label: 'פסימית',
-    rate: { BTC: 0.15, SMH: 0.09, SPMO: 0.085, XLK: 0.09, WORLD: 0.07, SYN: 0.088 },
+    rate: { BTC: 0.15, SMH: 0.09, XLK: 0.09, WORLD: 0.07, SYN: 0.088 },
     btcStages: [],
-    jepqTotal: 0.075,
-    decade: { BTC: '63.4%', SMH: '34.3%', SPMO: '20.3%', XLK: '24.8%',
+    decade: { BTC: '63.4%', SMH: '34.3%', XLK: '24.8%',
               WORLD: '13.2%', SYN: '15.4% / 21.0%' },
     why: {
       BTC: 'רבע ממה שעשה — ועדיין פי 66 בשלושים שנה',
       SMH: 'מתחת ל-10.7% שעשה מאז 2000',
-      SPMO: 'מתחת ל-S&P, כי אין לו היסטוריה ארוכה',
       XLK: 'מתחת ל-10.7% שעשה מאז 1998',
       WORLD: 'הרבה מתחת ל-10% ההיסטוריים',
       SYN: 'הממוצע ההיסטורי של S&P',
@@ -44,15 +40,13 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   },
   real: {
     label: 'ריאלית',
-    rate: { BTC: 0.20, SMH: 0.12, SPMO: 0.10, XLK: 0.11, WORLD: 0.08, SYN: 0.095 },
+    rate: { BTC: 0.20, SMH: 0.12, XLK: 0.11, WORLD: 0.08, SYN: 0.095 },
     btcStages: [[0.20, 10], [0.12, 10], [0.07, 99]],
-    jepqTotal: 0.080,
-    decade: { BTC: '63.4%', SMH: '34.3%', SPMO: '20.3%', XLK: '24.8%',
+    decade: { BTC: '63.4%', SMH: '34.3%', XLK: '24.8%',
               WORLD: '13.2%', SYN: '15.4% / 21.0%' },
     why: {
       BTC: 'מתבגר: עשור של אימוץ, עשור של התמתנות, ואז כמו השוק',
       SMH: 'ההיסטוריה הארוכה מאז 2000, ועוד נקודה',
-      SPMO: 'S&P ועוד פרמיית מומנטום צנועה',
       XLK: 'בדיוק ההיסטוריה הארוכה מאז 1998',
       WORLD: 'מתחת לממוצע הארוך',
       SYN: 'מעט מעל הממוצע ההיסטורי של S&P',
@@ -71,14 +65,14 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
  * every 9.3, not the 4 and 6 this file used to claim.
  */
 export const CYCLE_YEARS: Record<string, number> =
-  { BTC: 4.0, SMH: 6.6, SPMO: 11.0, XLK: 9.3, SYN: 9.3 };
+  { BTC: 4.0, SMH: 6.6, XLK: 9.3, SYN: 9.3 };
 
 /** how many times each sleeve broke out over the measured history */
 export const CYCLE_SEEN: Record<string, [number, number]> =
-  { BTC: [3, 12.1], SMH: [4, 26.3], SPMO: [1, 11.0], XLK: [3, 27.8] };
+  { BTC: [3, 12.1], SMH: [4, 26.3], XLK: [3, 27.8] };
 
 export const SLEEVE_HE: Record<SleeveId, string> = {
-  BTC: 'ביטקוין', SMH: 'שבבים · SMH', SPMO: 'מומנטום · SPMO',
+  BTC: 'ביטקוין', SMH: 'שבבים · SMH',
   XLK: 'טכנולוגיה · XLK', WORLD: 'מדד עולמי', SYN: 'סינתטיות',
 };
 

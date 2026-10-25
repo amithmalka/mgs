@@ -7,9 +7,18 @@
  * the gain sitting unrealised in the portfolio.
  */
 import {
-  SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, JEPQ_YIELD, horizonFor, btcRate,
+  SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, horizonFor, btcRate,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
+
+/* This projection still routes a share of every deposit into JEPQ. The fund was
+ * measured and rejected for the system itself — its audited 2025 report shows
+ * 96.6% of the distribution came from capital — and the MGS and month pages no
+ * longer use it. The home page and the onboarding still read this engine, so
+ * the two figures it needs live here rather than in the shared constants, which
+ * now describe only the sleeves the system actually buys. */
+const JEPQ_YIELD = 0.09;
+const JEPQ_TOTAL: Record<ScenarioId, number> = { pess: 0.075, real: 0.080 };
 import { glideFor, glideHeld, glideInvert, mixForAgeIn, type GlideMode } from './monthPlan';
 
 /** the most of a single deposit model 1 will route to JEPQ, reached at age 45 */
@@ -73,7 +82,7 @@ export interface TrackResult {
   finalJepq: number;
 }
 
-const SLEEVES: SleeveId[] = ['BTC', 'SMH', 'SPMO', 'XLK', 'WORLD', 'SYN'];
+const SLEEVES: SleeveId[] = ['BTC', 'SMH', 'XLK', 'WORLD', 'SYN'];
 
 interface Sleeve { v: number; c: number }
 
@@ -109,7 +118,7 @@ export function projectTrack(
       const r = k === 'BTC' ? btcRate(scenario, yrs) : S.rate[k];
       g[k].v *= Math.pow(1 + r, 1 / 12);
     }
-    jepq.v *= Math.pow(1 + S.jepqTotal, 1 / 12);
+    jepq.v *= Math.pow(1 + JEPQ_TOTAL[scenario], 1 / 12);
 
     // JEPQ pays out and the cash leaves the plan — it is never reinvested
     const pay = (jepq.v * JEPQ_YIELD) / 12;
@@ -124,8 +133,8 @@ export function projectTrack(
     } else {
       // Model 1 sends a growing share of every deposit straight to JEPQ — a
       // change of address for new money, never a sale, so it costs no tax. What
-      // stays on the growing side follows the same age mix as model 2, which
-      // means SPMO and XLK are the complements in both tracks.
+      // stays on the growing side follows the same age mix as model 2, with
+      // technology as the complement in both tracks.
       // the held glide is measured from the plan's own start, the others from age
       const g0 = glide === 'held' ? glideHeld(yrs, holdYears)
         : glide === 'invert' ? glideInvert(yrs, startAge)
@@ -137,13 +146,13 @@ export function projectTrack(
       const left = monthlyDeposit * (1 - toJepq);
       const vol = 1 - g0, core = 1 - vol;
       const mix: Array<[SleeveId, number]> = glide === 'held' || glide === 'invert'
-        ? [['BTC', vol / 2], ['SMH', vol / 2], ['SPMO', core / 2], ['XLK', core / 2]]
+        ? [['BTC', vol / 2], ['SMH', vol / 2], ['XLK', core]]
         : Object.entries(mixForAgeIn(age, glide)) as Array<[SleeveId, number]>;
       for (const [k, w] of mix) { g[k].v += left * w; g[k].c += left * w; }
     }
 
     // the harvest fires once a cycle, not on every new high
-    const keys: SleeveId[] = ['BTC', 'SMH', 'SPMO', 'XLK'];
+    const keys: SleeveId[] = ['BTC', 'SMH', 'XLK'];
     for (const k of keys) {
       const since = m - (lastHarvest[k] ?? 0);
       if (since < CYCLE_YEARS[k] * 12 || g[k].v <= g[k].c) continue;

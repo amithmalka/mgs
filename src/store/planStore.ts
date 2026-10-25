@@ -36,8 +36,8 @@ export interface MonthLog {
   month: string;
   /** what went in, per sleeve, in shekels */
   bought: Partial<Record<SleeveId, number>>;
-  /** what was harvested to JEPQ, net of tax */
-  harvested: number;
+  /** what was withdrawn this month, net of tax */
+  withdrawn: number;
   taxPaid: number;
   deposit: number;
   /** JEPQ's own distribution that month, after tax */
@@ -45,7 +45,6 @@ export interface MonthLog {
   /** what the growing side was worth when the month was confirmed */
   portfolio?: number;
   /** and what JEPQ was worth */
-  jepqValue?: number;
 }
 
 const empty = (): Lot => ({ units: 0, cost: 0, ath: 0, armed: false, lastHarvest: 0 });
@@ -71,13 +70,13 @@ interface PlanState {
   setRemind: (on: boolean) => void;
   start: (month: string) => void;
   setLot: (sleeve: SleeveId, patch: Partial<Lot>) => void;
-  recordMonth: (entry: MonthLog, lots: Record<SleeveId, Lot>, jepq: Jepq) => void;
+  recordMonth: (entry: MonthLog, lots: Record<SleeveId, Lot>) => void;
   undoLast: () => void;
   reset: () => void;
 }
 
 const emptyLots = (): Record<SleeveId, Lot> => ({
-  BTC: empty(), SMH: empty(), SPMO: empty(), XLK: empty(), WORLD: empty(), SYN: empty(),
+  BTC: empty(), SMH: empty(), XLK: empty(), WORLD: empty(), SYN: empty(),
 });
 
 export const thisMonth = () => new Date().toISOString().slice(0, 7);
@@ -99,14 +98,13 @@ export const usePlanStore = create<PlanState>()(
       setLot: (sleeve, patch) => set(s => ({
         lots: { ...s.lots, [sleeve]: { ...s.lots[sleeve], ...patch } },
       })),
-      recordMonth: (entry, lots, jepq) => set(s => ({
+      recordMonth: (entry, lots) => set(s => ({
         log: [...s.log.filter(l => l.month !== entry.month), entry]
           .sort((a, b) => a.month.localeCompare(b.month)),
-        lots, jepq,
+        lots,
       })),
       undoLast: () => set(s => ({ log: s.log.slice(0, -1) })),
-      reset: () => set({ started: false, lots: emptyLots(),
-        jepq: { units: 0, cost: 0, received: 0 }, log: [] }),
+      reset: () => set({ started: false, lots: emptyLots(), log: [] }),
     }),
     { name: 'mgs-plan' },
   ),

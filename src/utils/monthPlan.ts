@@ -6,14 +6,9 @@
  * depends on what is actually held and on each sleeve's own history.
  */
 import { horizonFor, type SleeveId } from '../constants/mgsScenarios';
-import type { Lot, Jepq } from '../store/planStore';
+import type { Lot } from '../store/planStore';
 
 export const TAX = 0.25;
-/** how far a sleeve must fall from its high before the next harvest arms */
-export const RESET: Partial<Record<SleeveId, number>> =
-  { BTC: 0.50, SMH: 0.30, SPMO: 0.30, XLK: 0.30 };
-/** a new high must clear the old one by this much before it counts */
-export const BREAKOUT = 0.10;
 /** a sleeve this far below its own high is in the deepest buying tier */
 export const DEEP = 0.50;
 /** and this close to its high counts as being at it */
@@ -33,8 +28,8 @@ export const NEAR_HIGH = 0.02;
  * then ends up holding exactly the portfolio of a 20-year-old.
  */
 export const TIER = { high: 0.25, fallen: 0.50, deep: 0.70 } as const;
-/** what JEPQ hands over a year, as a share of its value */
-export const JEPQ_YIELD = 0.09;
+/** the withdrawal: 4% a year, taken a twelfth at a time */
+export const WITHDRAW_RATE = 0.04;
 
 export type Reason =
   | 'high' | 'fallen' | 'deep' | 'landing';
@@ -56,15 +51,15 @@ export interface Line {
   fromHigh: number;
 }
 
-export interface HarvestLine {
+export interface WithdrawLine {
   sleeve: SleeveId;
-  /** shekels of gain being realised */
+  /** shekels taken out of this sleeve */
   gross: number;
   tax: number;
-  /** what reaches JEPQ */
+  /** what reaches the account */
   net: number;
-  /** the old high it had to clear */
-  bar: number;
+  /** its own average purchase price, which the price had to clear */
+  avg: number;
 }
 
 export interface MonthPlan {
@@ -72,13 +67,14 @@ export interface MonthPlan {
   age: number;
   phase: 'accumulate' | 'landing' | 'withdraw';
   lines: Line[];
-  harvests: HarvestLine[];
+  /** which sleeves this month's withdrawal came out of, and what tax that was */
+  withdrawals: WithdrawLine[];
   total: number;
   portfolio: number;
-  /** JEPQ's value right now, in shekels */
-  jepqValue: number;
-  /** what it hands over this month, after tax */
+  /** what reaches the account this month, after tax */
   income: number;
+  /** set when the rule found nothing priced above its own average cost */
+  allBelowAverage: boolean;
 }
 
 /** the age the glide is measured from: a 20-year-old is all volatile */
@@ -177,7 +173,7 @@ export const glideFor = (mode: GlideMode) =>
 export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<SleeveId, number>> {
   const vol = 1 - glideFor(mode)(age);
   const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+  return { BTC: vol / 2, SMH: vol / 2, XLK: core };
 }
 
 /**
@@ -200,7 +196,7 @@ export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<Sleeve
 export function mixForAge(age: number): Partial<Record<SleeveId, number>> {
   const vol = 1 - glideAt(age);
   const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, SPMO: core / 2, XLK: core / 2 };
+  return { BTC: vol / 2, SMH: vol / 2, XLK: core };
 }
 
 /** The mix the age calls for, in this plan month. */
@@ -218,8 +214,6 @@ export function buildMonth(
   lots: Record<SleeveId, Lot>,
   /** value of one unit, in shekels */
   price: Partial<Record<SleeveId, number>>,
-  jepq: Jepq = { units: 0, cost: 0, received: 0 },
-  jepqPrice = 0,
 ): MonthPlan {
   const years = (month - 1) / 12;
   const [depositYears, shiftYears] = horizonFor(startAge);
@@ -273,60 +267,58 @@ export function buildMonth(
     };
   });
 
-  // a harvest fires only on a real high: armed by a fall, then clearing the old
-  // high by the breakout margin
-  const harvests: HarvestLine[] = [];
-  for (const k of keys) {
-    const lot = lots[k]; const p = price[k];
-    const reset = RESET[k];
-    if (!lot || !p || !reset || lot.units <= 0 || !lot.armed) continue;
-    const bar = lot.ath * (1 + BREAKOUT);
-    if (p < bar) continue;
-    const val = lot.units * p;
-    const gain = val - lot.cost;
-    if (gain <= 0) continue;
-    const gross = 0.25 * gain;
-    const tax = gross * TAX;
-    harvests.push({ sleeve: k, gross, tax, net: gross - tax, bar });
+  // The withdrawal, once the plan is in its withdrawal phase: 4% a year taken
+  // a twelfth at a time, and only out of a sleeve priced above its own average
+  // purchase price. When all of them sit below it, nothing is sold — that is
+  // what keeps the plan from realising a loss to pay an income.
+  const withdrawals: WithdrawLine[] = [];
+  let income = 0, allBelowAverage = false;
+  if (phase === 'withdraw' && portfolio > 0) {
+    const gross = (portfolio * WITHDRAW_RATE) / 12;
+    const eligible = (Object.keys(lots) as SleeveId[]).filter(k => {
+      const lot = lots[k], p = price[k];
+      if (!lot || !p || lot.units <= 0) return false;
+      return p > lot.cost / lot.units;
+    });
+    if (!eligible.length) allBelowAverage = true;
+    else {
+      const pool = eligible.reduce((sum, k) => sum + value(k), 0);
+      for (const k of eligible) {
+        const lot = lots[k]!;
+        const take = gross * (value(k) / pool);
+        const share = Math.min(1, take / value(k));
+        // tax on the gain inside the slice being sold, not on the whole slice
+        const gain = Math.max(0, take - lot.cost * share);
+        const tax = gain * TAX;
+        withdrawals.push({ sleeve: k, gross: take, tax, net: take - tax, avg: lot.cost / lot.units });
+        income += take - tax;
+      }
+    }
   }
 
-  const jepqValue = jepq.units * jepqPrice;
   return {
-    month, age: startAge + Math.floor(years), phase, lines, harvests,
+    month, age: startAge + Math.floor(years), phase, lines, withdrawals,
     total: lines.reduce((s, l) => s + l.amount, 0), portfolio,
-    jepqValue,
-    income: ((jepqValue * JEPQ_YIELD) / 12) * (1 - TAX),
+    income, allBelowAverage,
   };
 }
 
-/** Roll the held lots forward for a month that was actually executed. */
 export function applyMonth(
   lots: Record<SleeveId, Lot>,
   plan: MonthPlan,
   price: Partial<Record<SleeveId, number>>,
-  jepq: Jepq = { units: 0, cost: 0, received: 0 },
-  jepqPrice = 0,
-): { lots: Record<SleeveId, Lot>; jepq: Jepq } {
+): Record<SleeveId, Lot> {
   const next: Record<SleeveId, Lot> = { ...lots };
   for (const k of Object.keys(lots) as SleeveId[]) next[k] = { ...lots[k] };
 
-  for (const h of plan.harvests) {
-    const lot = next[h.sleeve], p = price[h.sleeve]!;
-    const frac = h.gross / (lot.units * p);
+  // the withdrawal takes units out of the sleeves it came from
+  for (const w of plan.withdrawals) {
+    const lot = next[w.sleeve], p = price[w.sleeve];
+    if (!lot || !p || lot.units <= 0) continue;
+    const frac = Math.min(1, w.gross / (lot.units * p));
     lot.units *= 1 - frac;
     lot.cost *= 1 - frac;
-    lot.armed = false;
-    lot.lastHarvest = plan.month;
   }
-
-  // the harvest buys JEPQ, and JEPQ's own distribution leaves the plan as cash
-  const nextJepq: Jepq = { ...jepq };
-  const harvested = plan.harvests.reduce((s, h) => s + h.net, 0);
-  if (harvested > 0 && jepqPrice > 0) {
-    nextJepq.units += harvested / jepqPrice;
-    nextJepq.cost += harvested;
-  }
-  nextJepq.received += plan.income;
   for (const l of plan.lines) {
     if (l.amount <= 0) continue;
     const p = price[l.sleeve];
@@ -334,16 +326,12 @@ export function applyMonth(
     next[l.sleeve].units += l.amount / p;
     next[l.sleeve].cost += l.amount;
   }
-  // The bar freezes the moment a sleeve arms. Her rule is that bitcoin, having
-  // reached 128k and fallen to 60k, is harvested when it passes 128k by 10% —
-  // so the high it must clear is the one that stood *before* the fall, and it
-  // must not creep upward with the recovery. Let it creep and the price can
-  // never get 10% ahead of it, and the harvest never fires at all.
+  // The high only ever rises. It is what the deposit is routed from — a sleeve
+  // is measured by how far it sits below the best price it ever reached — so
+  // letting it drift down with the price would erase the fall the rule reads.
   for (const k of Object.keys(next) as SleeveId[]) {
-    const p = price[k]; if (!p) continue;
-    const reset = RESET[k];
-    if (!next[k].armed && p > next[k].ath) next[k].ath = p;
-    if (reset && next[k].ath > 0 && p < next[k].ath * (1 - reset)) next[k].armed = true;
+    const p = price[k];
+    if (p && p > (next[k].ath ?? 0)) next[k].ath = p;
   }
-  return { lots: next, jepq: nextJepq };
+  return next;
 }
