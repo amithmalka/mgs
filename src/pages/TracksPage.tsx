@@ -68,6 +68,45 @@ const WHY: Record<Scenario, Array<[string, string]>> = {
   ],
 };
 
+
+/** A number field that lets you finish typing.
+ *  Clamping on every keystroke is what broke this before: typing "1" on the
+ *  way to 10 was pushed straight to the 5 minimum, so 10 could never be
+ *  reached and clearing the field snapped back. The draft is held as text,
+ *  the value is committed only when it parses inside the range, and the
+ *  clamp runs on blur. */
+function Num({ value, min, max, step, unit, onCommit }: {
+  value: number; min: number; max: number; step: number; unit: string;
+  onCommit: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const shown = draft ?? String(value);
+  return (
+    <label className="own">
+      <input
+        className="amt" type="number" min={min} max={max} step={step} value={shown}
+        onChange={e => {
+          const t = e.target.value;
+          setDraft(t);
+          const n = Number(t);
+          if (t !== '' && Number.isFinite(n) && n >= min && n <= max) onCommit(n);
+        }}
+        onBlur={() => {
+          // an empty or unparseable field reverts to what was last committed,
+          // rather than snapping to the minimum
+          const t = (draft ?? '').trim();
+          if (t !== '') {
+            const n = Number(t);
+            if (Number.isFinite(n)) onCommit(Math.min(max, Math.max(min, n)));
+          }
+          setDraft(null);
+        }}
+      />
+      <span>{unit}</span>
+    </label>
+  );
+}
+
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
 }
@@ -177,29 +216,13 @@ export function TracksPage() {
           </div>
           <div className="grp">
             <span className="glab">הפקדה חודשית</span>
-            <label className="own">
-              <input className="amt" type="number" min={0} step={500} value={base}
-                onChange={e => setBase(Math.max(0, +e.target.value || 0))} />
-              <span>₪</span>
-            </label>
-            <span className="glab">עליה שנתית</span>
-            <label className="own">
-              <input className="amt" type="number" min={5} max={10} step={0.5} value={growth}
-                onChange={e => setGrowth(Math.min(10, Math.max(5, +e.target.value || 5)))} />
-              <span>%</span>
-            </label>
+            <Num value={base} min={0} max={1_000_000} step={500} unit="₪" onCommit={setBase} />
+            <span className="glab">עליה שנתית · 5 עד 10</span>
+            <Num value={growth} min={5} max={10} step={0.5} unit="%" onCommit={setGrowth} />
             <span className="glab">השקעה ראשונית</span>
-            <label className="own">
-              <input className="amt" type="number" min={0} step={10000} value={lump}
-                onChange={e => setLump(Math.max(0, +e.target.value || 0))} />
-              <span>₪</span>
-            </label>
+            <Num value={lump} min={0} max={100_000_000} step={10000} unit="₪" onCommit={setLump} />
             <span className="glab">אופק</span>
-            <label className="own">
-              <input className="amt" type="number" min={6} max={60} step={1} value={years}
-                onChange={e => setYears(Math.min(60, Math.max(6, +e.target.value || 40)))} />
-              <span>שנים</span>
-            </label>
+            <Num value={years} min={6} max={60} step={1} unit="שנים" onCommit={setYears} />
           </div>
           <p className="note">{TRACKS[track].rule}</p>
         </div>
