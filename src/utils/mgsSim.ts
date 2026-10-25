@@ -27,9 +27,13 @@ export const ASSUMPTION: Record<Scenario, Record<Sleeve, number>> = {
   pess: { BTC: 0.100, SEM: 0.1072, TEC: 0.0964 },
   real: { BTC: 0.166, SEM: 0.1072, TEC: 0.0964 },
 };
+/** Management fees of the instruments actually bought on each route.
+ *  Tel Aviv: bitcoin 0.20% (Tachlit 1217835), semiconductors 0.45%
+ *  (Kesem 1174119, the same MVIS 25 index these parameters were measured on),
+ *  technology 0.15% (IUIT 1159193, Irish and accumulating). */
 export const TER: Record<Market, Record<Sleeve, number>> = {
   fx: { BTC: 0.0010, SEM: 0.0035, TEC: 0.0014 },
-  il: { BTC: 0.0020, SEM: 0.0045, TEC: 0.0014 },
+  il: { BTC: 0.0020, SEM: 0.0045, TEC: 0.0015 },
 };
 export const FX_DRAG = 0.004, CPI = 0.02, TAX = 0.25, UP_CAP = 10;
 /** the year the plan would have moved to a global track — and does not */

@@ -72,8 +72,8 @@ export const CYCLE_SEEN: Record<string, [number, number]> =
   { BTC: [3, 12.1], SMH: [4, 26.3], XLK: [3, 27.8] };
 
 export const SLEEVE_HE: Record<SleeveId, string> = {
-  BTC: 'ביטקוין', SMH: 'שבבים · SMH',
-  XLK: 'טכנולוגיה · XLK', WORLD: 'מדד עולמי', SYN: 'סינתטיות',
+  BTC: 'ביטקוין', SMH: 'שבבים',
+  XLK: 'טכנולוגיה', WORLD: 'מדד עולמי', SYN: 'סינתטיות',
 };
 
 /** investing years, then the years that glide into the world index */

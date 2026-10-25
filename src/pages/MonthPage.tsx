@@ -11,12 +11,49 @@ import { Icon } from '../components/shared/Icon';
 import { pushSupported, pushStatus, subscribeToPush, unsubscribeFromPush } from '../lib/push';
 import { supabase } from '../lib/supabase';
 
-/** The instrument each sleeve is actually bought through. */
+/**
+ * The index each sleeve follows. This is a price reference, not the thing
+ * bought: the fall from peak that drives the month's split is the index's
+ * own, and so it is the same number whichever vehicle tracks that index.
+ */
 const TICKER: Partial<Record<SleeveId, string>> = {
   BTC: 'BTC/USD', SMH: 'SMH', XLK: 'XLK', WORLD: 'URTH',
 };
-const BUY_AS: Partial<Record<SleeveId, string>> = {
-  BTC: 'IBIT', SMH: 'SMH', XLK: 'XLK', WORLD: 'URTH',
+
+/**
+ * What is actually bought, in shekels, on the Tel Aviv exchange through an
+ * Israeli broker. Security numbers verified against the exchange's own
+ * security feed and the issuers' KIIDs, October 2026 — the number is what
+ * the order screen asks for, and two instruments can share a name.
+ *
+ * `irish` marks an Irish-domiciled accumulating UCITS: a corporation, so it
+ * is not US-situs property. Where it is false there is no Irish fund on the
+ * exchange at all and the vehicle is an Israeli trust — also not US-situs,
+ * but on a weaker-documented footing. `why` says which case it is.
+ */
+const BUY_AS: Partial<Record<SleeveId, {
+  sym: string; num: string; isin: string; fee?: string;
+  irish: boolean; why: string;
+}>> = {
+  BTC: { sym: 'תכלית סל ביטקוין', num: '1217835', isin: 'IL0012178351',
+         fee: '0.20%', irish: false,
+         why: 'אין בעולם קרן אירית על ביטקוין — UCITS לא מתיר קריפטו. ' +
+              'זו קרן סל ישראלית של מיטב, חשופה דרך חוזים וקרנות סל זרות ' +
+              'ולא מחזיקה ביטקוין עצמו.' },
+  SMH: { sym: 'קסם ETF שבבים', num: '1174119', isin: 'IL0011741191',
+         fee: '0.45%', irish: false,
+         why: 'אין אף קרן שבבים אירית רשומה בתל אביב. זו קרן סל ישראלית ' +
+              'על אותו מדד בדיוק — MVIS US Listed Semiconductor 25, ' +
+              'המדד שעליו נמדדו ההנחות כאן.' },
+  XLK: { sym: 'IUIT', num: '1159193', isin: 'IE00B3WJKG14',
+         fee: '0.15%', irish: true,
+         why: 'iShares S&P 500 Information Technology — אירלנד, צוברת, ' +
+              'מחזיקה את המניות עצמן ולא חוזה חילופין.' },
+  WORLD: { sym: 'iShares MSCI ACWI', num: '1159235', isin: 'IE00B6R52259',
+           fee: '0.20%', irish: true,
+           why: 'iShares MSCI All Country World, תת-קרן של iShares V plc, ' +
+                'אירלנד, צוברת — ״income will be included in their value״ ' +
+                'בלשון ה-KIID מ-3.9.2026.' },
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
@@ -256,7 +293,8 @@ export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs') => void } 
         <div className="scroll" style={{ flex: '3 1 440px' }}>
           <table>
             <thead><tr>
-              {['הרכיב', 'קונים', 'דרך', 'למה', 'כמה מחזיקים', 'חלק בתיק', 'היעד', 'מתחת לשיא']
+              {['הרכיב', 'קונים', 'מה קונים', 'למה', 'חלק מההפקדה',
+                'כמה מחזיקים', 'חלק בתיק', 'היעד', 'מתחת לשיא']
                 .map(h => <th key={h}>{h}</th>)}
             </tr></thead>
             <tbody>
@@ -264,11 +302,17 @@ export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs') => void } 
                 <tr key={l.sleeve} className={l.amount > 0 ? '' : 'dim'}>
                   <td>{SLEEVE_HE[l.sleeve]}</td>
                   <td className="v gold" style={{ fontSize: 15 }}>{n0(l.amount)} ₪</td>
-                  <td className="v dim" dir="ltr">{BUY_AS[l.sleeve]}</td>
+                  <td className="v dim" style={{ whiteSpace: 'normal' }}>
+                    {BUY_AS[l.sleeve]?.sym}
+                    <span className="dim" dir="ltr" style={{ display: 'block', fontSize: 12 }}>
+                      {BUY_AS[l.sleeve]?.num}
+                    {BUY_AS[l.sleeve]?.fee ? ` · ${BUY_AS[l.sleeve]?.fee}` : ''}
+                    </span>
+                  </td>
                   <td style={{ color: REASON[l.reason].tone, whiteSpace: 'normal' }}>
                     {REASON[l.reason].label}
                   </td>
-                  <td className="v dim">×{l.tier.toFixed(2)}</td>
+                  <td className="v dim">{(l.tier * 100).toFixed(0)}%</td>
                   <td className="v">{ready ? n0(l.value) : '—'}</td>
                   <td className="v dim">{ready ? `${(l.share * 100).toFixed(0)}%` : '—'}</td>
                   <td className="v dim">{(l.target * 100).toFixed(0)}%</td>
@@ -296,18 +340,71 @@ export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs') => void } 
             </tbody>
           </table>
           <p style={{ marginTop: 10 }}>
-            <b>ב-1 בכל חודש:</b> מפקידים {n0(deposit)} ₪ בדיוק לפי העמודה
-            ״קונים״, ואז מסמנים ״ביצעתי״. התמהיל זז לבד — שתי נקודות בשנה
-            יוצאות מביטקוין וממוליכים ועוברות לליבה, בהפקדות ולא במכירות,
+            <b>ביום ההפקדה:</b> מפקידים {n0(deposit)} ₪ בדיוק לפי העמודה
+            ״קונים״, ואז מסמנים ״ביצעתי״. התמהיל זז בהפקדות ולא במכירות,
             ולכן אין בדרך הזאת אף אירוע מס.
           </p>
           <p>
-            המנה של כל רכיב נקבעת מהגיל, ואז מוכפלת לפי מה שהוא עשה: על השיא
-            שלו ×0.25, ירד ממנו ×0.50, ירד מעל 50% ×0.70. כלומר רכיב שירד
-            מקבל פי שתיים מרכיב שעלה. מכירה נדרשת רק כשהשורה האדומה למעלה.
+            <b>כלל החלוקה.</b> רכיב שנמצא על השיא הקודם שלו או מעליו מקבל
+            <b> 10% מההפקדה</b>. רכיב שנמצא מתחתיו מקבל <b>את אחוז הירידה
+            שלו</b> — ירד 30%, מקבל 30%. <b>כל שאר הכסף הולך למה שירד הכי
+            עמוק</b> באותו יום. אם ביקשו יחד יותר מ-100%, החלוקה היא לפי
+            היחס ביניהם; אם אף רכיב לא מתחת לשיא, ההפקדה מתחלקת שווה בשווה.
           </p>
         </aside>
         </div>
+      </section>
+
+      <section>
+        <h2>דרך מה קונים — ומה מס העיזבון האמריקאי עושה כאן</h2>
+        <p>
+          כל נייר כאן נסחר <b>בשקלים בבורסה בתל אביב</b> ונקנה בחשבון
+          מסחר ישראלי רגיל, בעמלת קרנות סל, בלי אישור מיוחד.
+          <b> מספרי הניירות אומתו בפיד הניירות של הבורסה עצמה</b>,
+          אוקטובר 2026 — המספר הוא מה שמסך ההוראה מבקש, ולשמות יש כפילויות.
+        </p>
+        <div className="scroll">
+          <table>
+            <thead><tr>
+              {['הרכיב', 'מה קונים', 'מספר נייר', 'ISIN', 'דמי ניהול', 'אירית צוברת', 'למה זה זה']
+                .map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {plan.lines.map(l => {
+                const b = BUY_AS[l.sleeve];
+                if (!b) return null;
+                return (
+                  <tr key={l.sleeve}>
+                    <td>{SLEEVE_HE[l.sleeve]}</td>
+                    <td>{b.sym}</td>
+                    <td className="v" dir="ltr">{b.num}</td>
+                    <td className="v dim" dir="ltr" style={{ fontSize: 12 }}>{b.isin}</td>
+                    <td className="v dim">{b.fee ?? 'טרם אומת'}</td>
+                    <td className="v" style={{ color: b.irish ? 'var(--up)' : 'var(--gold)' }}>
+                      {b.irish ? 'כן' : 'לא — אין כזו'}
+                    </td>
+                    <td style={{ whiteSpace: 'normal', maxWidth: 420 }}>{b.why}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <b>למה בכלל אירית.</b> מס עיזבון אמריקאי חל על נכס שהוא
+          <b> נכס אמריקאי</b>, ומניה נחשבת כזו רק אם הנפיקה אותה חברה
+          אמריקאית. קרן אירית היא plc — חברה — ולכן התשובה נקייה וכתובה.
+        </p>
+        <p>
+          <b>ושתי הפעמים שזה לא אפשרי, ואין מה לעשות בזה.</b>
+          על <b>ביטקוין</b> אין קרן אירית בעולם: רגולציית UCITS מגדירה רשימה
+          סגורה של נכסים מותרים, וקריפטו לא בתוכה. על <b>שבבים</b> אין קרן
+          אירית רשומה למסחר בתל אביב — רק שתי חברות ניהול זרות רשומות כאן
+          בכלל, ולאף אחת מהן אין קרן שבבים.
+          בשני המקרים הנייר הוא <b>קרן סל ישראלית</b>, שהיא נאמנות ולא חברה —
+          גם היא אינה נכס אמריקאי, אבל מהנמקה חלשה יותר: לא ״עומדת בתנאי״
+          אלא ״התנאי לא חל עליה״. <b>זו שאלה ליועץ מס, לא למערכת הזאת.</b>
+        </p>
       </section>
 
       <div className="fl">
