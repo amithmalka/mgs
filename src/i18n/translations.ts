@@ -261,6 +261,7 @@ export const translations = {
   navGroupMain: { en: 'Menu', he: 'תפריט' },
   tabHome: { en: 'Home', he: 'בית' },
   tabMgs: { en: 'MGS', he: 'MGS' },
+  tabSystem: { en: 'System', he: 'המערכת' },
   tabTracks: { en: 'Tracks', he: 'מסלולים' },
   tabMonth: { en: 'This month', he: 'החודש' },
   tabKids: { en: 'MGS Kids', he: 'MGS Kids' },
