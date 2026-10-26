@@ -5,7 +5,7 @@ import { Icon } from '../shared/Icon';
 import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
-export type Tab = 'month' | 'dashboard' | 'mgs' | 'system' | 'kids' | 'academy';
+export type Tab = 'month' | 'dashboard' | 'mgs' | 'system' | 'build' | 'kids' | 'academy';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -26,6 +26,8 @@ const GROUPS: NavGroup[] = [
       // projection, withdrawals and tracking together.
       { id: 'mgs', key: 'tabMgs', icon: 'target' },
       { id: 'system', key: 'tabSystem', icon: 'cash' },
+      // the same engine, on sleeves the investor picks instead of the fixed three
+      { id: 'build', key: 'tabBuild', icon: 'target' },
       // the same growth engine, run from a child's age to twenty
       { id: 'kids', key: 'tabKids', icon: 'sparkle' },
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },

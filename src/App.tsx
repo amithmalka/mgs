@@ -6,6 +6,7 @@ import { AcademyPage } from './pages/AcademyPage';
 import { MonthPage } from './pages/MonthPage';
 import { TracksPage } from './pages/TracksPage';
 import { KidsPage } from './pages/KidsPage';
+import { BuildPage } from './pages/BuildPage';
 import { SystemPage } from './pages/SystemPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
@@ -22,6 +23,7 @@ const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   mgs: TracksPage,
   system: SystemPage,
   kids: KidsPage,
+  build: BuildPage,
   academy: AcademyPage,
 };
 
