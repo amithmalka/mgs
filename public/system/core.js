@@ -12,10 +12,19 @@ const INST={
           mkt:"לונדון · אינה נסחרת בת״א",ref:null}},
  TEC:{fx:{t:"XLKS",n:"Invesco Technology S&P US Select Sector",id:"IE00B3VSSL01",fee:0.14,cur:"USD",
           mkt:"לונדון",ref:null},
-      il:{t:"1185180",n:"Invesco Technology · נסחרת בתל אביב",id:"IE00B3VSSL01",fee:0.14,cur:"ILS",
-          mkt:"תל אביב",ref:"כ-3,274₪ ב-23.10.2026 · מקור משני"}}};
+      il:{t:"1159193",n:"IUIT · iShares S&P 500 Information Technology",id:"IE00B3WJKG14",fee:0.15,cur:"ILS",
+          mkt:"תל אביב · אירית צוברת",ref:null}}};
 INST.SEM.il={t:"1174119",n:"קסם ETF · MVIS US Listed Semiconductor 25",id:"1174119",fee:0.45,cur:"ILS",
              mkt:"תל אביב · אותו מדד של SMH",ref:null};
+/* מאיפה נשלף השער. exact=true — זה שער הנייר עצמו.
+   exact=false — זה שער המדד שהנייר עוקב אחריו, ולא שער היחידה:
+   אחוז הירידה מהשיא נכון, מספר היחידות מקורב. */
+INST.BTC.il.feed={kind:"tase",key:"1217835",exact:true};
+INST.SEM.il.feed={kind:"tase",key:"1174119",exact:true};
+INST.TEC.il.feed={kind:"tase",key:"1159193",exact:true};
+INST.BTC.fx.feed={kind:"px",key:"BTC/USD",exact:false};
+INST.SEM.fx.feed={kind:"px",key:"SMH",exact:false};
+INST.TEC.fx.feed={kind:"px",key:"XLK",exact:false};
 const MKT={fx:{nm:"חו״ל",d:"קרנות איריות ו-ETP שווייצרי, דרך ברוקר עם גישה לבורסות אירופה"},
            il:{nm:"תל אביב",d:"הכל נסחר בשקלים בבורסה בתל אביב, בלי המרת מט״ח"}};
 const TRACKS={

@@ -85,9 +85,11 @@
   </div>
   <div class="bar"><button class="btn" id="saveSetup">שמור את ההגדרות</button>
     <span class="msg" id="mSetup"></span></div>
-  <div class="note r"><div class="b"></div><p><b>השערים אינם מתעדכנים לבד.</b>
-  לדף אין גישה לאינטרנט — ולכן <b>מנהל המערכת מזין את שער הסגירה</b> בעמוד ״השערים״,
-  והמערכת שומרת אותו עם התאריך. כל אישור נבנה מהשער שהיה במערכת ביום ההנפקה.</p></div>
+  <div class="note r"><div class="b"></div><p><b>השערים נשלפים לבד — אבל שער סגירה בלבד.</b>
+  בכניסה לדף המערכת מושכת את השערים מהשוק. בתל אביב זה מגיע מהבורסה עצמה
+  ולכן זה <b>שער הנייר ממש</b>. <b>אין פה שער תוך-יומי ואין פרי-מרקט</b> —
+  הם לא קיימים במקור הזה. תמיד אפשר להזין שער ידנית, ואז הוא הקובע;
+  זה מה שצריך לעשות כשהביצוע בפועל היה בשער אחר.</p></div>
 </div>
 
 <!-- ═══ השערים ═══ -->
@@ -96,6 +98,7 @@
   <p class="l">השער שלפיו ייבנה האישור הבא, <b>והשיא של כל נייר</b> — שממנו נמדד אחוז הירידה
   שקובע את חלוקת ההפקדה.</p>
   <div class="mktbar"></div>
+  <div class="fnote" id="feedNote"></div>
   <div class="cards" id="rateCards"></div>
   <h3>עדכון שער · <span id="rateLbl"></span></h3>
   <div class="form">
@@ -104,9 +107,15 @@
     <div class="f"><label>שבבים</label><input type="number" id="rSEM" step="0.0001" min="0"><span class="u" id="rlSEM"></span></div>
     <div class="f"><label>טכנולוגיה</label><input type="number" id="rTEC" step="0.0001" min="0"><span class="u" id="rlTEC"></span></div>
   </div>
-  <div class="bar"><button class="btn" id="saveRates">עדכן שערים</button>
+  <div class="bar"><button class="btn" id="pullRates">משוך שערים מהשוק</button>
+    <button class="btn sec" id="saveRates">שמור שער שהוזן ידנית</button>
     <button class="btn sec" id="resetPeaks">אפס שיאים לשער הנוכחי</button>
     <span class="msg" id="mRates"></span></div>
+  <div class="note r"><div class="b"></div><p><b>איפה הפיד מדויק ואיפה לא.</b>
+  בתל אביב השער הוא <b>של הנייר עצמו</b>, מהבורסה. בחו״ל ספק הנתונים בתוכנית
+  הנוכחית אינו מכסה את לונדון ואת SIX, ולכן מה שנשלף שם הוא <b>הנייר האמריקאי
+  שעוקב אחרי אותו מדד</b>: <b>אחוז הירידה מהשיא נכון</b> — ולכן חלוקת ההפקדה
+  נכונה — אבל <b>מספר היחידות מקורב</b>, ושער היחידה צריך הזנה ידנית.</p></div>
   <div class="note a"><div class="b"></div><p><b>השיא עולה לבד ולא יורד.</b>
   בכל עדכון שער המערכת מרימה את השיא אם השער גבוה ממנו. <b>היא לא מורידה אותו אף פעם</b> —
   כי אחוז הירידה נמדד מהשיא ההיסטורי, וזה מה שמזין את מנגנון הקנייה.</p></div>
@@ -209,6 +218,7 @@
 </footer>
 </div>
 <script src="core.js"></script>
+<script src="feed.js"></script>
 <script src="sim.js"></script>
 <script src="chart.js"></script>
 <script src="ui.js"></script>

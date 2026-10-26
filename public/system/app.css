@@ -141,3 +141,9 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:22px;color:v
  font-size:12.5px;line-height:1.75;display:flex;flex-direction:column;gap:9px}
 footer b{color:var(--mut)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* הודעת מצב השליפה — טקסט בלבד, נכתב ב-textContent */
+.fnote{min-height:18px;margin:8px 0 12px;font-size:13px;line-height:1.5;color:var(--dim)}
+.fnote.good{color:var(--up)}
+.fnote.warn{color:var(--amb)}
+.fnote.bad{color:var(--dn)}

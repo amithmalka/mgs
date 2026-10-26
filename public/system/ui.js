@@ -191,6 +191,8 @@ async function boot(){
   document.getElementById("who").textContent =
     (MODE==="cloud"?(CANW?"נשמר בחשבון":"קריאה בלבד"):"נשמר במחשב הזה");
   fillForms(); route(); notices();
+  // המשיכה האוטומטית — אחרי שהמסך כבר מצויר, כדי שהדף לא יחכה לרשת
+  pullRates(true);
 }
 async function save(what){
   const m=pMkt();
@@ -204,6 +206,59 @@ async function save(what){
     if(what==="prices"){await DB.doc("prices/"+m).set(PX[m]); await DB.doc("peaks/"+m).set(PK[m]);}
     return true;
   }catch(e){return ok;}
+}
+/* ───────── שליפת שערים ─────────
+   הכל כאן textContent ולא innerHTML: הטקסט שמגיע מהרשת לא נכנס ל-DOM
+   כ-HTML בשום מצב. */
+let FEEDMSG=null, PULLING=false;
+function renderFeedNote(){
+  const el=document.getElementById("feedNote"); if(!el) return;
+  if(PULLING){el.textContent="מושך שערים מהשוק…"; el.className="fnote"; return;}
+  if(!FEEDMSG){el.textContent=""; el.className="fnote"; return;}
+  if(FEEDMSG.ok){
+    el.textContent="שער סגירה "+dStr(FEEDMSG.dateN)+" · "
+      +(FEEDMSG.exact?"שער הנייר עצמו, כפי שהבורסה בתל אביב מדווחת אותו"
+                     :"שער המדד שהנייר עוקב אחריו — ולא שער היחידה")
+      +(FEEDMSG.saved?"":" · נשמר רק בדף הזה");
+    el.className="fnote "+(FEEDMSG.exact?"good":"warn");
+  }else{
+    el.textContent="השליפה נכשלה: "+FEEDMSG.msg+" — אפשר להזין שער ידנית למטה.";
+    el.className="fnote bad";
+  }
+}
+/* שליפות מסתדרות בתור ולא נזרקות: החלפת בורסה בזמן שהשליפה באוויר
+   חייבת להסתיים בשער של הבורסה שנבחרה, ולא בשתיקה. */
+let PULLQ=Promise.resolve();
+function pullRates(auto){
+  PULLQ=PULLQ.then(()=>doPull(auto),()=>doPull(auto));
+  return PULLQ;
+}
+async function doPull(auto){
+  const mk=pMkt();
+  PULLING=true; renderFeedNote();
+  const btn=document.getElementById("pullRates");
+  if(btn) btn.disabled=true;
+  try{
+    const r=await fetchRates(mk);
+    const np={dateN:r.dateN||todayN()};
+    for(const t of K) np[t]=r[t];
+    const cl=cleanPrices(np);
+    if(!cl) throw new Error("השערים שחזרו לא עברו אימות");
+    PX[mk]=cl;
+    for(const t of K) PK[mk][t]=Math.max(PK[mk][t]||0,cl[t]);
+    const ok=await save("prices");
+    FEEDMSG={ok:true,exact:!!r.exact,dateN:cl.dateN,saved:ok};
+    PULLING=false; renderFeedNote();
+    fillRates(); route(); notices();
+    if(!auto) say("mRates","נשלפו שערי "+MKT[mk].nm,false);
+  }catch(e){
+    FEEDMSG={ok:false,msg:String((e&&e.message)||e)};
+    PULLING=false; renderFeedNote();
+    if(!auto) say("mRates","השליפה נכשלה",true);
+  }finally{
+    PULLING=false;
+    if(btn) btn.disabled=false;
+  }
 }
 function say(id,txt,bad){const e=document.getElementById(id); if(!e)return;
   e.textContent=txt; e.className="msg"+(bad?" e":""); setTimeout(()=>{e.textContent="";},4500);}
@@ -225,7 +280,8 @@ function fillForms(){
   document.getElementById("segAge").innerHTML=Object.keys(AGE)
     .map(a=>`<button data-v="${a}">${a} · שנה ${AGE[a]}</button>`).join("");
   seg("segAge",pAge(),v=>{PROF.ageIdx=idxOf(AGE_KEYS,v,1);});
-  seg("segMkt",pMkt(),v=>{PROF.mktIdx=idxOf(MKT_KEYS,v,0); save("prof"); mktBar(); fillRates(); route(); notices();});
+  seg("segMkt",pMkt(),v=>{PROF.mktIdx=idxOf(MKT_KEYS,v,0); save("prof"); mktBar(); fillRates();
+    route(); notices(); FEEDMSG=null; pullRates(true);});
   document.getElementById("picks").innerHTML=Object.entries(TRACKS).map(([k,v])=>
     `<button class="pick" data-v="${k}" aria-pressed="${pTrack()===k}">
       <b>${he(v.nm)}</b><span class="d">${he(v.d)}</span>
@@ -245,7 +301,7 @@ function mktBar(){
       `<span class="mkd">${he(MKT[pMkt()].d)}</span>`;
     [...el.querySelectorAll("button")].forEach(b=>b.onclick=()=>{
       PROF.mktIdx=idxOf(MKT_KEYS,b.dataset.v,0); save("prof"); mktBar(); fillRates();
-      route(); notices();});
+      route(); notices(); FEEDMSG=null; pullRates(true);});
   });
 }
 function fillRates(){
@@ -253,6 +309,7 @@ function fillRates(){
   document.getElementById("rDate").value=dStr(p.dateN)||today();
   for(const t of K) document.getElementById("r"+t).value=p[t]!=null?p[t]:"";
   document.getElementById("rateLbl").textContent=MKT[pMkt()].nm;
+  renderFeedNote();
   for(const t of K){
     const i=INST[t][pMkt()];
     document.getElementById("rl"+t).innerHTML=
@@ -692,6 +749,7 @@ document.getElementById("saveRates").onclick=async()=>{
   fillRates(); rRates(); notices();
   say("mRates",ok?"השער ל"+MKT[pMkt()].nm+" עודכן ל-"+d:"עודכן בדף אך השמירה נכשלה",!ok);
 };
+document.getElementById("pullRates").onclick=()=>pullRates(false);
 document.getElementById("resetPeaks").onclick=async()=>{
   if(!ready()){say("mRates","אין שער לאפס ממנו",true);return;}
   {const mk=pMkt();

@@ -12,7 +12,22 @@ global.window={claude:undefined,devicePixelRatio:1,scrollTo(){},addEventListener
 global.addEventListener=()=>{}; global.location={hash:"#home"};
 global.localStorage={_d:{},getItem(k){return this._d[k]??null;},setItem(k,v){this._d[k]=v;}};
 global.performance={now:()=>0}; global.setTimeout=f=>f();
-const app=["core.js","sim.js","chart.js","ui.js"].map(f=>fs.readFileSync(f,"utf8")).join("\n;\n");
+/* שרת מדומה: מחזיר בדיוק את הצורה שהנקודות האמיתיות מחזירות,
+   כדי שנתיב ההצלחה של השליפה ייבדק ולא רק נתיב הכשל. */
+let FETCHED=[];
+global.fetch=async(url)=>{
+  FETCHED.push(String(url));
+  const tase=String(url).indexOf("/api/tase")===0;
+  const body=tase
+    ? {prices:{"1217835":{price:33.06,date:"2026-10-23",source:"tase"},
+               "1174119":{price:653.80,date:"2026-10-23",source:"tase"},
+               "1159193":{price:158.30,date:"2026-10-23",source:"tase"}}}
+    : {prices:{"BTC/USD":{price:79724.98,candles:[{t:"2026-10-26",c:79724.98}]},
+               "SMH":{price:527.20,candles:[{t:"2026-10-23",c:527.20}]},
+               "XLK":{price:183.23,candles:[{t:"2026-10-23",c:183.23}]}}};
+  return {ok:true,status:200,text:async()=>JSON.stringify(body)};
+};
+const app=["core.js","feed.js","sim.js","chart.js","ui.js"].map(f=>fs.readFileSync(f,"utf8")).join("\n;\n");
 const test=`
 ;(function(){
 const pages=["home","track","setup","rates","deposit","withdraw","portfolio","history","returns","scen"];
@@ -42,5 +57,36 @@ try{ const bad2=cleanProf({track:"<img src=x onerror=alert(1)>",age:"__proto__",
      console.log("✓ קלט זדוני עוקר: trackIdx="+bad2.trackIdx+" ageIdx="+bad2.ageIdx+
        " mktIdx="+bad2.mktIdx+" day="+bad2.day+" startN="+bad2.startN);
 }catch(e){ console.log("✗ אימות: "+e.message); }
+
+/* ── השליפה ── */
+(async()=>{
+  try{
+    await PULLQ;            // השליפה שה-boot התחיל
+    PROF.mktIdx=1; FEEDMSG=null; PX.il=BLANK();
+    await pullRates(false);
+    const okIl = PX.il.dateN===20261023 && PX.il.BTC===33.06 && PX.il.TEC===158.30;
+    console.log((okIl?"✓":"✗")+" שליפת ת״א: "+K.map(t=>NM[t]+" "+PX.il[t]).join(" · ")
+      +" · תאריך "+dStr(PX.il.dateN)+" · exact="+(FEEDMSG&&FEEDMSG.exact));
+    const peaked = K.every(t=>PK.il[t]>=PX.il[t]);
+    console.log((peaked?"✓":"✗")+" השיא עלה עם השליפה");
+
+    PROF.mktIdx=0; FEEDMSG=null; PX.fx=BLANK();
+    await pullRates(false);
+    const okFx = PX.fx.BTC===79724.98 && PX.fx.dateN===20261023;
+    console.log((okFx?"✓":"✗")+" שליפת חו״ל: תאריך "+dStr(PX.fx.dateN)
+      +" (הישן מבין הרכיבים) · exact="+(FEEDMSG&&FEEDMSG.exact));
+    if(FEEDMSG&&FEEDMSG.exact!==false) console.log("✗ חו״ל סומן כמדויק והוא לא");
+
+    global.fetch=async()=>({ok:false,status:500,text:async()=>'{"error":"boom"}'});
+    FEEDMSG=null; const keep={...PX.fx};
+    await pullRates(false);
+    const held = PX.fx.BTC===keep.BTC && FEEDMSG && FEEDMSG.ok===false;
+    console.log((held?"✓":"✗")+" כשל בשליפה לא מוחק את השער הקיים");
+
+    bad=0;
+    for(const p of pages){try{go(p);}catch(e){console.log("✗ "+p+" (אחרי שליפה): "+e.message);bad++;}}
+    if(!bad) console.log("✓ עשרה מסכים · אחרי שליפה וכשל");
+  }catch(e){ console.log("✗ שליפה: "+e.message); }
+})();
 })();`;
 eval(app+test);
