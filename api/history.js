@@ -28,6 +28,10 @@ export default async function handler(req, res) {
 
   const years = Math.min(MAX_YEARS, Math.max(1, Number(req.query.years) || 10));
   const bars = years * 12 + 1;
+  // With series=1 the monthly closes come back too, not just the rates derived
+  // from them. A rule that buys by how far a holding has fallen cannot be
+  // tested against a CAGR -- it needs the path.
+  const wantSeries = String(req.query.series || '') === '1';
 
   const history = {};
   await Promise.all(symbols.map(async (sym) => {
@@ -75,6 +79,7 @@ export default async function handler(req, res) {
 
       history[sym] = {
         ...cagrs,
+        ...(wantSeries ? { series: asc } : {}),
         full,
         yearsAvailable: maxYears,
         firstDate: asc[0].t,
