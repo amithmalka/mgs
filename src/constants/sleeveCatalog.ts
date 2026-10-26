@@ -59,7 +59,7 @@ export const FUND: Partial<Record<SleeveKey, Fund>> = {
   SP5: { tick: 'CSPX', name: 'iShares Core S&P 500', isin: 'IE00B5BMR087',
          ter: 0.0007, tase: '1159250', px: 'same', aum: '154.5B' },
   NDX: { tick: 'CNDX', name: 'iShares Nasdaq 100', isin: 'IE00B53SZB19',
-         ter: 0.0030, tase: null, px: 'same', aum: '30.6B' },
+         ter: 0.0030, tase: '1159243', px: 'same', aum: '30.6B' },
   TEC: { tick: 'IUIT', name: 'iShares S&P 500 Information Technology',
          isin: 'IE00B3WJKG14', ter: 0.0015, tase: '1159193', px: 'near', aum: '19.5B',
          note: 'האירית עוקבת S&P 500 Capped 35/20 Information Technology; הנייר '
@@ -68,11 +68,17 @@ export const FUND: Partial<Record<SleeveKey, Fund>> = {
          ter: 0.0020, tase: '1159235', px: 'same' },
   SEM: { tick: 'SMH', name: 'VanEck Semiconductor UCITS', isin: 'IE00BMC38736',
          ter: 0.0035, tase: null, px: 'near', aum: '8.3B',
-         note: 'האירית עוקבת MarketVector US Listed Semiconductor 10% Capped Screened; '
-             + 'האמריקאית שעליה נמדד — את גרסת ה-25 בלי התקרה והסינון. דומה, לא זהה.' },
+         note: 'ל-VanEck אין רישום בבורסה בתל אביב כלל, ולכן נדרש ברוקר אירופי. '
+             + 'האלטרנטיבה שכן תהיה בת״א מ-5.11.2026 היא iShares 1248376. '
+             + 'והמדד: האירית על MarketVector US Listed Semiconductor 10% Capped '
+             + 'Screened, האמריקאית שעליה נמדד על גרסת ה-25 בלי תקרה וסינון.' },
+  // נרשמה למסחר בתל אביב ב-14.10.2026, נייר 1248376, מתחילה להיסחר 5.11.2026.
+  // זו הקרן האירית הצוברת **הראשונה על שבבים** שתהיה נגישה בשקלים בת״א.
   SOX: { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9',
-         ter: 0.0035, tase: null, px: 'near', aum: '5.6B',
-         note: 'מדד גלובלי עם סינון ESG ותקרה — שונה מ-PHLX שעליו נמדד.' },
+         ter: 0.0035, tase: '1248376', px: 'near', aum: '5.6B',
+         note: 'נרשמה לת״א ומתחילה להיסחר 5.11.2026 — הקרן האירית הצוברת '
+             + 'הראשונה על שבבים שנגישה בשקלים. המדד גלובלי (ACWI IMI, כולל '
+             + 'קטנות ומתעוררות) עם סינון ESG ותקרה — שונה מ-PHLX שעליו נמדד.' },
   QNT: { tick: 'QANT', name: 'iShares Quantum Computing UCITS', isin: 'IE000C6ITGC8',
          ter: 0.0050, tase: null, px: 'near', aum: '69M',
          note: 'הושקה 3.12.2025 ועוקבת STOXX Global Quantum Computing. הנייר שעליו '
@@ -104,6 +110,8 @@ export const ALT: Partial<Record<SleeveKey, Array<{
     { tick: 'EQQS', name: 'Invesco Nasdaq-100 Swap', isin: 'IE00BNRQM384', ter: 0.0020, aum: '3.2B', swap: true },
   ],
   WLD: [
+    { tick: 'MXWO', name: 'Invesco MSCI World · בת״א 1185164', isin: 'IE00B60SX394',
+      ter: 0.0005, aum: '10.3B', swap: true },
     { tick: 'ACWD', name: 'SPDR MSCI ACWI', isin: 'IE00B44Z5B48', ter: 0.0012, aum: '19.9B' },
     { tick: 'VWRA', name: 'Vanguard FTSE All-World', isin: 'IE00BK5BQT80', ter: 0.0014, aum: '60.2B' },
     { tick: 'IWDA', name: 'iShares Core MSCI World', isin: 'IE00B4L5Y983', ter: 0.0020, aum: '147.2B' },
@@ -120,12 +128,33 @@ export const ALT: Partial<Record<SleeveKey, Array<{
 
 /** הנחות תשואה מפורסמות — רק מה שיש לו מקור כתוב. */
 export const ASSUME: Partial<Record<SleeveKey, { pess: number; real: number; src: string }>> = {
-  BTC: { pess: 0.100, real: 0.166, src: 'JPMorgan LTCMA 2027 — תרחיש בסיס מול תרחיש שורי' },
-  SEM: { pess: 0.1072, real: 0.1072, src: 'Damodaran NYU 5.1.2026 — מוליכים למחצה' },
-  SOX: { pess: 0.1072, real: 0.1072, src: 'Damodaran NYU 5.1.2026 — מוליכים למחצה' },
-  TEC: { pess: 0.0964, real: 0.0964, src: 'Damodaran NYU 5.1.2026 — תוכנה וחומרה' },
+  // ביטקוין: JPMorgan LTCMA 2027, מהדורה 31, פורסם 19.10.2026, נתונים ל-30.9.2026.
+  // שלושה תרחישים מפורשים: דובי 11.2%-, בסיס 10.0%, שורי 16.6%.
+  // **ואזהרה שצריכה להיאמר:** האופק הוא 10 שנים ולא 10–15 כמו המניות, וג׳יי-פי
+  // מורגן כותבת במפורש שזה *מוקדם מדי* לשלב ביטקוין במטריצות שלה. זה תרחיש,
+  // לא שורה במטריצת ההנחות.
+  BTC: { pess: 0.100, real: 0.166,
+         src: 'JPMorgan LTCMA 2027 (19.10.2026) · תרחיש בסיס 10.0% מול שורי 16.6% · '
+            + 'אופק 10 שנים · תרחיש, לא הנחת מטריצה · קיים גם תרחיש דובי 11.2%-' },
+  SEM: { pess: 0.1072, real: 0.1072,
+         src: 'Damodaran NYU, ינואר 2026 · Semiconductor · 66 פירמות · בטא 1.52' },
+  SOX: { pess: 0.1072, real: 0.1072,
+         src: 'Damodaran NYU, ינואר 2026 · Semiconductor · 66 פירמות · בטא 1.52' },
+  // התיקון: 9.64% הוא Software (System & Application) בלבד — לא ״תוכנה וחומרה״.
+  // הרכיב עוקב S&P 500 Information Technology, שכמחציתו שבבים, ולכן בלנד אמיתי
+  // היה יוצא גבוה יותר. 9.64% נשאר כאן בכוונה כהנחה **שמרנית**.
+  TEC: { pess: 0.0964, real: 0.0964,
+         src: 'Damodaran NYU, ינואר 2026 · Software (System & Application) · 309 פירמות · '
+            + 'שמרני: המדד עצמו כמחציתו שבבים, ובלנד היה גבוה יותר' },
+  BIO: { pess: 0.0901, real: 0.0901,
+         src: 'Damodaran NYU, ינואר 2026 · Drugs (Biotechnology) · 496 פירמות · בטא 1.14' },
+  CLN: { pess: 0.0777, real: 0.0777,
+         src: 'Damodaran NYU, ינואר 2026 · Green & Renewable Energy · 15 פירמות · בטא 0.86' },
+  DEF: { pess: 0.0817, real: 0.0817,
+         src: 'Damodaran NYU, ינואר 2026 · Aerospace/Defense · 79 פירמות · בטא 0.95' },
+  GLD: { pess: 0.0768, real: 0.0768,
+         src: 'Damodaran NYU, ינואר 2026 · Precious Metals · 56 פירמות · בטא 0.84' },
 };
-
 /** דירוג הרכיבים לפי מה שנמדד, לתצוגה. */
 export const BY_RETURN = [...KEYS].sort((a, b) => MEASURED[b].cagr - MEASURED[a].cagr);
 
