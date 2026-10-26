@@ -42,19 +42,52 @@ export default async function handler(req, res) {
   await Promise.all([...new Set(symbols)].map(async (sym) => {
     try {
       const s = String(sym).trim().toUpperCase().replace('/', '');
-      const url = 'https://financialmodelingprep.com/stable/historical-price-eod/full'
-        + `?symbol=${encodeURIComponent(s)}&from=${from}&apikey=${key}`;
-      const r = await fetch(url);
-      if (!r.ok) { out[sym] = { error: 'HTTP ' + r.status }; return; }
-      const j = await r.json();
-      const rows = Array.isArray(j) ? j : Array.isArray(j?.historical) ? j.historical : null;
+      const q = `?symbol=${encodeURIComponent(s)}&from=${from}&apikey=${key}`;
+      const base = 'https://financialmodelingprep.com/stable/';
+
+      const rowsOf = async (path) => {
+        const r = await fetch(base + path + q);
+        if (!r.ok) return null;
+        const j = await r.json();
+        return Array.isArray(j) ? j : Array.isArray(j?.historical) ? j.historical : null;
+      };
+
+      const rows = await rowsOf('historical-price-eod/full');
       if (!rows || rows.length < 20) { out[sym] = { error: 'no history' }; return; }
       const m = monthly(rows);
       if (m.length < 13) { out[sym] = { error: 'not enough months' }; return; }
-      // adjClose equal to close all the way back means the feed is not
-      // adjusting -- the caller must know that rather than assume it did.
+
+      // The EOD rows on this plan carry adjClose equal to close, i.e. no
+      // dividend adjustment. So build the total return from the cash
+      // dividends: each month compounds (P_t + D_t) / P_(t-1).
+      let how = 'price-only', paid = 0;
+      let divs = null;
+      try { divs = await rowsOf('dividends'); } catch { divs = null; }
+      if (Array.isArray(divs) && divs.length) {
+        const byMonth = new Map();
+        for (const d of divs) {
+          const dt = String(d.date || d.paymentDate || '').slice(0, 10);
+          const amt = Number(d.adjDividend ?? d.dividend);
+          if (dt.length !== 10 || !Number.isFinite(amt) || amt <= 0) continue;
+          const k = dt.slice(0, 7);
+          byMonth.set(k, (byMonth.get(k) || 0) + amt);
+          paid += 1;
+        }
+        if (byMonth.size) {
+          let tr = m[0].c;
+          m[0].a = tr;
+          for (let i = 1; i < m.length; i++) {
+            const d = byMonth.get(m[i].t.slice(0, 7)) || 0;
+            tr *= (m[i].c + d) / m[i - 1].c;
+            m[i].a = Math.round(tr * 1e6) / 1e6;
+            m[i].d = d || undefined;
+          }
+          how = 'close+dividends';
+        }
+      }
       const adjusted = m.some(p => Math.abs(p.a - p.c) > 0.005);
-      out[sym] = { months: m.length, adjusted, first: m[0].t, last: m[m.length - 1].t, series: m };
+      out[sym] = { months: m.length, adjusted, how, dividendRows: paid,
+                   first: m[0].t, last: m[m.length - 1].t, series: m };
     } catch (e) {
       out[sym] = { error: e?.message || 'fetch error' };
     }
