@@ -4,8 +4,8 @@ const K=["BTC","SEM","TEC"];
 const NM={BTC:"ביטקוין",SEM:"שבבים",TEC:"טכנולוגיה"};
 /* הניירות לפי בורסה · cur = המטבע שבו הנייר נסחר · ref = שער מאומת להשוואה, אם קיים */
 const INST={
- BTC:{fx:{t:"CBTC",n:"21Shares Bitcoin Core ETP",id:"CH1199067674",fee:0.10,cur:"CHF",
-          mkt:"SIX שווייץ",ref:"16.4380 פרנק ב-21.10.2026"},
+ BTC:{fx:{t:"CBTC",n:"21Shares Bitcoin Core ETP · נייר חוב של 21Shares AG",id:"CH1199067674",fee:0.10,cur:"CHF",
+          mkt:"SIX שווייץ · מגובה פיזית · בלי ערב",ref:"16.4380 פרנק ב-21.10.2026"},
       il:{t:"1217835",n:"תכלית סל · CME CF Bitcoin Reference Rate",id:"1217835",fee:0.20,cur:"ILS",
           mkt:"תל אביב",ref:null}},
  SEM:{fx:{t:"SMH",n:"VanEck Semiconductor UCITS",id:"IE00BMC38736",fee:0.35,cur:"USD",
