@@ -43,11 +43,80 @@ export const CORR = [[1.0, 0.28419999999999995, 0.27528199999999997, 0.255878, 0
 
 export type SleeveKey = typeof KEYS[number];
 
-/** הקרן האירית הצוברת שבה הרכיב נקנה בפועל. */
+/** הקרן האירית הצוברת שבה הרכיב נקנה בפועל.
+ *  ter/acc אומתו ב-KID או בדף המוצר של המנפיק, אוקטובר 2026.
+ *  tase — מספר הנייר, אומת בפיד הניירות של הבורסה בתל אביב.
+ *  px   — איכות הפרוקסי שעליו נמדדו התנודתיות והמתאם:
+ *         'same'  = הנייר האמריקאי עוקב **בדיוק אותו מדד**.
+ *         'near'  = מדד דומה אך **לא זהה** — התנודתיות מהימנה, התשואה פחות.
+ */
 export interface Fund {
   tick: string; name: string; isin: string; ter: number | null;
-  tase: string | null; synth?: boolean;
+  tase: string | null; px: 'same' | 'near'; aum?: string; note?: string;
 }
+
+export const FUND: Partial<Record<SleeveKey, Fund>> = {
+  SP5: { tick: 'CSPX', name: 'iShares Core S&P 500', isin: 'IE00B5BMR087',
+         ter: 0.0007, tase: '1159250', px: 'same', aum: '154.5B' },
+  NDX: { tick: 'CNDX', name: 'iShares Nasdaq 100', isin: 'IE00B53SZB19',
+         ter: 0.0030, tase: null, px: 'same', aum: '30.6B' },
+  TEC: { tick: 'IUIT', name: 'iShares S&P 500 Information Technology',
+         isin: 'IE00B3WJKG14', ter: 0.0015, tase: '1159193', px: 'near', aum: '19.5B',
+         note: 'האירית עוקבת S&P 500 Capped 35/20 Information Technology; הנייר '
+             + 'שעליו נמדד (XLK) עוקב Technology Select Sector. דומה, לא זהה.' },
+  WLD: { tick: 'SSAC', name: 'iShares MSCI All Country World', isin: 'IE00B6R52259',
+         ter: 0.0020, tase: '1159235', px: 'same' },
+  SEM: { tick: 'SMH', name: 'VanEck Semiconductor UCITS', isin: 'IE00BMC38736',
+         ter: 0.0035, tase: null, px: 'near', aum: '8.3B',
+         note: 'האירית עוקבת MarketVector US Listed Semiconductor 10% Capped Screened; '
+             + 'האמריקאית שעליה נמדד — את גרסת ה-25 בלי התקרה והסינון. דומה, לא זהה.' },
+  SOX: { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9',
+         ter: 0.0035, tase: null, px: 'near', aum: '5.6B',
+         note: 'מדד גלובלי עם סינון ESG ותקרה — שונה מ-PHLX שעליו נמדד.' },
+  QNT: { tick: 'QANT', name: 'iShares Quantum Computing UCITS', isin: 'IE000C6ITGC8',
+         ter: 0.0050, tase: null, px: 'near', aum: '69M',
+         note: 'הושקה 3.12.2025 ועוקבת STOXX Global Quantum Computing. הנייר שעליו '
+             + 'נמדד עוקב מדד אחר (BlueStar), ולקרן עצמה פחות משנה היסטוריה. '
+             + 'נכסים 69M — מתחת לרף שסימנתי כסביר.' },
+  ROB: { tick: 'RBOT', name: 'iShares Automation & Robotics', isin: 'IE00BYZK4552',
+         ter: 0.0040, tase: '1159144', px: 'near' },
+  BLK: { tick: 'BCHN', name: 'Invesco CoinShares Global Blockchain',
+         isin: 'IE00BGBN6P67', ter: 0.0065, tase: '1186055', px: 'near' },
+  MOM: { tick: 'IWMO', name: 'iShares Edge MSCI World Momentum Factor',
+         isin: 'IE00BP3QZ825', ter: 0.0025, tase: null, px: 'near', aum: '6.4B',
+         note: 'המדד עולמי; הנייר שעליו נמדד אמריקאי בלבד. דומה, לא זהה.' },
+};
+
+/** חלופות על אותו מדד, אומתו ב-KIID או בדף מוצר, אוקטובר 2026.
+ *  swap=true — הקרן אינה מחזיקה את המניות אלא חוזה חילופין, ולכן נושאת
+ *  סיכון צד נגדי שלקרן פיזית אין. */
+export const ALT: Partial<Record<SleeveKey, Array<{
+  tick: string; name: string; isin: string; ter: number; aum: string; swap?: boolean;
+}>>> = {
+  SP5: [
+    { tick: 'SPYL', name: 'SPDR S&P 500', isin: 'IE000XZSV718', ter: 0.0003, aum: '19.2B' },
+    { tick: 'VUAA', name: 'Vanguard S&P 500', isin: 'IE00BFMXXD54', ter: 0.0007, aum: '36.3B' },
+    { tick: 'SPXS', name: 'Invesco S&P 500 Swap', isin: 'IE00B3YCGJ38', ter: 0.0005, aum: '59.0B', swap: true },
+  ],
+  NDX: [
+    { tick: 'XNAS', name: 'Xtrackers Nasdaq 100', isin: 'IE00BMFKG444', ter: 0.0020, aum: '2.8B' },
+    { tick: 'EQAC', name: 'Invesco EQQQ Nasdaq-100 Acc', isin: 'IE00BFZXGZ54', ter: 0.0030, aum: '21.6B' },
+    { tick: 'EQQS', name: 'Invesco Nasdaq-100 Swap', isin: 'IE00BNRQM384', ter: 0.0020, aum: '3.2B', swap: true },
+  ],
+  WLD: [
+    { tick: 'ACWD', name: 'SPDR MSCI ACWI', isin: 'IE00B44Z5B48', ter: 0.0012, aum: '19.9B' },
+    { tick: 'VWRA', name: 'Vanguard FTSE All-World', isin: 'IE00BK5BQT80', ter: 0.0014, aum: '60.2B' },
+    { tick: 'IWDA', name: 'iShares Core MSCI World', isin: 'IE00B4L5Y983', ter: 0.0020, aum: '147.2B' },
+  ],
+  SOX: [
+    { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9', ter: 0.0035, aum: '5.6B' },
+  ],
+  TEC: [
+    { tick: 'XUTC', name: 'Xtrackers MSCI USA Info Tech 1C', isin: 'IE0000K7HU41', ter: 0.0012, aum: '1.8B' },
+    { tick: 'WTEC', name: 'SPDR MSCI World Technology', isin: 'IE00BYTRRD19', ter: 0.0030, aum: '1.3B' },
+    { tick: 'XLKS', name: 'Invesco Technology S&P US Select Swap', isin: 'IE00B3VSSL01', ter: 0.0014, aum: '2.7B', swap: true },
+  ],
+};
 
 /** הנחות תשואה מפורסמות — רק מה שיש לו מקור כתוב. */
 export const ASSUME: Partial<Record<SleeveKey, { pess: number; real: number; src: string }>> = {
@@ -55,21 +124,6 @@ export const ASSUME: Partial<Record<SleeveKey, { pess: number; real: number; src
   SEM: { pess: 0.1072, real: 0.1072, src: 'Damodaran NYU 5.1.2026 — מוליכים למחצה' },
   SOX: { pess: 0.1072, real: 0.1072, src: 'Damodaran NYU 5.1.2026 — מוליכים למחצה' },
   TEC: { pess: 0.0964, real: 0.0964, src: 'Damodaran NYU 5.1.2026 — תוכנה וחומרה' },
-};
-
-export const FUND: Partial<Record<SleeveKey, Fund>> = {
-  TEC: { tick: 'IUIT', name: 'iShares S&P 500 Information Technology',
-         isin: 'IE00B3WJKG14', ter: 0.0015, tase: '1159193' },
-  SP5: { tick: 'CSPX', name: 'iShares Core S&P 500',
-         isin: 'IE00B5BMR087', ter: null, tase: '1159250' },
-  NDX: { tick: 'CNDX', name: 'iShares Nasdaq 100',
-         isin: 'IE00B53SZB19', ter: 0.0030, tase: '1159243' },
-  WLD: { tick: 'SSAC', name: 'iShares MSCI All Country World',
-         isin: 'IE00B6R52259', ter: 0.0020, tase: '1159235' },
-  ROB: { tick: 'RBOT', name: 'iShares Automation & Robotics',
-         isin: 'IE00BYZK4552', ter: 0.0040, tase: '1159144' },
-  BLK: { tick: 'BCHN', name: 'Invesco CoinShares Global Blockchain',
-         isin: 'IE00BGBN6P67', ter: 0.0065, tase: '1186055' },
 };
 
 /** דירוג הרכיבים לפי מה שנמדד, לתצוגה. */

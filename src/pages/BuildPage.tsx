@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  MEASURED, ASSUME, FUND, BY_RETURN, corr, type SleeveKey,
+  MEASURED, ASSUME, FUND, ALT, BY_RETURN, corr, type SleeveKey,
 } from '../constants/sleeveCatalog';
 import {
   simulatePortfolio, substituted, terOf, EQUITY, type Basis,
@@ -146,7 +146,8 @@ export function BuildPage() {
                     <td><input type="checkbox" checked={on} onChange={() => toggle(k)}
                       aria-label={m.he} /></td>
                     <td style={{ fontWeight: on ? 700 : 400 }}>{m.he}</td>
-                    <td className="v" style={{ color: 'var(--muted)' }}>{pc(m.cagr)}</td>
+                    <td className="v" style={{ color: f?.px === 'near' ? 'var(--gold)' : 'var(--muted)' }}>
+                      {pc(m.cagr)}{f?.px === 'near' ? ' *' : ''}</td>
                     <td className="v" style={{ color: m.vol > 0.3 ? 'var(--gold)' : 'var(--muted)' }}>{pc(m.vol, 0)}</td>
                     <td className="v dim">{pc(m.dd, 0)}</td>
                     <td className="v dim" dir="ltr">{m.since} · {m.months} ח׳</td>
@@ -154,7 +155,9 @@ export function BuildPage() {
                     <td className="v" style={{ color: k !== 'SEM' && corr(k, 'SEM') > 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
                       {corr(k, 'SEM').toFixed(2)}</td>
                     <td dir="ltr" style={{ whiteSpace: 'normal' }}>
-                      {f ? `${f.tick} · ${f.isin}` : <span className="dim">טרם אומתה</span>}</td>
+                      {f ? `${f.tick} · ${f.isin}` : <span className="dim">טרם אומתה</span>}
+                      {f?.aum && <span className="dim" style={{ display: 'block', fontSize: 12 }}>
+                        נכסים {f.aum}</span>}</td>
                     <td className="v dim">{f?.ter != null ? pc(f.ter, 2) : '—'}</td>
                     <td className="v" style={{ color: f?.tase ? 'var(--up)' : 'var(--muted)' }}>
                       {f?.tase ? `ת״א ${f.tase}` : 'ברוקר זר'}</td>
@@ -166,6 +169,49 @@ export function BuildPage() {
             </tbody>
           </table>
         </div>
+        <p>
+          <b>כוכבית על התשואה</b> אומרת שהנייר שעליו נמדד עוקב <b>מדד דומה אך
+          לא זהה</b> לזה של הקרן האירית. התנודתיות והמתאם מהימנים גם כך;
+          התשואה ההיסטורית — פחות.
+        </p>
+        {picked.map(k => FUND[k]?.note).filter(Boolean).length > 0 && (
+          <div className="note"><p>
+            {picked.filter(k => FUND[k]?.note).map(k => (
+              <span key={k} style={{ display: 'block', marginBottom: 4 }}>
+                <b>{MEASURED[k].he}:</b> {FUND[k]!.note}
+              </span>
+            ))}
+          </p></div>
+        )}
+        {picked.some(k => ALT[k]) && (
+          <>
+            <h3>אותו מדד, קרן אחרת — מה שאומת</h3>
+            <div className="scroll">
+              <table>
+                <thead><tr>{['הרכיב', 'הקרן', 'ISIN', 'דמי ניהול', 'נכסים', 'שכפול']
+                  .map(h => <th key={h}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {picked.flatMap(k => (ALT[k] ?? []).map(a => (
+                    <tr key={k + a.isin}>
+                      <td>{MEASURED[k].he}</td>
+                      <td dir="ltr">{a.tick} · {a.name}</td>
+                      <td className="v dim" dir="ltr" style={{ fontSize: 12 }}>{a.isin}</td>
+                      <td className="v">{pc(a.ter, 2)}</td>
+                      <td className="v dim" dir="ltr">{a.aum}</td>
+                      <td className="v" style={{ color: a.swap ? 'var(--gold)' : 'var(--up)' }}>
+                        {a.swap ? 'חוזה חילופין' : 'פיזי'}</td>
+                    </tr>
+                  )))}
+                </tbody>
+              </table>
+            </div>
+            <p>
+              <b>״חוזה חילופין״ אינו פרט טכני.</b> קרן כזאת אינה מחזיקה את
+              המניות אלא חוזה מול צד נגדי, ולכן נושאת <b>סיכון צד נגדי</b>
+              שלקרן פיזית אין. היא לרוב זולה יותר — וזה המחיר.
+            </p>
+          </>
+        )}
         {!showAll && (
           <button className="opt" type="button" onClick={() => setShowAll(true)}>
             הצג את כל {BY_RETURN.length} הרכיבים
@@ -356,9 +402,10 @@ export function BuildPage() {
         <p>
           <b>וסייג על הקטלוג:</b> הקרנות המסומנות ״טרם אומתה״ — לא אימתתי להן
           מספר נייר, דמי ניהול או שהן אכן צוברות, ולכן הוצבו להן דמי ניהול
-          שמרניים. <b>על קוונטים, אורניום ושבבים אין קרן אירית הרשומה למסחר
-          בתל אביב</b> — הן דורשות ברוקר עם גישה לבורסות אירופה.
-          אין בזה המלצה.
+          שמרניים. <b>על שבבים ועל קוונטים קיימת קרן אירית צוברת, אבל היא
+          אינה רשומה למסחר בתל אביב</b> — לשתיהן נדרש ברוקר עם גישה לבורסות
+          אירופה. בתל אביב אומתו עד כה חמש: S&P 500, טכנולוגיה, עולמי,
+          רובוטיקה ובלוקצ׳יין. אין בזה המלצה.
         </p>
       </section>
     </div>
