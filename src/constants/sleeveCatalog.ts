@@ -79,18 +79,32 @@ export const FUND: Partial<Record<SleeveKey, Fund>> = {
          note: 'נרשמה לת״א ומתחילה להיסחר 5.11.2026 — הקרן האירית הצוברת '
              + 'הראשונה על שבבים שנגישה בשקלים. המדד גלובלי (ACWI IMI, כולל '
              + 'קטנות ומתעוררות) עם סינון ESG ותקרה — שונה מ-PHLX שעליו נמדד.' },
-  QNT: { tick: 'QANT', name: 'iShares Quantum Computing UCITS', isin: 'IE000C6ITGC8',
-         ter: 0.0050, tase: null, px: 'near', aum: '69M',
-         note: 'הושקה 3.12.2025 ועוקבת STOXX Global Quantum Computing. הנייר שעליו '
-             + 'נמדד עוקב מדד אחר (BlueStar), ולקרן עצמה פחות משנה היסטוריה. '
-             + 'נכסים 69M — מתחת לרף שסימנתי כסביר.' },
-  ROB: { tick: 'RBOT', name: 'iShares Automation & Robotics', isin: 'IE00BYZK4552',
+  QNT: { tick: 'QNTM', name: 'VanEck Quantum Computing UCITS', isin: 'IE0007Y8Y157',
+         ter: 0.0055, tase: null, px: 'near', aum: '782M',
+         note: 'הגדולה והוותיקה מבין שלוש קרנות הקוונטים האיריות — הושקה '
+             + '21.5.2025, שכפול מלא ובלי השאלת ניירות. אין אף קרן קוונטים '
+             + 'בבורסה בתל אביב, ולכן נדרש ברוקר אירופי. והמדד: '
+             + 'MarketVector Global Quantum Leaders, שונה מזה שעליו נמדד.' },  ROB: { tick: 'RBOT', name: 'iShares Automation & Robotics', isin: 'IE00BYZK4552',
          ter: 0.0040, tase: '1159144', px: 'near' },
   BLK: { tick: 'BCHN', name: 'Invesco CoinShares Global Blockchain',
          isin: 'IE00BGBN6P67', ter: 0.0065, tase: '1186055', px: 'near' },
   MOM: { tick: 'IWMO', name: 'iShares Edge MSCI World Momentum Factor',
          isin: 'IE00BP3QZ825', ter: 0.0025, tase: null, px: 'near', aum: '6.4B',
          note: 'המדד עולמי; הנייר שעליו נמדד אמריקאי בלבד. דומה, לא זהה.' },
+  // נרשמה לת״א ב-14.10.2026, נייר 1248384, מתחילה להיסחר 5.11.2026
+  IND: { tick: 'NDIA', name: 'iShares MSCI India', isin: 'IE00BZCQB185',
+         ter: 0.0065, tase: '1248384', px: 'same', aum: '4.8B',
+         note: 'מתחילה להיסחר בת״א 5.11.2026. מדד זהה לנייר שעליו נמדד.' },
+  CHN: { tick: 'KWEB', name: 'KraneShares CSI China Internet', isin: 'IE00BFXR7892',
+         ter: 0.0075, tase: null, px: 'same', aum: '750M',
+         note: 'מדד זהה לנייר שעליו נמדד. ברוקר אירופי — אינה בת״א.' },
+  GLD: { tick: 'GDX', name: 'VanEck Gold Miners UCITS', isin: 'IE00BQQP9F84',
+         ter: 0.0053, tase: null, px: 'same', aum: '4.0B',
+         note: 'מ-19.9.2025 עוקבת בדיוק את אותו מדד של GDX האמריקאי. '
+             + 'ל-VanEck אין רישום בת״א כלל.' },
+  SML: { tick: 'ZPRR', name: 'SPDR Russell 2000 US Small Cap', isin: 'IE00BJ38QD84',
+         ter: 0.0030, tase: null, px: 'same', aum: '4.8B',
+         note: 'מדד זהה. ברוקר אירופי — אינה בת״א.' },
 };
 
 /** חלופות על אותו מדד, אומתו ב-KIID או בדף מוצר, אוקטובר 2026.
@@ -118,6 +132,13 @@ export const ALT: Partial<Record<SleeveKey, Array<{
   ],
   SOX: [
     { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9', ter: 0.0035, aum: '5.6B' },
+  ],
+  QNT: [
+    { tick: 'WQTM', name: 'WisdomTree Quantum Computing', isin: 'IE000W8WMSL2', ter: 0.0050, aum: '371M' },
+    { tick: 'QANT', name: 'iShares Quantum Computing', isin: 'IE000C6ITGC8', ter: 0.0050, aum: '69M' },
+  ],
+  GLD: [
+    { tick: 'SPGP', name: 'iShares Gold Producers', isin: 'IE00B6R52036', ter: 0.0055, aum: '3.3B' },
   ],
   TEC: [
     { tick: 'XUTC', name: 'Xtrackers MSCI USA Info Tech 1C', isin: 'IE0000K7HU41', ter: 0.0012, aum: '1.8B' },
