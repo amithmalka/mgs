@@ -265,6 +265,7 @@ export const translations = {
   tabTracks: { en: 'Tracks', he: 'מסלולים' },
   tabMonth: { en: 'This month', he: 'החודש' },
   tabBuild: { en: 'Build a portfolio', he: 'הרכבה חופשית' },
+  tabStudy: { en: 'Study fund IRA', he: 'קרן השתלמות IRA' },
   tabKids: { en: 'MGS Kids', he: 'MGS Kids' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },
   navGroupMoney: { en: 'My money', he: 'הכסף שלי' },
