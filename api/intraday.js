@@ -22,6 +22,7 @@ export default async function handler(req, res) {
     ? String(req.query.interval) : '1min';
   const bars = Math.min(5000, Math.max(1, Number(req.query.bars) || 2000));
 
+  const td = process.env.TWELVE_DATA_API_KEY;
   const out = {};
   await Promise.all(symbols.map(async (sym) => {
     try {
@@ -29,17 +30,33 @@ export default async function handler(req, res) {
         + `?symbol=${encodeURIComponent(sym)}&apikey=${key}`;
       if (/^\d{4}-\d{2}-\d{2}$/.test(from)) url += `&from=${from}`;
       if (/^\d{4}-\d{2}-\d{2}$/.test(to)) url += `&to=${to}`;
+      let rows = null, src = 'fmp';
       const r = await fetch(url);
-      if (!r.ok) { out[sym] = { error: 'HTTP ' + r.status }; return; }
-      const j = await r.json();
-      const rows = Array.isArray(j) ? j : null;
-      if (!rows || !rows.length) { out[sym] = { error: 'no data' }; return; }
+      if (r.ok) {
+        const j = await r.json();
+        rows = Array.isArray(j) && j.length ? j : null;
+      }
+      // FMP answers 402 for intraday on plans that do not include it; fall
+      // through rather than reporting "no data" for a billing limit.
+      if (!rows && td) {
+        src = 'twelvedata';
+        let u = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}`
+          + `&interval=${iv === '1hour' ? '1h' : iv}&outputsize=${bars}&apikey=${td}`;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(from)) u += `&start_date=${from}`;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(to)) u += `&end_date=${to} 23:59:59`;
+        const r2 = await fetch(u);
+        const j2 = await r2.json();
+        if (Array.isArray(j2?.values) && j2.values.length) rows = j2.values;
+        else { out[sym] = { error: j2?.message || ('HTTP ' + r.status) }; return; }
+      }
+      if (!rows || !rows.length) { out[sym] = { error: 'HTTP ' + r.status }; return; }
       // FMP returns newest first
       const asc = rows.slice(0, bars).reverse().map(v => ({
-        t: String(v.date), o: +v.open, h: +v.high, l: +v.low, c: +v.close, v: +v.volume,
+        t: String(v.date ?? v.datetime), o: +v.open, h: +v.high,
+        l: +v.low, c: +v.close, v: +(v.volume ?? 0),
       })).filter(b => Number.isFinite(b.c));
       out[sym] = {
-        n: asc.length, first: asc[0]?.t, last: asc[asc.length - 1]?.t,
+        n: asc.length, src, first: asc[0]?.t, last: asc[asc.length - 1]?.t,
         bars: asc,
       };
     } catch (e) {
