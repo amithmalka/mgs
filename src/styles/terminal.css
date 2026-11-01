@@ -196,3 +196,13 @@
 .term .why .more{font-family:var(--mono);font-size:9.5px;letter-spacing:1.2px;color:var(--muted)}
 .term .why[open] .more::after{content:"סגור ▲"}
 .term .why:not([open]) .more::after{content:"למה זה המספר ▼"}
+
+/* ── רוחב מלא לטבלאות רחבות · פורצת את ה-max-width של העמוד בלי לגעת בו ──
+   השוליים השליליים מוגבלים ברוחב כך שלעולם לא יחרגו מהמסך, והגלילה
+   האופקית נשארת כגיבוי לרוחב טלפון. */
+.term .bleed{margin-inline:0}
+@media (min-width:1100px){ .term .bleed{margin-inline:-110px} }
+@media (min-width:1400px){ .term .bleed{margin-inline:-215px} }
+@media (min-width:1700px){ .term .bleed{margin-inline:-330px} }
+.term .bleed table{font-size:12.5px}
+.term .bleed td,.term .bleed th{padding-inline:7px}
