@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   MEASURED, ASSUME, FUND, ALT, BY_RETURN, corr, type SleeveKey,
 } from '../constants/sleeveCatalog';
+import { attributeVol } from '../utils/volAttrib';
 import {
   simulatePortfolio, substituted, terOf, EQUITY, type Basis,
 } from '../utils/portfolioSim';
@@ -94,6 +95,7 @@ export function BuildPage() {
     });
   }, [sleeves, settled]);
 
+  const vol = useMemo(() => (res ? attributeVol(res.weights) : null), [res]);
   const sub = substituted(picked);
   const depEnd = depositsEndYear(track, cohort, base, growth / 100);
   const shown = showAll ? BY_RETURN : BY_RETURN.filter(k => MEASURED[k].vol > 0.17 || ASSUME[k] || FUND[k]);
@@ -368,6 +370,80 @@ export function BuildPage() {
                 <> — לרכיב שהקרן שלו טרם אומתה הוצבו {pc(0.0045, 2)} שמרניים.</>}
             </p>
           </section>
+          {vol && (<>
+          <section>
+            <h2>מה מרים את התנודתיות ומה מוריד אותה</h2>
+            <p>
+              תנודתיות התיק אינה הממוצע של הרכיבים — היא תלויה גם{' '}
+              <b>במתאמים ביניהם</b>. רכיב תנודתי עם מתאם נמוך יכול{' '}
+              <b>להוריד</b> את תנודתיות התיק, ושני רכיבים רגועים עם מתאם 0.95
+              לא מפזרים כלום. הטור ״בלעדיו״ הוא התשובה המעשית: מה היתה
+              תנודתיות התיק אם הרכיב הזה לא היה בו.
+            </p>
+            <div className="stats">
+              <Stat label="תנודתיות התיק" value={pc(vol.sigma, 1)}
+                sub="מהמשקלים שהכלל ייצר, על המתאמים שנמדדו" tone="gold" />
+              <Stat label="ממוצע משוקלל של הרכיבים" value={pc(vol.weighted, 1)}
+                sub="אילו לא היה פיזור כלל" />
+              <Stat label="מה שהפיזור חסך" value={pc(vol.saved, 1)}
+                tone={vol.saved > 0.02 ? 'up' : undefined}
+                sub={vol.saved > 0.02 ? 'הפיזור עובד' : 'כמעט ולא — הרכיבים דומים מדי'} />
+              <Stat label="חלון המדידה הקצר" value={`${vol.months} ח׳`}
+                sub={vol.shortest ? `${vol.shortest.he}, מאז ${vol.since}` : ''} />
+            </div>
+            <div className="scroll bleed">
+              <table>
+                <thead><tr>{['הרכיב', 'משקל', 'תנודתיות שלו', 'חלקו בתנודתיות',
+                  'מתאם לשאר התיק', 'התיק בלעדיו', 'ההשפעה', 'נמדד מאז', 'חודשים']
+                  .map(h => <th key={h}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {vol.rows.map(r => (
+                    <tr key={r.k}>
+                      <td style={{ fontWeight: 600 }}>{r.he}</td>
+                      <td className="v">{pc(r.w, 0)}</td>
+                      <td className="v" style={{ color: r.vol > 0.3 ? 'var(--gold)' : 'var(--muted)' }}>
+                        {pc(r.vol, 0)}</td>
+                      <td className="v" style={{ color: r.share > 0.4 ? 'var(--gold)' : 'var(--mid)' }}>
+                        {pc(r.share, 0)}</td>
+                      <td className="v" style={{ color: r.avgCorr > 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
+                        {r.avgCorr.toFixed(2)}</td>
+                      <td className="v dim">{pc(r.without, 1)}</td>
+                      <td className="v" style={{ color: r.delta < 0 ? 'var(--down)' : 'var(--up)' }}>
+                        {r.delta < 0 ? `מרים ${pc(-r.delta, 1)}` : `מוריד ${pc(r.delta, 1)}`}</td>
+                      <td className="v dim" dir="ltr">{r.since}</td>
+                      <td className="v dim">{r.months}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="note"><p>
+              <b>איך לקרוא את הטור ״ההשפעה״.</b> הוא מחושב מהטור שלפניו:
+              ״מרים״ אומר שבלי הרכיב התיק היה <b>רגוע יותר</b>, ו״מוריד״ אומר
+              שבלעדיו הוא היה <b>תנודתי יותר</b> — כלומר הרכיב מפזר בפועל.{' '}
+              <b>וזה יוצא הפוך מהאינטואיציה:</b> בתיק שיש בו ביטקוין, שבבים
+              וטכנולוגיה <b>מורידים</b> את התנודתיות הכוללת למרות שהם עצמם
+              תנודתיים — הם מדללים תנודתיות של 84% בתנודתיות של 26%.{' '}
+              <b>רכיב שמרים הרבה ומתאמו לשאר התיק גבוה הוא המועמד הראשון
+              להסרה</b> — הוא מוסיף סיכון בלי להוסיף פיזור.
+            </p></div>
+            <div className="note"><p>
+              <b>ועל כמה זמן אחורה נבדק כל דבר.</b> התנודתיות והמתאמים נמדדו
+              מתשואות חודשיות אמיתיות כולל דיבידנדים, אבל{' '}
+              <b>לא על אותו חלון</b> — לכל רכיב ההיסטוריה שלו, והמתאם בין שני
+              רכיבים נמדד על החיתוך ביניהם.{' '}
+              {vol.shortest && <>
+                <b>הרכיב הקצר הוא {vol.shortest.he} — {vol.shortest.months} חודשים
+                בלבד, מאז {vol.shortest.since}</b>, והוא זה שקובע את מידת
+                הביטחון בכל המטריצה.
+              </>}{' '}
+              <b>חלון של פחות מ-120 חודשים לא ראה מחזור שלם</b>, ומתאם שנמדד
+              רק בשוק עולה נוטה להיראות נמוך מכפי שיתגלה בנפילה. המתאמים
+              כולם כוונצו ב-2% לעבר מטריצת היחידה כדי לא להציג פיזור שלא
+              בטוח שקיים.
+            </p></div>
+          </section>
+          </>)}
 
           <section>
             <h2>היעדים</h2>
