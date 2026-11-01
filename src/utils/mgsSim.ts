@@ -55,20 +55,38 @@ export function withdrawRate(track: Track, cohort: Cohort, year: number, startYe
   return r[Math.min(year - 1, r.length - 1)];
 }
 /** the deposit climbs for five years, then falls by a share of the base */
+/** ההפקדה בשנה נתונה.
+ *
+ *  ההפקדה עולה ב-growth עד שנה 5, מחזיקה עד שנת המעבר, ואז **דועכת
+ *  לינארית עד אפס בשנה האחרונה של האופק**.
+ *
+ *  עד 1.11.2026 הדעיכה הייתה אחוז קבוע מהבסיס — 5% בתזרים-וצמיחה
+ *  ו-10% בשאר — וזה יצר חוסר עקביות: בצמיחה בלבד לגילאי 20-40 שנת
+ *  המעבר היא 20, הדעיכה דרשה 12 שנים, **וההפקדות נגמרו בשנה 32,
+ *  כלומר אחרי אופק של 30 שנה**. התיק עוד הפקיד בשנה 30 בזמן שהוא
+ *  כבר מושך. בתזרים-וצמיחה הן נגמרו ב-28 ובתזרים ב-17.
+ *  עכשיו קצב הדעיכה נגזר מהשנים שנשארו, ולכן **ההפקדות מתאפסות
+ *  בדיוק בשנה האחרונה בכל מסלול ובכל גיל.** */
 export function depositFor(
   track: Track, cohort: Cohort, year: number, base: number, growth: number,
-  startYear?: number,
+  years: number, startYear?: number,
 ): number {
-  const down = track === 'both' ? 0.05 : 0.10;
   const start = track === 'growth' ? transitionYear(cohort, startYear) : 5;
   if (year <= Math.min(5, start)) return base * Math.pow(1 + growth, Math.min(year, 5) - 1);
   if (year <= start) return base * Math.pow(1 + growth, 4);
-  return Math.max(0, base * Math.pow(1 + growth, Math.min(start, 5) - 1) - base * down * (year - start));
+  const peak = base * Math.pow(1 + growth, Math.min(start, 5) - 1);
+  // הדעיכה פרושה על כל השנים שנשארו, כך שהיא מגיעה לאפס בשנה האחרונה.
+  // אם האופק קצר משנת המעבר, אין שלב דעיכה בכלל ולכן אין על מה לחלק.
+  const span = years - start;
+  if (span <= 0) return peak;
+  return Math.max(0, peak * (1 - (year - start) / span));
 }
 export function depositsEndYear(
-  track: Track, cohort: Cohort, base: number, growth: number, startYear?: number,
+  track: Track, cohort: Cohort, base: number, growth: number,
+  years: number, startYear?: number,
 ) {
-  for (let y = 2; y <= 200; y++) if (depositFor(track, cohort, y, base, growth, startYear) <= 0) return y;
+  for (let y = 2; y <= 200; y++)
+    if (depositFor(track, cohort, y, base, growth, years, startYear) <= 0) return y;
   return null;
 }
 
@@ -153,7 +171,7 @@ function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) 
     const year = Math.floor(m / 12) + 1;
     if (m % 12 === 0) yearCash = 0;
     const idx = Math.pow(cm, m);
-    let dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.startYear);
+    let dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.years, o.startYear);
     for (const t of SLEEVES) peak[t] = peak[t] > 0 ? Math.max(peak[t], px[t][m]) : px[t][m];
     if (lump > 0 && m === 0) {
       // nothing is below its peak on day one, so the rule has nothing to read:
@@ -260,7 +278,7 @@ export function simulate(o: SimInput): SimResult {
     paid: runs[0].paid, skipped: Math.round(median(runs.map(x => x.skipped))),
     belowFloor: Math.round(median(runs.map(x => x.belowFloor))),
     firstWithdrawal: mid(x => x.first), crossover, goals,
-    depositsEnd: depositsEndYear(o.track, o.cohort, o.base, o.growth, o.startYear),
+    depositsEnd: depositsEndYear(o.track, o.cohort, o.base, o.growth, o.years, o.startYear),
   };
 }
 /** the median of a skewed distribution moves between runs; this is how much */

@@ -122,7 +122,7 @@ function onePath(o: StudyInput, months: number, r: () => number) {
     const idx = Math.pow(cm, m);
     for (const t of SLEEVES) peak[t] = peak[t] > 0 ? Math.max(peak[t], px[t][m]) : px[t][m];
 
-    const dep = depositFor(o.track, o.cohort, year, o.base, o.growth);
+    const dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.years);
     if (dep > 0) {
       // פיצול התקרה: החלק המוטב מתוך ההפקדה השנתית
       const yearly = dep * 12;
@@ -221,7 +221,7 @@ export function simulateStudy(o: StudyInput): StudyResult {
     const g = (lo + hi) / 2, mr = Math.pow(1 + g, 1 / 12) - 1;
     let npv = 0;
     for (let m = 0; m < months; m++) {
-      npv -= depositFor(o.track, o.cohort, Math.floor(m / 12) + 1, o.base, o.growth)
+      npv -= depositFor(o.track, o.cohort, Math.floor(m / 12) + 1, o.base, o.growth, o.years)
              / Math.pow(1 + mr, m + 1);
     }
     npv += (value + taken) / Math.pow(1 + mr, months);

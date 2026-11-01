@@ -157,7 +157,7 @@ function onePath(o: PortInput, L: number[][], mu: number[], sd: number[], months
       paid += lump;
     }
 
-    const dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.startYear);
+    const dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.years, o.startYear);
     if (dep > 0) {
       const f = new Array(n).fill(0), drop = new Array(n).fill(0);
       let s = 0, deepest = 0, worst = -1;
@@ -255,7 +255,8 @@ export function simulatePortfolio(o: PortInput): PortResult {
     const g = (lo + hi) / 2, mr = Math.pow(1 + g, 1 / 12) - 1;
     let npv = -(o.lump ?? 0);
     for (let m = 0; m < months; m++) {
-      const dep = depositFor(o.track, o.cohort, Math.floor(m / 12) + 1, o.base, o.growth, o.startYear);
+      const dep = depositFor(o.track, o.cohort, Math.floor(m / 12) + 1, o.base, o.growth,
+        o.years, o.startYear);
       npv -= dep / Math.pow(1 + mr, m + 1);
     }
     npv += (value + cash) / Math.pow(1 + mr, months);

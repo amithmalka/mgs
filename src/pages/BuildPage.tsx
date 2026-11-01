@@ -97,7 +97,7 @@ export function BuildPage() {
 
   const vol = useMemo(() => (res ? attributeVol(res.weights) : null), [res]);
   const sub = substituted(picked);
-  const depEnd = depositsEndYear(track, cohort, base, growth / 100);
+  const depEnd = depositsEndYear(track, cohort, base, growth / 100, years);
   const shown = showAll ? BY_RETURN : BY_RETURN.filter(k => MEASURED[k].vol > 0.17 || ASSUME[k] || FUND[k]);
 
   const toggle = (k: SleeveKey) =>
@@ -198,6 +198,46 @@ export function BuildPage() {
           ולכן המערכת מציבה את הנחת המניות הרחבה. <b>אין שום קשר בין השתיים</b> —
           רכיב יכול להיות נקנה בת״א ולרוץ על הצבה, או להיות זמין רק בחו״ל ולרוץ
           על הנחה מפורסמת.
+        </p></div>
+        <div className="note"><p>
+          <b>איזה ברוקר ישראלי קונה מה.</b> קרן שמסומנת <b>״ת״א״</b> נקנית
+          בשקלים אצל <b>כל</b> ברוקר ישראלי. לקרן שמסומנת <b>״בורסה
+          אירופית״</b>, אלה מה שמפרסמים גישה בתעריפון שלהם:
+        </p>
+        <div className="scroll">
+          <table>
+            <thead><tr>{['ברוקר', 'גישה לבורסות אירופה', 'מה שכתוב בתעריפון']
+              .map(h => <th key={h}>{h}</th>)}</tr></thead>
+            <tbody>
+              <tr><td style={{ fontWeight: 600 }}>פסגות טרייד</td>
+                <td className="v" style={{ color: 'var(--up)' }}>כן, כולל ETF במפורש</td>
+                <td>0.15% מהעסקה, מינימום €15. יש בתעריפון גם דוגמה לעמלה
+                  בפרנק שוויצרי.</td></tr>
+              <tr><td style={{ fontWeight: 600 }}>אקסלנס · הפניקס</td>
+                <td className="v" style={{ color: 'var(--up)' }}>כן</td>
+                <td>מסלול Global EXtrade — 0.15%, מינימום €20 / £20 / CHF 30.
+                  ופטור מדמי שמירה.</td></tr>
+              <tr><td style={{ fontWeight: 600 }}>IBI טרייד</td>
+                <td className="v" style={{ color: 'var(--gold)' }}>כן, אך לא בפלטפורמה העצמאית</td>
+                <td>0.3%, מינימום 30 במטבע העסקה — תחת ״עסקאות מיוחדות
+                  בבורסות זרות״, כלומר דרך חדר המסחר.</td></tr>
+              <tr><td style={{ fontWeight: 600 }}>מיטב טרייד</td>
+                <td className="v" style={{ color: 'var(--down)' }}>אין ראיה</td>
+                <td>אין תעריפון אירופי פומבי, וכל עמודי המסחר בחו״ל שלהם הם
+                  ארה״ב. זה היעדר תיעוד ולא הכחשה — שווה לשאול.</td></tr>
+              <tr><td style={{ fontWeight: 600 }}>בנקים</td>
+                <td className="v" style={{ color: 'var(--down)' }}>אפשרי, אך לא כדאי</td>
+                <td>לאומי: 0.9% קנייה <b>ועוד 0.2% דמי ניהול פיקדון לרבעון
+                  = 0.8% לשנה</b>. על עשר שנים זה כעשירית מההשקעה.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <b>מה שלא אומת:</b> שהמערכת של אף אחד מהם מכירה את ה-ISIN
+          הספציפי. גישה בתעריפון אינה אותו דבר כמו יכולת להציב פקודה על
+          נייר נתון — <b>שווה לבקש מהם אישור על ה-ISIN לפני שפותחים
+          חשבון</b>. ומרווח המרת המט״ח הוא כ-0.5% אצל כולם, וכ-70% מהעלות
+          האמיתית — <b>עליו צריך להתמקח, לא על העמלה</b>.
         </p></div>
         <div className="note"><p>
           <b>ולמה שווה לרכז את הכל בחשבון אחד.</b> בברוקר ישראלי אחד, הפסד
