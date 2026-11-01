@@ -53,19 +53,26 @@ export type SleeveKey = typeof KEYS[number];
 export interface Fund {
   tick: string; name: string; isin: string; ter: number | null;
   tase: string | null; px: 'same' | 'near'; aum?: string; note?: string;
+  /** תמורה יומית בת״א בשקלים, 30.10.2026 — אומת בדף המסחר של הבורסה.
+   *  0 = לא נסחרה באותו יום כלל. חסר = טרם החלה להיסחר. */
+  turn?: number;
 }
 
 export const FUND: Partial<Record<SleeveKey, Fund>> = {
   SP5: { tick: 'CSPX', name: 'iShares Core S&P 500', isin: 'IE00B5BMR087',
-         ter: 0.0007, tase: '1159250', px: 'same', aum: '154.5B' },
+         ter: 0.0007, tase: '1159250', px: 'same', aum: '154.5B',
+         turn: 5344727 },
   NDX: { tick: 'CNDX', name: 'iShares Nasdaq 100', isin: 'IE00B53SZB19',
-         ter: 0.0030, tase: '1159243', px: 'same', aum: '30.6B' },
+         ter: 0.0030, tase: '1159243', px: 'same', aum: '30.6B',
+         turn: 1877032 },
   TEC: { tick: 'IUIT', name: 'iShares S&P 500 Information Technology',
          isin: 'IE00B3WJKG14', ter: 0.0015, tase: '1159193', px: 'near', aum: '19.5B',
          note: 'האירית עוקבת S&P 500 Capped 35/20 Information Technology; הנייר '
-             + 'שעליו נמדד (XLK) עוקב Technology Select Sector. דומה, לא זהה.' },
+             + 'שעליו נמדד (XLK) עוקב Technology Select Sector. דומה, לא זהה.',
+         turn: 46144 },
   WLD: { tick: 'SSAC', name: 'iShares MSCI All Country World', isin: 'IE00B6R52259',
-         ter: 0.0020, tase: '1159235', px: 'same' },
+         ter: 0.0020, tase: '1159235', px: 'same',
+         turn: 4418821 },
   SEM: { tick: 'SMH', name: 'VanEck Semiconductor UCITS', isin: 'IE00BMC38736',
          ter: 0.0035, tase: null, px: 'near', aum: '8.3B',
          note: 'ל-VanEck אין רישום בבורסה בתל אביב כלל, ולכן נדרש ברוקר אירופי. '
@@ -85,9 +92,11 @@ export const FUND: Partial<Record<SleeveKey, Fund>> = {
              + '21.5.2025, שכפול מלא ובלי השאלת ניירות. אין אף קרן קוונטים '
              + 'בבורסה בתל אביב, ולכן נדרש ברוקר אירופי. והמדד: '
              + 'MarketVector Global Quantum Leaders, שונה מזה שעליו נמדד.' },  ROB: { tick: 'RBOT', name: 'iShares Automation & Robotics', isin: 'IE00BYZK4552',
-         ter: 0.0040, tase: '1159144', px: 'near' },
+         ter: 0.0040, tase: '1159144', px: 'near',
+         turn: 32259 },
   BLK: { tick: 'BCHN', name: 'Invesco CoinShares Global Blockchain',
-         isin: 'IE00BGBN6P67', ter: 0.0065, tase: '1186055', px: 'near' },
+         isin: 'IE00BGBN6P67', ter: 0.0065, tase: '1186055', px: 'near',
+         turn: 0 },
   MOM: { tick: 'IWMO', name: 'iShares Edge MSCI World Momentum Factor',
          isin: 'IE00BP3QZ825', ter: 0.0025, tase: null, px: 'near', aum: '6.4B',
          note: 'המדד עולמי; הנייר שעליו נמדד אמריקאי בלבד. דומה, לא זהה.' },
@@ -112,26 +121,36 @@ export const FUND: Partial<Record<SleeveKey, Fund>> = {
  *  סיכון צד נגדי שלקרן פיזית אין. */
 export const ALT: Partial<Record<SleeveKey, Array<{
   tick: string; name: string; isin: string; ter: number; aum: string; swap?: boolean;
+  /** מספר נייר בת״א — אם קיים, נקנית בשקלים דרך ברוקר ישראלי */
+  tase?: string;
+  /** תמורה יומית בת״א בשקלים, 30.10.2026 — אומת בדף המסחר של הבורסה.
+   *  0 = לא נסחרה באותו יום כלל. */
+  turn?: number;
 }>>> = {
   SP5: [
     { tick: 'SPYL', name: 'SPDR S&P 500', isin: 'IE000XZSV718', ter: 0.0003, aum: '19.2B' },
     { tick: 'VUAA', name: 'Vanguard S&P 500', isin: 'IE00BFMXXD54', ter: 0.0007, aum: '36.3B' },
-    { tick: 'SPXS', name: 'Invesco S&P 500 Swap', isin: 'IE00B3YCGJ38', ter: 0.0005, aum: '59.0B', swap: true },
+    { tick: 'SPXS', name: 'Invesco S&P 500 Swap', isin: 'IE00B3YCGJ38', ter: 0.0005, aum: '59.0B',
+      swap: true, tase: '1183441', turn: 5355148 },
   ],
   NDX: [
     { tick: 'XNAS', name: 'Xtrackers Nasdaq 100', isin: 'IE00BMFKG444', ter: 0.0020, aum: '2.8B' },
     { tick: 'EQAC', name: 'Invesco EQQQ Nasdaq-100 Acc', isin: 'IE00BFZXGZ54', ter: 0.0030, aum: '21.6B' },
-    { tick: 'EQQS', name: 'Invesco Nasdaq-100 Swap', isin: 'IE00BNRQM384', ter: 0.0020, aum: '3.2B', swap: true },
+    { tick: 'EQQS', name: 'Invesco Nasdaq-100 Swap', isin: 'IE00BNRQM384', ter: 0.0020, aum: '3.2B',
+      swap: true, tase: '1186063', turn: 2920432 },
   ],
   WLD: [
-    { tick: 'MXWO', name: 'Invesco MSCI World · בת״א 1185164', isin: 'IE00B60SX394',
-      ter: 0.0005, aum: '10.3B', swap: true },
+    { tick: 'FWRA', name: 'Invesco FTSE All-World', isin: 'IE000716YHJ7', ter: 0.0015,
+      aum: '4.3B', tase: '1209220', turn: 8187506 },
+    { tick: 'MXWO', name: 'Invesco MSCI World', isin: 'IE00B60SX394',
+      ter: 0.0005, aum: '10.3B', swap: true, tase: '1185164', turn: 2848487 },
     { tick: 'ACWD', name: 'SPDR MSCI ACWI', isin: 'IE00B44Z5B48', ter: 0.0012, aum: '19.9B' },
     { tick: 'VWRA', name: 'Vanguard FTSE All-World', isin: 'IE00BK5BQT80', ter: 0.0014, aum: '60.2B' },
     { tick: 'IWDA', name: 'iShares Core MSCI World', isin: 'IE00B4L5Y983', ter: 0.0020, aum: '147.2B' },
   ],
   SOX: [
-    { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9', ter: 0.0035, aum: '5.6B' },
+    { tick: 'SEMI', name: 'iShares MSCI Global Semiconductors', isin: 'IE000I8KRLL9', ter: 0.0035,
+      aum: '5.6B', tase: '1248376' },
   ],
   QNT: [
     { tick: 'WQTM', name: 'WisdomTree Quantum Computing', isin: 'IE000W8WMSL2', ter: 0.0050, aum: '371M' },

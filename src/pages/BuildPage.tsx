@@ -135,7 +135,7 @@ export function BuildPage() {
             <thead><tr>
               {['', 'הרכיב', 'תשואה שנמדדה', 'תנודתיות', 'נפילה מהשיא', 'נמדד מאז',
                 'מתאם לביטקוין', 'מתאם לשבבים', 'הקרן האירית', 'דמי ניהול',
-                'איפה אפשר לקנות', 'בסיס התחזית']
+                'איפה אפשר לקנות', 'תמורה יומית בת״א', 'בסיס התחזית']
                 .map((h, i) => <th key={i}>{h}</th>)}
             </tr></thead>
             <tbody>
@@ -162,6 +162,13 @@ export function BuildPage() {
                     <td className="v dim">{f?.ter != null ? pc(f.ter, 2) : '—'}</td>
                     <td className="v" style={{ color: f?.tase ? 'var(--up)' : 'var(--gold)' }}>
                       {f?.tase ? `ת״א ${f.tase}` : 'ברוקר זר בלבד'}</td>
+                    <td className="v" style={{
+                      color: f?.turn == null ? 'var(--muted)'
+                        : f.turn === 0 ? 'var(--down)'
+                        : f.turn < 100000 ? 'var(--gold)' : 'var(--up)',
+                    }}>
+                      {f?.turn == null ? (f?.tase ? 'טרם נסחרת' : '—')
+                        : f.turn === 0 ? 'לא נסחרה' : `₪${n0(f.turn)}`}</td>
                     <td className="v" style={{ color: a ? 'var(--up)' : 'var(--gold)' }}>
                       {a ? 'הנחה מפורסמת' : 'הצבה'}</td>
                   </tr>
@@ -206,9 +213,10 @@ export function BuildPage() {
         {picked.some(k => ALT[k]) && (
           <>
             <h3>אותו מדד, קרן אחרת — מה שאומת</h3>
-            <div className="scroll">
+            <div className="scroll bleed">
               <table>
-                <thead><tr>{['הרכיב', 'הקרן', 'ISIN', 'דמי ניהול', 'נכסים', 'שכפול']
+                <thead><tr>{['הרכיב', 'הקרן', 'ISIN', 'דמי ניהול', 'נכסים',
+                  'איפה אפשר לקנות', 'תמורה יומית בת״א', 'שכפול']
                   .map(h => <th key={h}>{h}</th>)}</tr></thead>
                 <tbody>
                   {picked.flatMap(k => (ALT[k] ?? []).map(a => (
@@ -218,6 +226,15 @@ export function BuildPage() {
                       <td className="v dim" dir="ltr" style={{ fontSize: 12 }}>{a.isin}</td>
                       <td className="v">{pc(a.ter, 2)}</td>
                       <td className="v dim" dir="ltr">{a.aum}</td>
+                      <td className="v" style={{ color: a.tase ? 'var(--up)' : 'var(--gold)' }}>
+                        {a.tase ? `ת״א ${a.tase}` : 'ברוקר זר בלבד'}</td>
+                      <td className="v" style={{
+                        color: a.turn == null ? 'var(--muted)'
+                          : a.turn === 0 ? 'var(--down)'
+                          : a.turn < 100000 ? 'var(--gold)' : 'var(--up)',
+                      }}>
+                        {a.turn == null ? (a.tase ? 'טרם נסחרת' : '—')
+                          : a.turn === 0 ? 'לא נסחרה' : `₪${n0(a.turn)}`}</td>
                       <td className="v" style={{ color: a.swap ? 'var(--gold)' : 'var(--up)' }}>
                         {a.swap ? 'חוזה חילופין' : 'פיזי'}</td>
                     </tr>
@@ -228,8 +245,19 @@ export function BuildPage() {
             <p>
               <b>״חוזה חילופין״ אינו פרט טכני.</b> קרן כזאת אינה מחזיקה את
               המניות אלא חוזה מול צד נגדי, ולכן נושאת <b>סיכון צד נגדי</b>
-              שלקרן פיזית אין. היא לרוב זולה יותר — וזה המחיר.
+              שלקרן פיזית אין. היא לרוב זולה יותר — וזה המחיר. <b>במניות
+              אמריקאיות יש לה גם יתרון מיסויי</b>: היא אינה מקבלת דיבידנד,
+              ולכן אינה סובלת ניכוי מקור אמריקאי כלל.
             </p>
+            <div className="note"><p>
+              <b>העמודה ״תמורה יומית בת״א״ היא מחזור המסחר בשקלים ביום אחד —
+              30.10.2026</b>, כפי שהבורסה פרסמה אותו. <b>היא לא פרט שולי:</b>{' '}
+              <b>״לא נסחרה״ אומר שבאותו יום לא בוצעה בה אף עסקה</b>, ולכן
+              המחיר תלוי כולו בציטוט של עושה השוק ובפקודה גדולה תשלמו מרווח.
+              מתוך 32 הקרנות האיריות הצוברות הרשומות בת״א, <b>13 סיימו את
+              אותו יום בתמורה אפס</b>. יום אחד אינו מדגם — אך קרן שלא נסחרה
+              בו כלל אינה קרן נזילה בשקלים.
+            </p></div>
           </>
         )}
         {!showAll && (
