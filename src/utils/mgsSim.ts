@@ -37,8 +37,15 @@ export const TER: Record<Market, Record<Sleeve, number>> = {
 };
 export const FX_DRAG = 0.004, CPI = 0.02, TAX = 0.25, UP_CAP = 10;
 /** the year the plan would have moved to a global track — and does not */
+/** שנת המעבר במסלול הצמיחה — מתי ההפקדה מתחילה לדעוך ומתי המשיכות
+ *  נפתחות. הסולם יורד בחמש לכל קבוצה, כך שהמשיכות מתחילות בגיל
+ *  50 / 55 / 60 / 65 / 70.
+ *
+ *  עד 1.11.2026 שתי הקבוצות הצעירות קיבלו שתיהן 20, ולכן **גילאי 20-30
+ *  ו-30-40 הניבו תוצאה זהה לחלוטין** — הגיל נכנס לסימולציה רק דרך
+ *  הערך הזה, ולכן אין שום משתנה אחר שהבדיל ביניהן. */
 export const COHORT_YEAR: Record<Cohort, number> = {
-  '20-30': 20, '30-40': 20, '40-50': 15, '50-60': 10, '60-70': 5,
+  '20-30': 25, '30-40': 20, '40-50': 15, '50-60': 10, '60-70': 5,
 };
 /** each track withdraws on its own schedule, by plan year */
 const RAMP: Record<'flow' | 'both', number[]> = {
