@@ -67,7 +67,9 @@ export function BuildPage() {
   const [track, setTrack] = useState<Track>('growth');
   const [cohort, setCohort] = useState<Cohort>('30-40');
   const [base, setBase] = useState(4000);
-  const [growth, setGrowth] = useState(7);
+  // העלייה השנתית נבחרת, עד 5%. היה 7% קבוע, שהוא מעל כל
+// תרחיש שכר סביר ושימש כאילו הוא נתון.
+  const [growth, setGrowth] = useState(3);
   const [years, setYears] = useState(30);
   const [lump, setLump] = useState(0);
   const [showAll, setShowAll] = useState(false);
@@ -346,8 +348,8 @@ export function BuildPage() {
         <div className="grp">
           <span className="glab">הפקדה חודשית</span>
           <Num value={base} min={100} max={200000} step={100} unit="שקלים" onCommit={setBase} />
-          <span className="glab">עליה שנתית</span>
-          <Num value={growth} min={0} max={25} step={0.5} unit="אחוזים" onCommit={setGrowth} />
+          <span className="glab">עליה שנתית עד שנה 5</span>
+          <Num value={growth} min={0} max={5} step={0.5} unit="אחוזים" onCommit={setGrowth} />
           <span className="glab">סכום ראשוני</span>
           <Num value={lump} min={0} max={10000000} step={1000} unit="שקלים" onCommit={setLump} />
           <span className="glab">שנים</span>

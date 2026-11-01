@@ -132,7 +132,9 @@ export function TracksPage() {
   const [cohort, setCohort] = useState<Cohort>('30-40');
   const [scenario, setScenario] = useState<Scenario>('real');
   const [market, setMarket] = useState<Market>('fx');
-  const [growth, setGrowth] = useState(7);
+  // העלייה השנתית נבחרת, עד 5%. היה 7% קבוע, שהוא מעל כל
+// תרחיש שכר סביר ושימש כאילו הוא נתון.
+  const [growth, setGrowth] = useState(3);
   const [years, setYears] = useState(40);
   const [lump, setLump] = useState(0);
   const { simulationParams, setSimulationParams } = useStore();
@@ -237,7 +239,7 @@ export function TracksPage() {
             <span className="glab">הפקדה חודשית</span>
             <Num value={base} min={0} max={1_000_000} step={500} unit="₪" onCommit={setBase} />
             <span className="glab">עליה שנתית</span>
-            <Num value={growth} min={0} max={25} step={0.5} unit="%" onCommit={setGrowth} />
+            <Num value={growth} min={0} max={5} step={0.5} unit="%" onCommit={setGrowth} />
             <span className="glab">השקעה ראשונית</span>
             <Num value={lump} min={0} max={100_000_000} step={10000} unit="₪" onCommit={setLump} />
             <span className="glab">אופק</span>

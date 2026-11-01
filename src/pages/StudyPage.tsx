@@ -59,7 +59,9 @@ export function StudyPage() {
   const [cohort, setCohort] = useState<Cohort>('40-50');
   const [status, setStatus] = useState<Status>('self');
   const [base, setBase] = useState(4000);
-  const [growth, setGrowth] = useState(7);
+  // העלייה השנתית נבחרת, עד 5%. היה 7% קבוע, שהוא מעל כל
+// תרחיש שכר סביר ושימש כאילו הוא נתון.
+  const [growth, setGrowth] = useState(3);
   const [years, setYears] = useState(30);
 
   const live = { track, scenario, cohort, status, base, growth, years };
@@ -125,7 +127,7 @@ export function StudyPage() {
           <span className="glab">הפקדה חודשית</span>
           <Num value={base} min={100} max={100000} step={100} unit="שקלים" onCommit={setBase} />
           <span className="glab">עליה שנתית</span>
-          <Num value={growth} min={0} max={25} step={0.5} unit="אחוזים" onCommit={setGrowth} />
+          <Num value={growth} min={0} max={5} step={0.5} unit="אחוזים" onCommit={setGrowth} />
           <span className="glab">שנים</span>
           <Num value={years} min={7} max={50} step={1} unit="שנים" onCommit={setYears} />
         </div>

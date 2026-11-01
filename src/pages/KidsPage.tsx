@@ -69,7 +69,9 @@ export function KidsPage() {
   const [childAge, setChildAge] = useState(savedAge);
   const [deposit, setDeposit] = useState(childDeposit);
   const [salaryAge, setSalaryAge] = useState<number>(20);
-  const [growth, setGrowth] = useState(7);
+  // העלייה השנתית נבחרת, עד 5%. היה 7% קבוע, שהוא מעל כל
+// תרחיש שכר סביר ושימש כאילו הוא נתון.
+  const [growth, setGrowth] = useState(3);
   /** how long the plan is watched past the day the income opens */
   const [after, setAfter] = useState(30);
 
@@ -150,7 +152,7 @@ export function KidsPage() {
           </div>
           <div className="grp">
             <span className="glab">עליה שנתית</span>
-            <Num value={growth} min={0} max={25} step={0.5} unit="%" onCommit={setGrowth} />
+            <Num value={growth} min={0} max={5} step={0.5} unit="%" onCommit={setGrowth} />
             <span className="glab">לראות עד</span>
             <Num value={after} min={5} max={50} step={5} unit="שנים אחרי" onCommit={setAfter} />
             <span className="glab">התרחיש</span>
