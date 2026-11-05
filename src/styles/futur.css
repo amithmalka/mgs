@@ -54,7 +54,21 @@
   -webkit-mask-image: radial-gradient(190px circle at var(--mx) var(--my), #000 20%, transparent 72%);
 }
 .gcard.on > .edge-lit, .gcard.on > .face > .spot, .gcard.on > .face > .grid { opacity: 1; }
-.gcard > .body { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
+/* **`min-height` ולא `height`.** אותו באג בדיוק תוקן בדף הנחיתה:
+   עם `height:100%` הגוף נעול לגובה שורת הגריד, תוכן גבוה יותר גולש
+   החוצה בלי שהקופסה תגדל, והטקסט של הכרטיס הבא נערם עליו.
+   `min-height` משאיר את המילוי כשיש מקום ומאפשר גדילה כשאין. */
+.gcard > .body { position: relative; z-index: 2; min-height: 100%;
+  padding: 1.1rem 1.15rem; display: flex; flex-direction: column;
+  box-sizing: border-box; }
+.gcard h3 { font-size: .86rem; font-weight: 500; color: var(--color-text-muted);
+  letter-spacing: .01em; margin: 0; }
+.gcard .big { font-size: clamp(1.5rem,3.4vw,2.2rem); font-weight: 700;
+  line-height: 1; letter-spacing: -.02em; color: var(--color-text);
+  font-variant-numeric: tabular-nums; }
+.gcard .cap { font-size: .74rem; color: var(--color-text-dim); }
+.gcard .hd { display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; margin-bottom: .75rem; }
 
 /* ===== קו מפריד שדועך לקצוות ===== */
 .hr-fade { height: 1px; border: 0;
@@ -92,3 +106,230 @@
   .gcard > .edge-lit, .gcard > .face > .spot, .gcard > .face > .grid { transition: none }
   .cmdk { animation: none }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * כרטיסי נתונים — מה שמחליף טבלה צרה
+ *
+ * **הבעיה.** טבלה בת 2–4 עמודות על מסך רחב היא שתי מילים ושלושה
+ * מטרים של ריק, ועל מסך צר היא גלילה לצדדים כדי לקרוא שדה אחד.
+ * בשני המצבים היא פחות קריאה ממה שאותו מידע היה כרטיס.
+ *
+ * **מה כן טבלה.** מעל ארבע עמודות ההשוואה בין שורות היא העיקר —
+ * העין רצה למטה בעמודה אחת — וכרטיסים שוברים בדיוק את זה. לכן
+ * הגבול הוא ארבע, והטבלאות הרחבות נשארות טבלאות.
+ *
+ * **המבנה:** `<dl>` ולא `<div>` — כל שדה הוא זוג מונח/הגדרה, מה
+ * שנותן לקורא מסך את הקישור בין התווית לערך בלי ARIA ידני.
+ * ═══════════════════════════════════════════════════════════════════ */
+.term .dcards { display: grid; gap: .7rem; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .term .dcards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) {
+  .term .dcards.wide { grid-template-columns: repeat(3, 1fr); }
+}
+.term .dcard {
+  position: relative; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 7px;
+  padding: 12px 13px 13px; display: flex; flex-direction: column; gap: 9px;
+  transition: border-color .3s, background .3s;
+}
+.term .dcard:hover {
+  border-color: color-mix(in srgb, var(--gold) 38%, var(--rule));
+  background: color-mix(in srgb, var(--gold) 3%, var(--surface));
+}
+/* הכרטיס המסומן — אותו תפקיד של `tr.mark` בטבלה */
+.term .dcard.mark {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--rule));
+  background: color-mix(in srgb, var(--gold) 6%, var(--surface));
+}
+.term .dcard > .t {
+  font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.35;
+  display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+}
+.term .dcard > .t .sym {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .4px;
+  color: var(--gold); font-weight: 500;
+}
+.term .dcard > .t .sub {
+  font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.5;
+  flex-basis: 100%;
+}
+.term .dcard > dl {
+  margin: 0; display: grid; gap: 7px 14px;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+}
+/* שדה בודד = תווית מעל ערך, כמו `.stat` */
+.term .dcard > dl > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.term .dcard dt {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 1px;
+  color: var(--muted); text-transform: uppercase;
+}
+/* **ברירת המחדל היא הגופן העברי, וזה תיקון של באג שנראה בצילום.**
+   `--mono` הוא IBM Plex Mono, שאין לו אותיות עבריות — ולכן ערך
+   כמו ״גיל 54״ נפל לגופן גיבוי **אות־אות** ונראה ״ג י ל 54״.
+   מספרים לא מפסידים מזה: `tabular-nums` עובד גם ב-Heebo ומיישר
+   את הספרות בטור. המונו נשאר אופציה מפורשת, לסימולים ו-ISIN. */
+.term .dcard dd {
+  margin: 0; font-family: var(--sans); font-variant-numeric: tabular-nums;
+  font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.25;
+}
+.term .dcard dd.mono { font-family: var(--mono); font-size: 13px; letter-spacing: .2px; }
+/* משפט ולא ערך — קטן יותר וקל יותר, כדי שלא יתחרה במספרים */
+.term .dcard dd.he { font-size: 12.5px; font-weight: 400; line-height: 1.55; }
+.term .dcard dd.up { color: var(--up); }
+.term .dcard dd.dn { color: var(--down); }
+.term .dcard dd.gold { color: var(--gold); }
+.term .dcard dd.dim { color: var(--muted); }
+/* הערה בתחתית הכרטיס — מה שהיה שורת `note` מתחת לטבלה */
+.term .dcard > .n {
+  font-size: 11px; color: var(--muted); line-height: 1.6;
+  border-top: 1px solid var(--grid); padding-top: 8px; margin-top: auto;
+}
+@media (max-width: 559px) {
+  .term .dcard { padding: 11px 12px 12px; }
+  .term .dcard > dl { grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * בנטו — הרשת מדף הנחיתה
+ * ═══════════════════════════════════════════════════════════════════ */
+.term .bento { display: grid; gap: .8rem; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .term .bento { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) {
+  /* `minmax` ולא גובה קבוע — אותה סיבה שתוקנה בדף */
+  .term .bento { grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(180px, auto); }
+  .term .b-2x2 { grid-column: span 2; grid-row: span 2; }
+  .term .b-1x2 { grid-row: span 2; }
+  .term .b-2x1 { grid-column: span 2; }
+  .term .b-4x1 { grid-column: span 4; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * הכפתור שמתמלא מלמטה — מדף הנחיתה, בלי גרדיאנט צועק
+ * ═══════════════════════════════════════════════════════════════════ */
+.term .btn-fill {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1px solid var(--rule); color: var(--ink); background: none;
+  padding: 10px 22px; border-radius: 3px; font: inherit; font-weight: 500;
+  cursor: pointer; position: relative; overflow: hidden; isolation: isolate;
+  transition: color .35s, border-color .35s;
+}
+.term .btn-fill::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(100deg, var(--gold), #9FE9FF 55%, var(--peri));
+  transform: translateY(101%); transition: transform .4s cubic-bezier(.16,1,.3,1);
+}
+.term .btn-fill:hover { color: #04121A; border-color: var(--gold); }
+.term .btn-fill:hover::before { transform: translateY(0); }
+.term .btn-fill:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .term .dcard, .term .btn-fill, .term .btn-fill::before { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * המרקיזה — שורה שזוחלת, שלוש המטרות
+ *
+ * **איך זה עובד, ולמה לא ספרייה.** הפס מכיל את התוכן **פעמיים**
+ * והוא מוסע ב-50% מרוחבו. בסוף המסלול הצמד השני יושב בדיוק במקום
+ * שבו הצמד הראשון התחיל, ולכן החזרה לאפס אינה נראית — לופ חלק
+ * בשתי שורות CSS, בלי JavaScript ובלי חבילה.
+ *
+ * **שלושה דברים שחייבים להיות כאן:**
+ *
+ * 1. **`aria-hidden` על הכפילות.** קורא מסך היה מקריא כל מטרה
+ *    פעמיים. ההעתק מוסתר ממנו, והוא קיים רק בשביל העין.
+ * 2. **עצירה במעבר עכבר ובפוקוס.** `:focus-within` ולא רק `:hover`,
+ *    כדי שמי שמנווט במקלדת יוכל לקרוא ולא ירדוף אחרי הכרטיס.
+ * 3. **`prefers-reduced-motion`.** התנועה נעצרת לגמרי והפס נפרס
+ *    לרשת רגילה. זו לא נגישות־לייט: מרקיזה שזזה היא טריגר אמיתי
+ *    למי שרגיש לתנועה, והתוכן כאן חייב להיות קריא בלעדיה.
+ * ═══════════════════════════════════════════════════════════════════ */
+.term .mq {
+  position: relative; overflow: hidden;
+  /* הדהייה בקצוות — הכרטיסים נכנסים ויוצאים ולא נחתכים */
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+/* **`margin` על הכרטיס ולא `gap` על הפס — וזה לא קוסמטיקה.**
+   עם `gap: 12px` בין שישה כרטיסים יש **חמישה** רווחים, ולכן 50%
+   מהרוחב הם שלושה כרטיסים ועוד **שניים וחצי** רווחים. התפר יוצא
+   חצי רווח קצר, והלופ קופץ 6px בכל סבב. עם margin על כל כרטיס
+   הרוחב הוא בדיוק 6×(כרטיס+רווח), וחציו 3×(כרטיס+רווח) — תפר מדויק. */
+.term .mq-rail {
+  display: flex; width: max-content;
+  animation: mq-run var(--mq-dur, 38s) linear infinite;
+}
+.term .mq.rev .mq-rail { animation-direction: reverse; }
+.term .mq:hover .mq-rail,
+.term .mq:focus-within .mq-rail { animation-play-state: paused; }
+@keyframes mq-run { to { transform: translateX(-50%); } }
+
+/* הכרטיס שבפס — אותה שפה של `.dcard`, רק ברוחב קבוע */
+.term .mq-card {
+  flex: 0 0 auto; width: min(21rem, 78vw); margin-inline-end: 12px;
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 9px; padding: 15px 16px 16px;
+  display: flex; flex-direction: column; gap: 7px;
+  transition: border-color .3s, background .3s, transform .3s;
+}
+.term .mq-card:hover, .term .mq-card:focus-visible {
+  border-color: color-mix(in srgb, var(--gold) 42%, var(--rule));
+  background: color-mix(in srgb, var(--gold) 4%, var(--surface));
+  transform: translateY(-2px); outline: none;
+}
+.term .mq-card .k {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--gold);
+}
+.term .mq-card h3 {
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  line-height: 1.3; margin: 0; letter-spacing: -.1px;
+}
+.term .mq-card p {
+  font-size: 12.5px; color: var(--mid); line-height: 1.65; margin: 0; max-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term .mq { mask-image: none; -webkit-mask-image: none; overflow: visible; }
+  .term .mq-rail {
+    animation: none; width: auto; flex-wrap: wrap;
+    display: grid; gap: 12px; grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) { .term .mq-rail { grid-template-columns: repeat(3, 1fr); } }
+  .term .mq-card { width: auto; margin-inline-end: 0; transition: none; }
+  /* ההעתק מיותר כשאין תנועה, ורק מכפיל את הגלילה */
+  .term .mq-rail > [aria-hidden="true"] { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * רצועת החישוב — ברוטו, מינוס, נטו
+ *
+ * **למה לא כרטיסים.** שלוש השורות האלה אינן פריטים להשוואה אלא
+ * **שרשרת אריתמטית**: הראשונה פחות השנייה שווה לשלישית. כרטיסים
+ * זה לצד זה מאבדים בדיוק את הקשר הזה, ולכן הן נשארות שורות —
+ * רק בלי טבלה שגוררת עמודות ריקות.
+ * ═══════════════════════════════════════════════════════════════════ */
+.term .dsum {
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--sunk); border: 1px solid var(--rule);
+  border-radius: 7px; overflow: hidden; margin-top: 10px;
+}
+.term .dsum > div {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 9px 13px; border-bottom: 1px solid var(--grid);
+}
+.term .dsum > div:last-child { border-bottom: 0; }
+.term .dsum .l { font-size: 12.5px; color: var(--mid); }
+.term .dsum .s { font-size: 11px; color: var(--muted); }
+.term .dsum .v {
+  margin-inline-start: auto; font-variant-numeric: tabular-nums;
+  font-size: 15px; font-weight: 600; color: var(--ink);
+}
+.term .dsum .v.gold { color: var(--gold); }
+.term .dsum .v.warn { color: var(--down); }
+/* השורה האחרונה היא התוצאה — קו מפריד עבה יותר ורקע */
+.term .dsum > div.fin {
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  border-top: 1px solid var(--goldsoft);
+}
+.term .dsum > div.fin .l { color: var(--ink); font-weight: 600; }

@@ -13,6 +13,7 @@
  *    בלתי מבוטל שצריך להרכיב לו תיק משלו. זה הרוב.
  */
 import { CEILINGS, exemptCeiling } from '../../constants/studyFunds';
+import { DataCards } from '../shared/DataCards';
 import { useMyPortfolio, type FundStatus } from '../../store/myPortfolio';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
@@ -135,23 +136,13 @@ export function BuyHeader() {
 
       <section>
         <h2>מה יש בדף — לפי הסדר</h2>
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr><th className="lead">החלק</th><th>על מה הוא עונה</th></tr>
-            </thead>
-            <tbody>
-              {MAP.map((m, i) => (
-                <tr key={m.he}>
-                  <td className="lead">
-                    <span className="bh-num">{i + 1}</span>{m.he}
-                  </td>
-                  <td>{m.what}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataCards
+          items={MAP} keyOf={m => m.he}
+          cols={[
+            { h: 'החלק', v: m => <><span className="bh-num">{MAP.indexOf(m) + 1}</span>{m.he}</> },
+            { h: 'על מה הוא עונה', he: true, v: m => m.what },
+          ]}
+        />
         <p className="note">
           <b>והקו המנחה, שנמדד:</b> לבחור <b>2 עד 4 תעודות</b>, אחת מכל
           רמת יציבות. הקפיצה מרכיב אחד לשניים שווה <b>פי שמונה</b>

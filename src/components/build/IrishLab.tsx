@@ -11,6 +11,7 @@
  *  אין בזה המלצה ואין בזה ייעוץ פיננסי.
  */
 import { useState, useMemo } from 'react';
+import { DataCards } from '../shared/DataCards';
 import {
   IRISH, TIER_HE, TIER_BAND, WINDOW,
   RULE_BY_SIZE, RULE_BY_PICK, RULE_FLOOR, mix, corr,
@@ -369,25 +370,17 @@ export function IrishLab() {
           אלה <b>כן</b> מופיעות ברשימת הבורסה, ולכן קל לחשוב שאפשר לקנות
           אותן. התמורה היומית אומרת אחרת. הן הוצאו מכל חישוב בדף הזה.
         </p>
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr><th className="lead">הקרן</th><th>נייר</th>
-                <th>תמורה יומית</th><th>למה הוצאה</th></tr>
-            </thead>
-            <tbody>
-              {ILLIQUID.map(f => (
-                <tr key={f.tase} className="dim">
-                  <td className="lead">{f.he}</td>
-                  <td dir="ltr">{f.tase}</td>
-                  <td dir="ltr" className="warn">{f.turn.toLocaleString('en-US')}₪</td>
-                  <td>{f.turn === 0 ? 'לא נסחרה כלל באותו יום'
-                    : `מתחת לסף של ${MIN_TURNOVER.toLocaleString('en-US')}₪ ליום`}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataCards
+          wide items={ILLIQUID} keyOf={f => f.tase}
+          cols={[
+            { h: 'הקרן', v: f => f.he },
+            { h: 'נייר בת״א', mono: true, v: f => f.tase },
+            { h: 'תמורה יומית', tone: () => 'dn',
+              v: f => `${f.turn.toLocaleString('en-US')}₪` },
+          ]}
+          note={f => f.turn === 0 ? 'לא נסחרה כלל באותו יום'
+            : `מתחת לסף של ${MIN_TURNOVER.toLocaleString('en-US')}₪ ליום`}
+        />
         <p className="note">
           <b>וזו לא הערת שוליים.</b> טכנולוגיה (1159193) החזיקה את כל הגבול
           היעיל של תל אביב עד 22% תנודתיות — והיא נסחרת ב-46 אלף ש״ח ביום.
@@ -571,26 +564,17 @@ export function IrishLab() {
           והשוויתי אותו לחלוקה שווה פשוטה. <b>התוצאה לא תלויה בגודל
           היוניברס אלא באיכותו.</b>
         </p>
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr><th className="lead">כמה קרנות ביוניברס</th>
-                <th>עם המנגנון</th><th>חלוקה שווה</th><th>מה המנגנון הוסיף</th></tr>
-            </thead>
-            <tbody>
-              {RULE_BY_SIZE.map(r => (
-                <tr key={r.n} className={r.rule < r.equal ? 'cross' : ''}>
-                  <td className="lead" dir="ltr">{r.n}</td>
-                  <td dir="ltr" className="up">{sg(r.rule)}</td>
-                  <td dir="ltr">{sg(r.equal)}</td>
-                  <td dir="ltr" className={r.rule >= r.equal ? 'gold' : 'warn'}>
-                    {((r.rule - r.equal) * 100).toFixed(1)} נק׳
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataCards
+          items={RULE_BY_SIZE} keyOf={r => String(r.n)}
+          mark={r => r.rule < r.equal}
+          cols={[
+            { h: 'כמה קרנות ביוניברס', v: r => `${r.n} קרנות` },
+            { h: 'עם המנגנון', tone: () => 'up', v: r => sg(r.rule) },
+            { h: 'חלוקה שווה', v: r => sg(r.equal) },
+            { h: 'מה המנגנון הוסיף', tone: r => r.rule >= r.equal ? 'gold' : 'dn',
+              v: r => `${((r.rule - r.equal) * 100).toFixed(1)} נק׳` },
+          ]}
+        />
         <p>
           <b>מ-3 קרנות ועד 20, המנגנון ניצח את החלוקה השווה בכל גודל</b> —
           בין 3.4 ל-5.4 נקודות. ואז, בארבע הקרנות האחרונות שנוספו,{' '}

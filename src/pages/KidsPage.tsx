@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DataCards } from '../components/shared/DataCards';
 import { KidsGrowth } from '../components/build/KidsGrowth';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { KidsIntro } from '../components/onboarding/KidsIntro';
@@ -203,27 +204,17 @@ function LegacyKids() {
 
       <section>
         <h2>מתי המשכורת מגיעה לכל סכום</h2>
-        <div className="scroll">
-          <table>
-            <thead><tr>
-              <th>משכורת חודשית</th><th className="lead">באיזה גיל</th><th>כמה שנים מהיום</th>
-            </tr></thead>
-            <tbody>
-              {TARGETS.map(T => {
-                const m = r.goals[T];
-                return (
-                  <tr key={T}>
-                    <td style={{ fontWeight: 600 }}>{n0(T)}₪</td>
-                    <td className="lead">{ym(m)}</td>
-                    <td className="n dim">
-                      {m === null ? '—' : `${Math.floor(m / 12) + 1} שנים`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataCards
+          items={TARGETS} wide keyOf={T => String(T)}
+          mark={T => r.goals[T] !== null}
+          cols={[
+            { h: 'משכורת חודשית', v: T => `${n0(T)}₪` },
+            { h: 'באיזה גיל', v: T => ym(r.goals[T]),
+              tone: T => r.goals[T] === null ? 'dim' : 'gold' },
+            { h: 'כמה שנים מהיום', he: true, tone: () => 'dim',
+              v: T => r.goals[T] === null ? '—' : `${Math.floor(r.goals[T]! / 12) + 1} שנים` },
+          ]}
+        />
         <p className="note">
           לכל מסלול מחיר נמדד החודש הראשון שבו המשכורת מגיעה לסכום, ואז נלקח
           <b> חציון זמני ההגעה</b>. ‏״—״ פירושו שהסכום לא הושג ברוב המסלולים

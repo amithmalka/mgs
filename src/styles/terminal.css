@@ -89,7 +89,7 @@
 .term .clg i{display:inline-block;width:18px;height:3px;border-radius:2px;
   margin-inline-end:6px;vertical-align:middle;font-style:normal}
 .term .chart svg{width:100%;height:auto;display:block;overflow:visible}
-.term .chart svg path[data-lead="1"]{filter:drop-shadow(0 0 7px rgba(227,190,69,.33))}
+.term .chart svg path[data-lead="1"]{filter:drop-shadow(0 0 7px color-mix(in srgb, var(--gold) 33%, transparent))}
 
 .term .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;
   border:1px solid var(--rule);background:var(--surface);border-radius:4px}
@@ -183,10 +183,10 @@
 /* ── the tracks table · the income column leads, the rest supports ── */
 .term th.lead{background:var(--surface);color:var(--ink);font-size:10.5px;
   border-inline:1px solid var(--rule)}
-.term td.lead{background:rgba(201,162,76,.06);border-inline:1px solid var(--rule);
+.term td.lead{background:color-mix(in srgb, var(--gold) 6%, transparent);border-inline:1px solid var(--rule);
   font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:15px;
   font-weight:700;color:var(--gold)}
-.term tr.mark td{background:rgba(201,162,76,.09);font-weight:600}
+.term tr.mark td{background:color-mix(in srgb, var(--gold) 9%, transparent);font-weight:600}
 .term tr.zero td{background:rgba(110,155,116,.11);font-weight:600}
 .term tr.cross td{background:rgba(127,163,201,.12);font-weight:600}
 .term .why{background:var(--surface);border:1px solid var(--rule);border-radius:5px;overflow:hidden}
@@ -272,7 +272,7 @@
   font-family:var(--mono);font-size:11px;font-weight:600;white-space:nowrap;
   border:1px solid currentColor}
 .term .bk-ok{color:var(--up);background:color-mix(in srgb,#2FD898 9%,transparent)}
-.term .bk-warn{color:var(--gold);background:color-mix(in srgb,#E3BE45 9%,transparent)}
+.term .bk-warn{color:var(--gold);background:color-mix(in srgb,var(--gold) 9%,transparent)}
 .term .bk-bad{color:var(--down);background:color-mix(in srgb,#FF6A5C 9%,transparent)}
 
 /* ── שערים חיים ─────────────────────────────────────────────────── */
@@ -307,7 +307,7 @@
   font-weight:600;font-size:clamp(17px,3vw,25px);line-height:1.1}
 .term .bh-part small{font-size:10.5px;opacity:.6}
 .term .bh-fund{color:var(--gold);border-color:var(--goldsoft);
-  background:color-mix(in srgb,#E3BE45 7%,transparent)}
+  background:color-mix(in srgb,var(--gold) 7%,transparent)}
 .term .bh-broker{color:var(--mid);background:var(--surface)}
 .term .bh-broker span{color:var(--ink)}
 .term .bh-num{display:inline-flex;align-items:center;justify-content:center;
@@ -320,8 +320,8 @@
   gap:2px;padding:7px 13px;line-height:1.25}
 .term .opt.bh-mode small{font-size:10px;opacity:.6;font-family:var(--mono)}
 .term .opt.bh-mode[aria-pressed="true"] small{opacity:.75}
-.term .mp-empty{border:1px dashed color-mix(in srgb,#E3BE45 35%,var(--rule));
-  border-radius:7px;padding:20px 22px;background:color-mix(in srgb,#E3BE45 3%,transparent)}
+.term .mp-empty{border:1px dashed color-mix(in srgb,var(--gold) 35%,var(--rule));
+  border-radius:7px;padding:20px 22px;background:color-mix(in srgb,var(--gold) 3%,transparent)}
 .term .opt.mp-go{background:var(--gold);border-color:var(--gold);color:#07090A;
   font-weight:700;padding:11px 24px;font-size:14px}
 .term .opt.mp-go:hover{box-shadow:0 0 0 1px var(--gold),0 8px 26px -10px var(--gold)}
@@ -332,10 +332,10 @@
 .term .cb-card{border:1px solid var(--rule);border-radius:8px;background:var(--surface);
   padding:15px 16px;display:flex;flex-direction:column;gap:11px;
   transition:border-color .25s,box-shadow .25s}
-.term .cb-card:hover{border-color:color-mix(in srgb,#E3BE45 45%,var(--rule))}
+.term .cb-card:hover{border-color:color-mix(in srgb,var(--gold) 45%,var(--rule))}
 .term .cb-card.on{border-color:var(--gold);
   box-shadow:0 0 0 1px var(--gold),0 14px 40px -26px var(--gold);
-  background:color-mix(in srgb,#E3BE45 5%,var(--surface))}
+  background:color-mix(in srgb,var(--gold) 5%,var(--surface))}
 .term .cb-card header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .term .cb-vol{font-family:var(--mono);font-variant-numeric:tabular-nums;
   font-size:26px;font-weight:600;line-height:1;color:var(--ink)}
@@ -397,15 +397,15 @@
 .term .sp-win{display:inline-block;margin-inline-end:7px;padding:1px 7px;
   border-radius:3px;background:var(--gold);color:#07090A;font-size:10px;
   font-weight:700}
-.term .cb-helper{border:1px solid color-mix(in srgb,#E3BE45 30%,var(--rule));
-  border-radius:6px;background:color-mix(in srgb,#E3BE45 4%,transparent);
+.term .cb-helper{border:1px solid color-mix(in srgb,var(--gold) 30%,var(--rule));
+  border-radius:6px;background:color-mix(in srgb,var(--gold) 4%,transparent);
   padding:12px 14px;margin:4px 0 12px;display:grid;gap:8px}
 .term .cb-hint{font-size:11.5px;color:var(--muted)}
 .term .cb-why{font-size:12.5px;line-height:1.65;color:var(--mid);margin:0;max-width:72ch}
 
 /* ── התמהיל שנבחר בשלושת המסלולים ──────────────────────────────── */
 .term .cm{border:1px solid var(--goldsoft);border-radius:8px;padding:18px 20px;
-  background:color-mix(in srgb,#E3BE45 4%,var(--surface))}
+  background:color-mix(in srgb,var(--gold) 4%,var(--surface))}
 .term .cm-mix{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 6px}
 .term .cm-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
   border:1px solid var(--rule);border-radius:4px;background:var(--surface);
@@ -436,7 +436,7 @@
   border:1px solid var(--rule);max-width:none}
 .term .opt.cm-reset{font-size:10.5px;padding:2px 8px;margin-inline-start:5px}
 .term details.fw{border:1px solid var(--goldsoft);border-radius:6px;
-  background:color-mix(in srgb,#E3BE45 4%,transparent);margin:4px 0}
+  background:color-mix(in srgb,var(--gold) 4%,transparent);margin:4px 0}
 .term details.fw summary{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   padding:11px 14px;cursor:pointer;list-style:none;font-size:13.5px}
 .term details.fw summary::-webkit-details-marker{display:none}
@@ -448,7 +448,7 @@
   border-top:1px solid var(--rule)}
 .term .cm-head{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;
   padding:11px 14px;border-radius:6px;border:1px solid var(--gold);
-  background:color-mix(in srgb,#E3BE45 8%,transparent);margin:2px 0}
+  background:color-mix(in srgb,var(--gold) 8%,transparent);margin:2px 0}
 .term .cm-head-k{font-size:10.5px;letter-spacing:2px;color:var(--muted)}
 .term .cm-head-v{font-family:var(--mono);font-size:20px;font-weight:600;
   color:var(--gold);line-height:1}
@@ -461,7 +461,7 @@
   border:1px solid var(--rule);background:var(--surface);
   grid-template-columns:minmax(118px,auto) minmax(140px,1.1fr) minmax(190px,1.6fr) minmax(150px,auto);
   align-items:center;transition:border-color .2s}
-.term .iv-row:hover{border-color:color-mix(in srgb,#E3BE45 40%,var(--rule))}
+.term .iv-row:hover{border-color:color-mix(in srgb,var(--gold) 40%,var(--rule))}
 .term .iv-swap{display:flex;align-items:center;gap:7px;font-family:var(--mono);
   font-size:12px}
 .term .iv-us{color:var(--down);text-decoration:line-through;opacity:.75}
@@ -500,7 +500,7 @@
   font-weight:700;white-space:nowrap}
 .term .cm-shared{display:grid;gap:12px;margin:12px 0 4px;padding:14px 16px;
   border:1px solid var(--gold);border-radius:7px;
-  background:color-mix(in srgb,#E3BE45 6%,transparent);
+  background:color-mix(in srgb,var(--gold) 6%,transparent);
   grid-template-columns:repeat(auto-fit,minmax(min(185px,100%),1fr))}
 .term .cm-shared>div{display:grid;gap:2px;min-width:0}
 .term .cm-shared .k{font-size:10.5px;letter-spacing:1.4px;color:var(--muted)}
@@ -517,9 +517,9 @@
 .term tbody td{padding:10px 11px;border-bottom:1px solid var(--grid);
   vertical-align:middle;color:var(--mid)}
 .term tbody tr:last-child td{border-bottom:0}
-.term tbody tr:hover td{background:color-mix(in srgb,#E3BE45 3%,transparent)}
+.term tbody tr:hover td{background:color-mix(in srgb,var(--gold) 3%,transparent)}
 .term td.lead{color:var(--ink);font-weight:500}
-.term tr.cross td{background:color-mix(in srgb,#E3BE45 7%,transparent);
+.term tr.cross td{background:color-mix(in srgb,var(--gold) 7%,transparent);
   border-bottom-color:var(--goldsoft)}
 .term tr.fin td{border-top:1px solid var(--goldsoft);font-weight:600}
 .term td.up,.term .up{color:var(--up)}
@@ -546,9 +546,9 @@
 .term .cp-card{position:relative;border:1px solid var(--rule);border-radius:7px;
   background:var(--surface);padding:10px 11px;display:grid;gap:8px;
   transition:border-color .18s,box-shadow .18s}
-.term .cp-card:hover{border-color:color-mix(in srgb,#E3BE45 42%,var(--rule))}
+.term .cp-card:hover{border-color:color-mix(in srgb,var(--gold) 42%,var(--rule))}
 .term .cp-card.on{border-color:var(--gold);
-  background:color-mix(in srgb,#E3BE45 6%,var(--surface));
+  background:color-mix(in srgb,var(--gold) 6%,var(--surface));
   box-shadow:0 0 0 1px var(--goldsoft)}
 .term .cp-pick{display:flex;align-items:baseline;gap:7px;width:100%;
   background:none;border:0;padding:0;cursor:pointer;text-align:start;
@@ -654,7 +654,7 @@
 /* MGS קידס · התשובה ליעד — מספר אחד, גדול, לפני כל השאר */
 .term .kg-mode{gap:6px}
 .term .kg-answer{border:1px solid var(--gold);border-radius:8px;
-  background:color-mix(in srgb,#E3BE45 7%,transparent);
+  background:color-mix(in srgb,var(--gold) 7%,transparent);
   padding:16px 18px;display:grid;gap:3px;justify-items:start}
 .term .kg-answer .k{font-size:11px;letter-spacing:1.4px;color:var(--muted)}
 .term .kg-answer>b{font-family:var(--mono);font-variant-numeric:tabular-nums;
@@ -714,12 +714,12 @@
 .term .fc-ph.fc-up{border-color:var(--goldsoft);color:var(--gold)}
 .term .fc-ph.fc-hold{border-color:var(--rule);color:var(--mid)}
 .term .fc-ph.fc-draw{border-color:color-mix(in srgb,#2FD898 45%,var(--rule));color:var(--up)}
-.term .fc-ph.fc-grow{border-color:color-mix(in srgb,#E3BE45 45%,var(--rule));color:var(--gold)}
+.term .fc-ph.fc-grow{border-color:color-mix(in srgb,var(--gold) 45%,var(--rule));color:var(--gold)}
 .term .fc .scroll{max-height:460px;overflow-y:auto}
 /* התחזית כפאנל עצמאי מעל הרשת */
 .term .fc-panel{margin:4px 0 16px;padding:16px 18px;border:1px solid var(--gold);
   border-top:1px solid var(--gold);border-radius:9px;
-  background:color-mix(in srgb,#E3BE45 4%,var(--surface));
+  background:color-mix(in srgb,var(--gold) 4%,var(--surface));
   scroll-margin-top:14px}
 
 /* יומן ההפקדות ותזכורת */
@@ -727,7 +727,7 @@
 .term .dl-h3{font-size:12px;font-weight:600;letter-spacing:1.4px;
   color:var(--muted);margin:14px 0 0}
 .term .dl-form{border:1px solid var(--gold);border-radius:8px;padding:14px 15px;
-  background:color-mix(in srgb,#E3BE45 5%,var(--surface));
+  background:color-mix(in srgb,var(--gold) 5%,var(--surface));
   display:flex;flex-direction:column;gap:10px}
 .term .dl-form header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .term .dl-form header b{font-size:13px;color:var(--ink)}
@@ -761,7 +761,7 @@
   border:1px solid var(--rule);border-radius:9px;background:var(--surface);
   padding:15px 16px;display:grid;gap:6px;color:var(--ink);
   transition:border-color .2s,box-shadow .2s}
-.term .dk-card:hover{border-color:color-mix(in srgb,#E3BE45 50%,var(--rule));
+.term .dk-card:hover{border-color:color-mix(in srgb,var(--gold) 50%,var(--rule));
   box-shadow:0 10px 30px -22px #000}
 .term .dk-tag{font-size:9.5px;font-weight:700;letter-spacing:1.6px;
   color:var(--gold);text-transform:none}
@@ -839,7 +839,7 @@
 /* ההנחה מול התוצאה — שני המספרים זה לצד זה */
 .term .fw-top{display:flex;flex-wrap:wrap;align-items:center;gap:14px;
   padding:14px 16px;border:1px solid var(--gold);border-radius:8px;
-  background:color-mix(in srgb,#E3BE45 5%,transparent)}
+  background:color-mix(in srgb,var(--gold) 5%,transparent)}
 .term .fw-top>div{display:grid;gap:2px;min-width:0}
 .term .fw-top .k{font-size:10.5px;letter-spacing:1.2px;color:var(--muted)}
 .term .fw-top b{font-family:var(--mono);font-variant-numeric:tabular-nums;

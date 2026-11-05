@@ -11,6 +11,7 @@ import { Card } from '../components/layout/Card';
 import { Icon } from '../components/shared/Icon';
 import type { IconName } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
+import { GoalsMarquee } from '../components/shared/GoalsMarquee';
 
 import { cohortFor, milestonesFor } from '../constants/mgsScenarios';
 import { projectTrack } from '../utils/trackProject';
@@ -83,6 +84,12 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
 
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
+      {/* **מה תדעו לעשות בסוף — ראשון על הדף.** לפני כל מספר, שלוש
+          המטרות: לבנות הון, לנהל אותו בעצמכם, ולהתחיל גם לילדים. */}
+      <div className="term">
+        <GoalsMarquee />
+      </div>
+
       {/* התיק שהמשקיע בחר — ואם לא בחר, הזמנה לבחור. אין ברירת מחדל. */}
       <div className="term">
         <MyPlanCard onBuild={() => onNavigate?.('build')} />

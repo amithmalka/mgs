@@ -10,6 +10,7 @@
  *  אין בזה המלצה ואין בזה ייעוץ מס או ייעוץ פנסיוני.
  */
 import { useMemo, useState } from 'react';
+import { DataCards } from '../shared/DataCards';
 import {
   CEILINGS, PROVIDERS, MARKET, GONE, POLICY_RISK, selfDeduction, exemptCeiling,
   ceilingFor, RATE,
@@ -143,39 +144,35 @@ export function SplitPlan() {
             sub="זה מה שהפטור שווה" tone="gold" />
         </div>
 
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr><th className="lead">לאן</th><th>לחודש</th>
-                <th>בתום התקופה</th><th>המס</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="lead">קרן השתלמות</td>
-                <td dir="ltr">{n0(toFund)}₪</td>
-                <td dir="ltr" className="gold">{n0(res.f)}₪</td>
-                <td className="up">אפס, אחרי 6 שנים</td>
-              </tr>
-              <tr>
-                <td className="lead">ברוקר</td>
-                <td dir="ltr">{n0(toBroker)}₪</td>
-                <td dir="ltr">{n0(res.b)}₪</td>
-                <td className="warn">25% על הרווח הריאלי</td>
-              </tr>
-              <tr className="cross">
-                <td className="lead"><b>סך הכל</b></td>
-                <td dir="ltr">{n0(deposit)}₪</td>
-                <td dir="ltr" className="gold"><b>{n0(res.total)}₪</b></td>
-                <td />
-              </tr>
-              <tr className="dim">
-                <td className="lead">לשם השוואה — הכל לברוקר</td>
-                <td dir="ltr">{n0(deposit)}₪</td>
-                <td dir="ltr">{n0(res.allBroker)}₪</td>
-                <td className="warn">25% על הכל</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* שני היעדים ככרטיסים, והסיכום כרצועה — כי ״סך הכל״
+            ו״לשם השוואה״ אינם פריט שלישי אלא תוצאה והשוואה אליה. */}
+        <DataCards
+          wide
+          items={[
+            { k: 'fund', he: 'קרן השתלמות', month: toFund, end: res.f,
+              tax: 'אפס, אחרי 6 שנים', tone: 'up' as const, mark: true },
+            { k: 'broker', he: 'ברוקר', month: toBroker, end: res.b,
+              tax: '25% על הרווח הריאלי', tone: 'dn' as const, mark: false },
+          ]}
+          keyOf={r => r.k} mark={r => r.mark}
+          cols={[
+            { h: 'לאן', v: r => r.he },
+            { h: 'לחודש', v: r => `${n0(r.month)}₪` },
+            { h: 'בתום התקופה', v: r => `${n0(r.end)}₪`, tone: r => r.mark ? 'gold' : undefined },
+            { h: 'המס', he: true, v: r => r.tax, tone: r => r.tone },
+          ]}
+        />
+        <div className="dsum">
+          <div className="fin">
+            <span className="l">סך הכל</span>
+            <span className="s">{n0(deposit)}₪ לחודש</span>
+            <span className="v gold" dir="ltr">{n0(res.total)}₪</span>
+          </div>
+          <div>
+            <span className="l">לשם השוואה — הכל לברוקר</span>
+            <span className="s">25% מס על הכל</span>
+            <span className="v" dir="ltr">{n0(res.allBroker)}₪</span>
+          </div>
         </div>
 
         {status === 'both' && (

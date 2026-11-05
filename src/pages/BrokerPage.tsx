@@ -12,6 +12,7 @@
  *  2.11.2026. אין בדף הזה המלצה ואין בו ייעוץ פיננסי או ייעוץ מס.
  */
 import { useMemo, useState } from 'react';
+import { DataCards } from '../components/shared/DataCards';
 import { IRISH, UMBRELLA, HOLDINGS, LENDING, WINDOW, type IrishFund } from '../constants/irish';
 import { BUY, BUY_UNVERIFIED } from '../constants/irish';
 import { ACCESS, TURNOVER, MIN_TURNOVER, EXPOSURES, ASK } from '../constants/access';
@@ -159,24 +160,15 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
               לגמרי. מי שיקליד את הסימול ויקבל את הבורסה הלא נכונה קונה
               נייר אמריקאי — בדיוק מה שהרשימה הזאת באה למנוע.
             </p>
-            <div className="scroll">
-              <table>
-                <thead>
-                  <tr><th className="lead">הסימול</th><th>בארה״ב הוא</th>
-                    <th>ISIN</th><th>למה זה מסוכן</th></tr>
-                </thead>
-                <tbody>
-                  {CLASH.map(c => (
-                    <tr key={c.sym}>
-                      <td className="lead" dir="ltr">{c.sym}</td>
-                      <td dir="ltr">{c.us}</td>
-                      <td dir="ltr" className="warn">{c.isin}</td>
-                      <td>{c.why}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataCards
+              items={CLASH} keyOf={c => c.sym}
+              cols={[
+                { h: 'הסימול', v: c => <span dir="ltr">{c.sym}</span> },
+                { h: 'בארה״ב הוא', mono: true, v: c => c.us },
+                { h: 'ISIN האמריקאי', mono: true, tone: () => 'dn', v: c => c.isin },
+              ]}
+              note={c => c.why}
+            />
             <p>
               <b>והכלל שמגן עליכם בלי קשר:</b> באינטראקטיב, חפשו{' '}
               <b>לפי ISIN ולא לפי סימול</b>. כל ISIN בדף הזה מתחיל
@@ -302,21 +294,12 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
           {dropped.length + DROPPED.length > 0 && (
             <section>
               <h2>מה הוצא מהרשימה, ולמה</h2>
-              <div className="scroll">
-                <table>
-                  <thead>
-                    <tr><th className="lead">הקרן</th><th>הסיבה</th></tr>
-                  </thead>
-                  <tbody>
-                    {DROPPED.map(d => (
-                      <tr key={d.sym} className="dim">
-                        <td className="lead">{d.he}<small className="bk-sub" dir="ltr">{d.sym}</small></td>
-                        <td>{d.why}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataCards
+                items={DROPPED} keyOf={d => d.sym}
+                titleSym={d => d.sym}
+                cols={[{ h: 'הקרן', v: d => d.he }]}
+                note={d => d.why}
+              />
             </section>
           )}
         </>
@@ -385,24 +368,16 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
               לקנות אותן בשקלים. התמורה היומית אומרת אחרת. הסף כאן הוא{' '}
               {n0(MIN_TURNOVER)}₪ ליום.
             </p>
-            <div className="scroll">
-              <table>
-                <thead>
-                  <tr><th className="lead">הקרן</th><th>נייר</th>
-                    <th>תמורה יומית</th><th>איפה כן אפשר</th></tr>
-                </thead>
-                <tbody>
-                  {dropped.map(f => (
-                    <tr key={f.k} className="dim">
-                      <td className="lead">{f.he}</td>
-                      <td dir="ltr">{f.tase}</td>
-                      <td dir="ltr" className="warn">{n0(TURNOVER[f.k] ?? 0)}₪</td>
-                      <td dir="ltr">{BUY[f.k] ? `${BUY[f.k].sym} · ${BUY[f.k].ex}` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <DataCards
+              items={dropped} keyOf={f => f.k}
+              cols={[
+                { h: 'הקרן', v: f => f.he },
+                { h: 'נייר בת״א', mono: true, v: f => f.tase },
+                { h: 'תמורה יומית', tone: () => 'dn', v: f => `${n0(TURNOVER[f.k] ?? 0)}₪` },
+                { h: 'איפה כן אפשר', mono: true,
+                  v: f => BUY[f.k] ? `${BUY[f.k].sym} · ${BUY[f.k].ex}` : '—' },
+              ]}
+            />
             <p className="note">
               <b>וזו לא הערת שוליים.</b> טכנולוגיה (1159193) החזיקה לבדה
               את כל הגבול היעיל של תל אביב עד 22% תנודתיות — והיא נסחרת
@@ -528,29 +503,17 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
 
           <section>
             <h2>⚠ שלושה טיקרים שלא לסמוך עליהם</h2>
-            <div className="scroll">
-              <table>
-                <thead>
-                  <tr><th className="lead">הטיקר</th><th>בלונדון</th>
-                    <th>בארצות הברית</th></tr>
-                </thead>
-                <tbody>
-                  {CLASH.map(c => (
-                    <tr key={c.sym}>
-                      <td className="lead" dir="ltr"><b>{c.sym}</b></td>
-                      <td>
-                        {IRISH.find(f => BUY[f.k]?.sym === c.sym)?.he ?? '—'}
-                        <small className="bk-sub">אירית, תקין</small>
-                      </td>
-                      <td className="warn" dir="ltr">
-                        {c.us}
-                        <small className="bk-sub" dir="rtl">{c.why}</small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <DataCards
+              wide items={CLASH} keyOf={c => c.sym}
+              titleSym={c => c.sym}
+              cols={[
+                { h: 'הטיקר', v: () => 'אותו סימול, שני ניירות' },
+                { h: 'בלונדון — אירית, תקין', he: true, tone: () => 'up',
+                  v: c => IRISH.find(f => BUY[f.k]?.sym === c.sym)?.he ?? '—' },
+                { h: 'בארצות הברית', mono: true, tone: () => 'dn', v: c => c.us },
+              ]}
+              note={c => c.why}
+            />
           </section>
         </>
       )}

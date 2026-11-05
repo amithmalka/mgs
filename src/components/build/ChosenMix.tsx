@@ -10,6 +10,7 @@
  *  הסתיים שם או נמוך מזה.
  */
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { DataCards } from '../shared/DataCards';
 import { useMgsStore } from '../../store/mgsStore';
 import { IRISH, BUY, mix, type Tier } from '../../constants/irish';
 import { TRACK_HE, TRACK_WHY, type TrackKey } from '../../constants/combos';
@@ -243,46 +244,35 @@ export function ChosenMix() {
             <b>208 מיליון ש״ח</b> מ-2,286₪ בחודש. זה לא מספר אמיתי,
             ולכן ההנחות כאן נמוכות בהרבה מהמדידה — <b>בכוונה</b>.
           </p>
-          <div className="scroll">
-            <table>
-              <thead>
-                <tr><th className="lead">הרכיב</th><th>משקל</th>
-                  <th>ההנחה</th><th>המקור</th></tr>
-              </thead>
-              <tbody>
-                {rows.map(({ h, f }) => {
-                  const a = FORWARD[f.k];
-                  return (
-                    <tr key={f.k}>
-                      <td className="lead">{f.he}</td>
-                      <td dir="ltr">{pc(tot ? h.w / tot : 0)}</td>
-                      <td dir="ltr" className="gold">{a ? pc(a.real, 2) : '—'}</td>
-                      <td className="dim">{a ? a.src : 'לא אומת'}</td>
-                    </tr>
-                  );
-                })}
-                <tr className="cross">
-                  <td className="lead"><b>ברוטו משוקלל</b></td>
-                  <td />
-                  <td dir="ltr" className="gold"><b>{pc(fwd.gross, 2)}</b></td>
-                  <td className="dim">
-                    {outlook !== 'real' && `כולל התאמת תרחיש ${OUTLOOK_HE[outlook]}`}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="lead">פחות דמי ניהול</td>
-                  <td />
-                  <td dir="ltr" className="warn">−{pc(fwd.ter, 2)}</td>
-                  <td className="dim">משוקלל לפי המשקלות</td>
-                </tr>
-                <tr className="fin">
-                  <td className="lead"><b>נטו — מה שנכנס לחישוב</b></td>
-                  <td />
-                  <td dir="ltr" className="gold"><b>{pc(fwd.cagr, 2)}</b></td>
-                  <td />
-                </tr>
-              </tbody>
-            </table>
+          <DataCards
+            items={rows} keyOf={({ f }) => f.k}
+            titleSym={({ f }) => f.k}
+            cols={[
+              { h: 'הרכיב', v: ({ f }) => f.he },
+              { h: 'משקל', v: ({ h }) => pc(tot ? h.w / tot : 0) },
+              { h: 'ההנחה', tone: ({ f }) => FORWARD[f.k] ? 'gold' : 'dim',
+                v: ({ f }) => FORWARD[f.k] ? pc(FORWARD[f.k]!.real, 2) : '—' },
+            ]}
+            note={({ f }) => FORWARD[f.k]?.src ?? 'לא אומת'}
+          />
+          {/* שרשרת החישוב — שורות ולא כרטיסים, כי הקשר ביניהן הוא חיסור */}
+          <div className="dsum">
+            <div>
+              <span className="l">ברוטו משוקלל</span>
+              {outlook !== 'real' && (
+                <span className="s">כולל התאמת תרחיש {OUTLOOK_HE[outlook]}</span>
+              )}
+              <span className="v gold" dir="ltr">{pc(fwd.gross, 2)}</span>
+            </div>
+            <div>
+              <span className="l">פחות דמי ניהול</span>
+              <span className="s">משוקלל לפי המשקלות</span>
+              <span className="v warn" dir="ltr">−{pc(fwd.ter, 2)}</span>
+            </div>
+            <div className="fin">
+              <span className="l">נטו — מה שנכנס לחישוב</span>
+              <span className="v gold" dir="ltr">{pc(fwd.cagr, 2)}</span>
+            </div>
           </div>
           <p className="note">
             <b>המקורות:</b> דאמודראן NYU ינואר 2026 לעלות ההון הענפית,

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { DataCards } from '../components/shared/DataCards';
 import {
   MEASURED, ASSUME, FUND, ALT, BY_RETURN, corr, type SleeveKey,
 } from '../constants/sleeveCatalog';
@@ -65,6 +66,39 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
  * לוח המשיכות לפי מסלול וגיל, מס ריאלי. התנודתיות והמתאם נמדדו מנתונים
  * אמיתיים; התשואה קדימה היא הנחה מפורסמת, ואיפה שאין — הצבה מוצהרת.
  */
+/** **מי מפרסם גישה לבורסות אירופה, ומה כתוב אצלו בתעריפון.**
+ *
+ *  **אינטראקטיב ישראל ראשון כי זו הדרך בפועל** — כל שמונת הניירות
+ *  נסחרים בלונדון בדולר, ושם הם נקנים. **את העמלה שלכם בדקו בכתב
+ *  מול ה-ISIN:** היא תלויה בסוג החשבון ובמחזור, ואני לא נוקב במספר
+ *  שלא אימתתי.
+ *
+ *  שאר השורות אומתו בתעריפונים הפומביים, אוקטובר 2026. *גישה
+ *  בתעריפון אינה הבטחה* שהמערכת שלהם מכירה ISIN מסוים.
+ */
+const BROKERS: Array<{
+  he: string; access: string; tariff: string;
+  tone: 'up' | 'gold' | 'dn'; ours: boolean;
+}> = [
+  { he: 'אינטראקטיב ישראל', access: 'כן — לונדון, מקוון, בדולר', tone: 'up', ours: true,
+    tariff: 'זו הדרך שכל המערכת בנויה עליה: פקודה מקוונת לפי ISIN, בלי חדר '
+          + 'מסחר טלפוני. את העמלה והמרת המט״ח בדקו בכתב — הן תלויות בסוג '
+          + 'החשבון, ולא נוקב כאן במספר שלא אומת.' },
+  { he: 'פסגות טרייד', access: 'כן, כולל ETF במפורש', tone: 'up', ours: false,
+    tariff: '0.15% מהעסקה, מינימום €15. יש בתעריפון גם דוגמה לעמלה בפרנק שוויצרי.' },
+  { he: 'אקסלנס · הפניקס', access: 'כן', tone: 'up', ours: false,
+    tariff: 'מסלול Global EXtrade — 0.15%, מינימום €20 / £20 / CHF 30. ופטור מדמי שמירה.' },
+  { he: 'IBI טרייד', access: 'כן, אך לא בפלטפורמה העצמאית', tone: 'gold', ours: false,
+    tariff: '0.3%, מינימום 30 במטבע העסקה — תחת ״עסקאות מיוחדות בבורסות זרות״, '
+          + 'כלומר דרך חדר המסחר.' },
+  { he: 'מיטב טרייד', access: 'אין ראיה', tone: 'dn', ours: false,
+    tariff: 'אין תעריפון אירופי פומבי, וכל עמודי המסחר בחו״ל שלהם הם ארה״ב. '
+          + 'זה היעדר תיעוד ולא הכחשה — שווה לשאול.' },
+  { he: 'בנקים', access: 'אפשרי, אך לא כדאי', tone: 'dn', ours: false,
+    tariff: 'לאומי: 0.9% קנייה ועוד 0.2% דמי ניהול פיקדון לרבעון = 0.8% לשנה. '
+          + 'על עשר שנים זה כעשירית מההשקעה.' },
+];
+
 export function BuildPage() {
   // **זרימה אחת בלבד.** כלי ההרכבה הישן נשאר בקובץ ועבר ל״ללמוד״
   // כחומר מתקדם — שתי מערכות בחירה על דף אחד הן בדיוק הבלבול.
@@ -224,38 +258,20 @@ export function LegacyBuild() {
           על הנחה מפורסמת.
         </p></div>
         <div className="note"><p>
-          <b>איזה ברוקר ישראלי קונה מה.</b> קרן שמסומנת <b>״ת״א״</b> נקנית
-          בשקלים אצל <b>כל</b> ברוקר ישראלי. לקרן שמסומנת <b>״בורסה
-          אירופית״</b>, אלה מה שמפרסמים גישה בתעריפון שלהם:
+          <b>איזה ברוקר קונה מה.</b> כל שמונת הניירות שהמערכת עובדת
+          איתם נסחרים <b>בלונדון בדולר</b>, ושם הם נקנים —
+          <b> דרך אינטראקטיב ישראל</b>. מי שרוצה להשוות, אלה מה
+          שמפרסמים גישה לבורסות אירופה בתעריפון שלהם:
         </p>
-        <div className="scroll">
-          <table>
-            <thead><tr>{['ברוקר', 'גישה לבורסות אירופה', 'מה שכתוב בתעריפון']
-              .map(h => <th key={h}>{h}</th>)}</tr></thead>
-            <tbody>
-              <tr><td style={{ fontWeight: 600 }}>פסגות טרייד</td>
-                <td className="v" style={{ color: 'var(--up)' }}>כן, כולל ETF במפורש</td>
-                <td>0.15% מהעסקה, מינימום €15. יש בתעריפון גם דוגמה לעמלה
-                  בפרנק שוויצרי.</td></tr>
-              <tr><td style={{ fontWeight: 600 }}>אקסלנס · הפניקס</td>
-                <td className="v" style={{ color: 'var(--up)' }}>כן</td>
-                <td>מסלול Global EXtrade — 0.15%, מינימום €20 / £20 / CHF 30.
-                  ופטור מדמי שמירה.</td></tr>
-              <tr><td style={{ fontWeight: 600 }}>IBI טרייד</td>
-                <td className="v" style={{ color: 'var(--gold)' }}>כן, אך לא בפלטפורמה העצמאית</td>
-                <td>0.3%, מינימום 30 במטבע העסקה — תחת ״עסקאות מיוחדות
-                  בבורסות זרות״, כלומר דרך חדר המסחר.</td></tr>
-              <tr><td style={{ fontWeight: 600 }}>מיטב טרייד</td>
-                <td className="v" style={{ color: 'var(--down)' }}>אין ראיה</td>
-                <td>אין תעריפון אירופי פומבי, וכל עמודי המסחר בחו״ל שלהם הם
-                  ארה״ב. זה היעדר תיעוד ולא הכחשה — שווה לשאול.</td></tr>
-              <tr><td style={{ fontWeight: 600 }}>בנקים</td>
-                <td className="v" style={{ color: 'var(--down)' }}>אפשרי, אך לא כדאי</td>
-                <td>לאומי: 0.9% קנייה <b>ועוד 0.2% דמי ניהול פיקדון לרבעון
-                  = 0.8% לשנה</b>. על עשר שנים זה כעשירית מההשקעה.</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <DataCards
+          items={BROKERS} keyOf={b => b.he} mark={b => b.ours}
+          titleSub={b => b.ours ? 'הברוקר שהמערכת בנויה עליו' : undefined}
+          cols={[
+            { h: 'ברוקר', v: b => b.he },
+            { h: 'גישה לבורסות אירופה', he: true, v: b => b.access, tone: b => b.tone },
+          ]}
+          note={b => b.tariff}
+        />
         <p>
           <b>מה שלא אומת:</b> שהמערכת של אף אחד מהם מכירה את ה-ISIN
           הספציפי. גישה בתעריפון אינה אותו דבר כמו יכולת להציב פקודה על
@@ -522,23 +538,19 @@ export function LegacyBuild() {
 
           <section>
             <h2>היעדים</h2>
-            <div className="scroll">
-              <table>
-                <thead><tr><th>הכנסה לחודש</th><th>מתי מושגת</th></tr></thead>
-                <tbody>
-                  {GOALS.map(g => {
-                    const m = res.goals[g];
-                    return (
-                      <tr key={g} className={m === null ? 'zero' : ''}>
-                        <td className="lead">{n0(g)} ₪</td>
-                        <td className="v">{m === null ? 'לא מושגת בחלון'
-                          : `שנה ${Math.floor(m / 12) + 1}`}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DataCards
+              items={GOALS} wide keyOf={g => String(g)}
+              mark={g => res.goals[g] !== null}
+              cols={[
+                { h: 'הכנסה לחודש', v: g => `${n0(g)} ₪` },
+                {
+                  h: 'מתי מושגת', he: true,
+                  v: g => res.goals[g] === null ? 'לא מושגת בחלון'
+                    : `שנה ${Math.floor(res.goals[g]! / 12) + 1}`,
+                  tone: g => res.goals[g] === null ? 'dim' : 'gold',
+                },
+              ]}
+            />
           </section>
 
           <section>
