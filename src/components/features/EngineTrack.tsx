@@ -141,8 +141,8 @@ export function EngineTrack() {
           <ComposedChart data={chart} margin={{ top: 12, right: 15, left: 15, bottom: 5 }}>
             <defs>
               <linearGradient id="engGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                <stop offset="5%" stopColor="#5EE6D0" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#5EE6D0" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -152,8 +152,8 @@ export function EngineTrack() {
             <Tooltip contentStyle={{ background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', color: '#E8E8E8', fontSize: '12px' }}
               formatter={v => `₪${Number(v).toLocaleString()}`} />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
-            <Area yAxisId="l" type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#D4AF37" fill="url(#engGrad)" strokeWidth={2} />
-            <Line yAxisId="r" type="monotone" dataKey={he ? 'קצבה נטו לחודש' : 'Net monthly'} stroke="#34D399" dot={false} strokeWidth={2} />
+            <Area yAxisId="l" type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#5EE6D0" fill="url(#engGrad)" strokeWidth={2} />
+            <Line yAxisId="r" type="monotone" dataKey={he ? 'קצבה נטו לחודש' : 'Net monthly'} stroke="#4ADE80" dot={false} strokeWidth={2} />
           </ComposedChart>
         </ResponsiveContainer>
 

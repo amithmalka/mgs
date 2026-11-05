@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · מסלולים לפי גיל</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="chile-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 8</span></header>
+  <h1>מסלולים לפי גיל</h1>
+  <p class="lede">ההיגיון שמאחורי הפילוח — ומה צ׳ילה למדה אחרי 23 שנה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-open">
+  <header><span class="eyebrow">השאלה</span><span class="pos" dir="ltr">1 / 8</span></header>
+  <h2>למה בכלל לקשור מסלול לגיל</h2>
+  <div class="body"><p class="lede">כי <b>אותה נפילה אינה אותו סיכון</b> לשני אנשים. ההבדל היחיד ביניהם הוא <b>כמה זמן נשאר עד שהם צריכים את הכסף.</b></p><p>וזה לא רעיון שהמצאנו. <b>מדינה שלמה בנתה עליו מערכת פנסיה חובה, מדדה אותה 23 שנה, ושינתה אותה לפי מה שמצאה.</b> כדאי להכיר את מה שהיא מצאה.</p></div>
+  
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-reform">
+  <header><span class="eyebrow">הרקע</span><span class="pos" dir="ltr">2 / 8</span></header>
+  <h2>צ׳ילה, 1980 — המערכת הפרטית הראשונה בעולם</h2>
+  <div class="body"><ol class="tl"><li><b dir="ltr">4.11.1980</b><span><b>Decreto Ley 3.500</b> נחתם. שר העבודה <b>José Piñera</b> מוביל.</span></li><li><b dir="ltr">13.11.1980</b><span>פורסם ברשומות — ״מערכת פנסיה חדשה״.</span></li><li><b dir="ltr">1.5.1981</b><span>המערכת <b>מתחילה לפעול</b>, עם 12 חברות ניהול (AFP).</span></li><li><b dir="ltr">1.1.1983</b><span>כל מי שנכנס לשוק העבודה מאז — <b>חייב</b>.</span></li></ol><div class="vs"><div class="col"><h4>לפני — reparto</h4><ul><li>הדור העובד מממן את הפנסיונרים</li><li>קופות ענפיות נפרדות</li><li>זכאויות שונות לכל מקצוע</li><li>דמוגרפיה מתדרדרת</li></ul></div><div class="col"><h4>אחרי — צבירה אישית</h4><ul><li><b>חשבון אישי בבעלות העובד</b></li><li>הפקדת חובה <b>10% מהשכר</b></li><li>ניהול בידי חברות פרטיות</li><li>המדינה מפקחת ומבטיחה רצפה</li></ul></div></div><p>המודל הועתק אחר כך לפרו, קולומביה, מקסיקו, בוליביה, אל־סלוודור וקזחסטן.</p></div>
+  <p class="src">Superintendencia de Pensiones · DL 3.500 (13.11.1980).</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-multi">
+  <header><span class="eyebrow">הלב</span><span class="pos" dir="ltr">3 / 8</span></header>
+  <h2>Multifondos, 2002 — חמישה מסלולים לפי סיכון</h2>
+  <div class="body"><p>חוק <b>Ley 19.795</b>, בתוקף מ-<b>26.9.2002</b>. מה שמגדיר כל מסלול הוא <b>אחוז החשיפה המותר למניות</b>.</p><div class="scroll"><table><thead><tr><th class="lead">הקרן</th><th>התיאור</th><th>תקרת מניות</th><th>רצפת מניות</th></tr></thead><tbody><tr><td class="lead">A</td><td dir="ltr">המסוכנת ביותר</td><td dir="ltr">80%</td><td dir="ltr"><b>40%</b></td></tr><tr><td class="lead">B</td><td dir="ltr">מסוכנת</td><td dir="ltr">60%</td><td dir="ltr"><b>25%</b></td></tr><tr><td class="lead">C</td><td dir="ltr">ביניים</td><td dir="ltr">40%</td><td dir="ltr"><b>15%</b></td></tr><tr><td class="lead">D</td><td dir="ltr">שמרנית</td><td dir="ltr">20%</td><td dir="ltr"><b>5%</b></td></tr><tr><td class="lead">E</td><td dir="ltr">השמרנית ביותר</td><td dir="ltr">5%</td><td dir="ltr">0%</td></tr></tbody></table></div><p class="box good"><b>שימו לב לעמודה האחרונה — זו ההברקה העיצובית.</b> מסלול ״אגרסיבי״ לא רק מוגבל ל-80% מניות, הוא <b>מחויב למינימום 40%</b>. כל מסלול הוא <b>טווח, לא תקרה</b> — וזה מונע מהמסלולים להתיישר זה לזה בשקט.</p></div>
+  <p class="src">Superintendencia de Pensiones, נתונים רשמיים.</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-age">
+  <header><span class="eyebrow">הגיל</span><span class="pos" dir="ltr">4 / 8</span></header>
+  <h2>ושלוש שכבות של כללי גיל</h2>
+  <div class="body"><ul><li><b>שכבה 1 — מה אסור לבחור.</b> מגיל <b>51 לנשים ו-56 לגברים</b> אסור לבחור את קרן A לחיסכון החובה. פנסיונרים — רק C, D, E.</li><li><b>שכבה 2 — ברירת מחדל למי שלא בוחר.</b> עד 35 → <b>B</b>. נשים 36–50 וגברים 36–55 → <b>C</b>. מעל זה → <b>D</b>.</li><li><b>שכבה 3 — הפחתת סיכון בכפייה.</b> המעבר בין טווחי גיל <b>אינו קופץ</b> — הוא נפרס על <b>חמש שנים, 20% לשנה.</b></li></ul><p class="box good"><b>שכבה 3 היא הפתרון לבעיה שעיצוב נאיבי יוצר:</b> העברת כל התיק ביום ההולדת ה-56 הופכת תאריך שרירותי לאירוע תזמון מהותי. פריסה על חמש שנים ממתנת את זה.</p><p class="box warn"><b>ושימו לב מה אינו ברירת מחדל:</b> לא A ולא E. <b>הקצה האגרסיבי והקצה השמרני דורשים שניהם בחירה פעילה.</b> ברירת המחדל לצעיר היא B (25%–60% מניות), לא A.</p><p>ועוד הבחנה אלגנטית: <b>ההגבלות חלות רק על כסף החובה.</b> בחיסכון הוולונטרי החוסך חופשי לחלוטין, בכל גיל.</p></div>
+  <p class="src">Superintendencia de Pensiones · Compendio de Pensiones, &quot;Esquema de Traspasos futuros de Fondos según edad&quot;.</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-finding">
+  <header><span class="eyebrow">המימצא</span><span class="pos" dir="ltr">5 / 8</span></header>
+  <h2>ואז הם מדדו מה קרה לבוחרים</h2>
+  <div class="body"><p class="lede">אחרי 23 שנה, הרגולטור הצ׳יליאני בדק מה עשו אלה שבחרו בעצמם והחליפו מסלולים.</p><div class="stats"><div class="stat warn"><span class="k">יצאו גרוע יותר</span><span class="n" dir="ltr">77%</span><span class="s">208,985 מחליפים, 4.2012–3.2013</span></div><div class="stat warn"><span class="k">מתוכם</span><span class="n" dir="ltr">~⅔</span><span class="s">עשו גרוע יותר מהקרן **הגרועה** בתקופה</span></div><div class="stat warn"><span class="k">בקוהורט 2008</span><span class="n" dir="ltr">מעל 80%</span><span class="s">פיגרו אחרי קרן ברירת המחדל</span></div></div><p><b>ורוב המעברים היו מ-A ל-E ובחזרה</b> — כלומר ניסיונות תזמון בין הקצה האגרסיבי לקצה השמרני.</p><p class="box warn"><b>ומי שמכר להם את העצה:</b> חברה בשם Felices y Forrados אמרה לחוסכים מתי לעבור. ההמלצות שלה הסבירו <b>מעל 27%</b> מכלל התנועה בין הקרנות, עם זרימות של 1–4 מיליארד דולר בחודש. <b>ולא הייתה לה שום מיומנות</b> — היא צדקה ב-8 מתוך 15 תקופות, בדיוק מה שמטבע הוגן היה נותן. <b>כ-99% מהעוקבים אחריה יצאו בהפסד.</b></p><p class="box warn"><b>והתגובה הרגולטורית לא הייתה ״חינוך פיננסי״.</b> היא הייתה <b>ביטול זכות הבחירה</b> בחיסכון החובה.</p></div>
+  <p class="src">Superintendencia de Pensiones, Nota Técnica, יוני 2013 — 343,729 מעברים של 208,985 חוסכים, 4.2012–3.2013 · Da, Larrain, Sialm &amp; Tessada, &quot;Destabilizing Financial Advice&quot;, Review of Financial Studies 31(10), 2018 · Fuentes, Searle &amp; Villatoro 2013 לקוהורט 2008.</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-gen">
+  <header><span class="eyebrow">מה שהחליף</span><span class="pos" dir="ltr">6 / 8</span></header>
+  <h2>Fondos Generacionales — אפס בחירה, לפי שנת לידה</h2>
+  <div class="body"><p>חוק <b>Ley 21.735</b>, פורסם <b>26.3.2025</b>. <b>בתוקף מ-1.4.2027.</b></p><ul><li><b>10 קרנות</b> במקום 5: קרן התחלתית עד גיל 35, שמונה קרנות ביניים בפסי חמש שנים, וקרן איחוד למעלה מ-75.</li><li><b>השיוך לפי שנת לידה, ובלי זכות בחירה</b> — בחיסכון החובה.</li><li><b>מסלול ירידה מוסדי:</b> עד <b>95% נכסי צמיחה</b> בקרן הצעירה, יורד בהדרגה עם הגיל.</li><li>כל חמש שנים נוצרת קרן חדשה, והוותיקה מתמזגת לקרן האיחוד.</li></ul><p class="box good"><b>זהו המסר האסטרטגי: המודל הצ׳יליאני עצמו, אחרי 23 שנה, זנח את תפריט המסלולים לטובת מסלול אוטומטי לפי שנת לידה.</b> למעשה — Target Date Fund במנדט ממשלתי.</p></div>
+  <p class="src">Ley 21.735 (26.3.2025) · Régimen de Inversión de los Fondos Generacionales, Superintendencia de Pensiones.</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-warning">
+  <header><span class="eyebrow">והלקח המכאיב</span><span class="pos" dir="ltr">7 / 8</span></header>
+  <h2>מה שמסלול טוב לא יכול לתקן</h2>
+  <div class="body"><p>אחרי שלושה עשורים של מסלולים מתוחכמים לפי גיל, אלה שיעורי התחלופה שצ׳ילה השיגה — הפנסיה העצמית כאחוז מהשכר, חציון, לפורשים 2015–2022:</p><div class="stats"><div class="stat warn"><span class="k">סך הכל</span><span class="n" dir="ltr">17%</span><span class="s">הסטנדרט הנחשב ״טוב״ הוא 60%–70%</span></div><div class="stat "><span class="k">גברים</span><span class="n" dir="ltr">27%</span><span class="s"></span></div><div class="stat warn"><span class="k">נשים</span><span class="n" dir="ltr">11%</span><span class="s"></span></div></div><p class="box warn"><b>והסיבה אינה המסלולים — היא שההפקדה הייתה קטנה מדי.</b> 10% בלבד, מול 15%–18% המקובלים ב-OECD, ועם צפיפות הפקדות נמוכה בגלל שוק עבודה לא פורמלי.</p><p><b>ומה שקרה כשהלגיטימציה קרסה:</b> ב-2020–2021 הקונגרס אישר שלושה סבבי משיכה מוקדמת. <b>מעל 48 מיליארד דולר נמשכו — כ-23% מנכסי הפנסיה, וכמעט 20% מהתמ״ג. כ-3.8 מיליון חשבונות מתוך 9.7 מיליון התרוקנו לאפס.</b></p><p class="box good"><b>ורפורמת 2025 פתרה את זה לא במסלולים אלא בהפקדה:</b> הוספת <b>7% מהמעסיק</b> — לראשונה בהיסטוריה הצ׳יליאנית — בדרך לסך של 18.5%.</p></div>
+  <p class="src">Ministerio de Hacienda · IMF Chile Selected Issues 2023 · Ley 21.735.</p>
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="chile-ours">
+  <header><span class="eyebrow">ואצלנו</span><span class="pos" dir="ltr">8 / 8</span></header>
+  <h2>מה לקחנו מזה — ומה לא</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">מה צ׳ילה עשתה</th><th>מה אנחנו עושים</th></tr></thead><tbody><tr><td class="lead">חשיפה מנייתית יורדת עם הגיל</td><td dir="ltr"><b>כן</b> — תזרים / תזרים וצמיחה / צמיחה</td></tr><tr><td class="lead">מעבר הדרגתי ולא קפיצה</td><td dir="ltr"><b>חלקית</b> — ההפקדה יורדת בהדרגה, המסלול לא</td></tr><tr><td class="lead">ברירת מחדל שאינה הקצה</td><td dir="ltr"><b>כן</b> — ההצעה לפי גיל, לא האגרסיבי ביותר</td></tr><tr><td class="lead">ביטול זכות הבחירה</td><td dir="ltr"><b>לא</b> — ואנחנו אומרים למה</td></tr></tbody></table></div><p class="box warn"><b>למה לא ביטלנו את הבחירה למרות ה-77%?</b> כי צ׳ילה מדדה <b>כסף חובה</b> שאנשים לא בחרו להפקיד, והיא עצמה <b>השאירה את החיסכון הוולונטרי חופשי לחלוטין</b>. כאן הכל וולונטרי.</p><p class="box good"><b>אבל המימצא כן משנה את העיצוב:</b> אנחנו מציגים הצעה לפי גיל <b>כברירת מחדל מודגשת</b>, ואומרים במפורש ש<b>האופק קובע ולא הגיל</b> — במקום לתת תפריט שטוח של מסלולים שמזמין תזמון.</p><p><b>והלקח האחרון הוא החשוב ביותר:</b> אופטימיזציה של מסלול לא מתקנת תת־הפקדה. <b>כמה מפקידים חשוב יותר מאיפה.</b></p></div>
+  
+  <footer><a href="./" class="crumb">מסלולים לפי גיל</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">מסלולים לפי גיל — פתיחה</option><option value="1">1. למה בכלל לקשור מסלול לגיל</option><option value="2">2. צ׳ילה, 1980 — המערכת הפרטית הראשונה בעולם</option><option value="3">3. Multifondos, 2002 — חמישה מסלולים לפי סיכון</option><option value="4">4. ושלוש שכבות של כללי גיל</option><option value="5">5. ואז הם מדדו מה קרה לבוחרים</option><option value="6">6. Fondos Generacionales — אפס בחירה, לפי שנת לידה</option><option value="7">7. מה שמסלול טוב לא יכול לתקן</option><option value="8">8. מה לקחנו מזה — ומה לא</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

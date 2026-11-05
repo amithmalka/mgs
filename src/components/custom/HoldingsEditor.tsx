@@ -139,7 +139,7 @@ export function HoldingsEditor({ prices, history }: {
                       <td className="py-2 text-end text-[11px]" dir="ltr">
                         {hasHist ? (
                           <>
-                            <span style={{ color: seeded.value >= 0 ? '#34D399' : '#F87171' }}>
+                            <span style={{ color: seeded.value >= 0 ? '#4ADE80' : '#F87171' }}>
                               {seeded.value > 0 ? '+' : ''}{seeded.value.toFixed(1)}%
                             </span>
                             <span className="block text-text-dim">{seeded.basis}</span>

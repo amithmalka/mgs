@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · המנגנון מול הפקדה קבועה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="mechvs-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 5</span></header>
+  <h1>המנגנון מול הפקדה קבועה</h1>
+  <p class="lede">האם קנייה בירידות מנצחת הפקדה אחידה — ומה בדיוק היא כן קונה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="mechvs-claim">
+  <header><span class="eyebrow">והטענה שצריך לבדוק</span><span class="pos" dir="ltr">1 / 5</span></header>
+  <h2>המנגנון קונה יותר בזול. השאלה אם זה מתורגם לכסף</h2>
+  <div class="body"><p class="lede"><b>הטענה פשוטה ונשמעת מובנת מאליה:</b> המנגנון קונה <b>יותר</b> מרכיב שירד ו<b>פחות</b> מרכיב שעלה. הפקדה קבועה קונה אותו דבר בכל חודש, לא משנה איפה המחיר. <b>אז המנגנון חייב לנצח.</b></p><p><b>ובדקנו את זה בשני שלבים.</b> קודם — האם הוא באמת קונה בזול יותר. ואחר כך — האם זה מתורגם ליותר כסף בסוף. <b>שתי השאלות אינן אותה שאלה</b>, וזה כל העניין.</p><p class="box good"><b>והחלק הראשון של הטענה מאומת לגמרי.</b> אותו תמהיל, אותן הפקדות, 93 נקודות התחלה בהיסטוריה. זה מחיר היחידה הממוצע שיצא:</p><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>הפקדה קבועה</th><th>מנגנון MGS</th><th>ההפרש</th></tr></thead><tbody><tr><td class="lead"><b>מוליכים למחצה</b></td><td dir="ltr">1.259</td><td dir="ltr"><b>0.893</b></td><td dir="ltr"><b>−29.1% זול יותר</b></td></tr><tr><td class="lead"><b>טכנולוגיה</b></td><td dir="ltr">1.876</td><td dir="ltr"><b>1.496</b></td><td dir="ltr"><b>−20.2% זול יותר</b></td></tr><tr><td class="lead">נאסד״ק 100</td><td dir="ltr">2.011</td><td dir="ltr">2.193</td><td dir="ltr">+9.0%</td></tr><tr><td class="lead">מדד רחב</td><td dir="ltr">1.754</td><td dir="ltr">2.226</td><td dir="ltr">+26.9%</td></tr></tbody></table></div><p class="note">מחיר היחידה הממוצע, מנורמל למחיר בתחילת התקופה. <b>נמוך יותר = קניתם בזול יותר.</b></p><p class="box warn"><b>ושימו לב לשתי השורות התחתונות, כי הן ההפתעה.</b> המנגנון קנה את הנאסד״ק ואת המדד הרחב <b>ביוקר</b> מההפקדה הקבועה. <b>למה?</b> כי נכס שעולה בחוזקה — הירידות שלו הן עדיין מחירים גבוהים מההתחלה. <b>קנייה בירידות מורידה את המחיר ביחס לשיא, לא ביחס להתחלה.</b></p></div>
+  <p class="src">הרצה על 93 נקודות התחלה, 20 שנה, סדרות המדדים · 4.11.2026.</p>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="mechvs-result">
+  <header><span class="eyebrow">ומה זה עשה לכסף</span><span class="pos" dir="ltr">2 / 5</span></header>
+  <h2>עשרה תמהילים, חמישה ניצחו — וההפרש קטן</h2>
+  <div class="body"><p class="lede"><b>כל אחד מעשרת התמהילים בקטלוג, מול הפקדה קבועה לפי משקלי היעד.</b> מכל נקודת התחלה אפשרית, 93 עד 148 לכל תמהיל:</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>התמהיל</th><th>ההפרש</th><th>ניצח ב</th></tr></thead><tbody><tr><td class="lead">צמיחה</td><td dir="ltr">XLKS70/SMH30</td><td dir="ltr"><b>+1.15%</b></td><td dir="ltr">93%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">SMH50/XLKS50</td><td dir="ltr"><b>+0.96%</b></td><td dir="ltr">93%</td></tr><tr><td class="lead">תזרים</td><td dir="ltr">SPXS60/MXWO30/SMH10</td><td dir="ltr"><b>+0.90%</b></td><td dir="ltr">78%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">SMH70/XLKS20/SPXS10</td><td dir="ltr">+0.67%</td><td dir="ltr">61%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">SMH90/XLKS10</td><td dir="ltr">+0.27%</td><td dir="ltr">90%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">XLKS50/SMH30/IWDA10/SPXS10</td><td dir="ltr">−0.19%</td><td dir="ltr">53%</td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">SPXS80/SMH10/XLKS10</td><td dir="ltr">−0.70%</td><td dir="ltr">33%</td></tr><tr><td class="lead">תזרים</td><td dir="ltr">VWRA50/SPXS40/XLKS10</td><td dir="ltr">−1.38%</td><td dir="ltr">0%</td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">MXWO40/XLKS30/IWDA20/SMH10</td><td dir="ltr">−1.50%</td><td dir="ltr">13%</td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">XLKS40/IWDA20/SMH20/SPXS20</td><td dir="ltr"><b>−2.00%</b></td><td dir="ltr">17%</td></tr></tbody></table></div><p class="note"><b>ממוצע −0.18%, חציון +0.04%.</b> כלומר על פני כל הקטלוג זה כמעט תיקו.</p><p><b>ויש פה תבנית, והיא עקבית:</b> המנגנון <b>מנצח כשהרכיבים דומים באופיים</b> — שני נכסי צמיחה שמתנדנדים זה סביב זה, ואז קנייה בירידה תופסת היפוך אמיתי. <b>והוא מפסיד כשמדד רחב איטי מחובר לתבלין מהיר</b> — כי אז הוא מזין את האיטי על חשבון המהיר, שוב ושוב, במשך עשרים שנה.</p><p class="box good"><b>וזה אינו כישלון של המנגנון — זו עדות על התקופה שנמדדה.</b> בשלושים השנים האחרונות הטכנולוגיה והמוליכים למחצה ניצחו את המדד הרחב בפער גדול. <b>מי שהעדיף את האיטי שילם על זה.</b> אם התקופה הבאה תחזור לממוצע, אותה משמעת תשלם.</p></div>
+  <p class="src">אותה הרצה · 10 תמהילים × 93–148 נקודות התחלה.</p>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="mechvs-error">
+  <header><span class="eyebrow">והתיקון שחייב להופיע כאן</span><span class="pos" dir="ltr">3 / 5</span></header>
+  <h2>הגרסה הראשונה של המצגת הזאת הייתה שגויה</h2>
+  <div class="body"><p class="lede"><b>המצגת הזאת פורסמה קודם עם מספרים אחרים לגמרי</b>, וקבעה שהמנגנון מפסיד עד <b>6.92%</b> וש״הוא אינו ממקסם תשואה״. <b>זו הייתה שגיאת מדידה שלנו, והיא מתועדת כאן ולא נמחקת.</b></p><p><b>מה שהיה שגוי.</b> הקרנות הרחבות בקטלוג — IWDA, VWRA, SPXS, MXWO — יוצגו במדידה על ידי מדד ‎^GSPC, <b>שהוא ה-S&amp;P 500 במחיר בלבד, בלי דיבידנדים.</b> וכל הקרנות האלה <b>צוברות</b>: הן מחזירות את הדיבידנד פנימה וקונות בו עוד.</p><div class="scroll"><table><thead><tr><th class="lead">אותו תמהיל, אותה הרצה</th><th>ההפרש</th></tr></thead><tbody><tr><td class="lead"><b>S&amp;P במחיר בלבד — מה שנמדד בטעות</b></td><td dir="ltr"><b>−4.19%</b></td></tr><tr><td class="lead">S&amp;P בתשואה כוללת — הנכון</td><td dir="ltr">−1.16%</td></tr><tr><td class="lead">ובאופק 25 שנה</td><td dir="ltr"><b>+0.25%</b></td></tr></tbody></table></div><p class="note">הדיבידנד של ה-S&amp;P תרם 2.30 נקודות בשנה בין 1988 ל-2026. <b>הוא חוסר מהרכיב שהמנגנון מזין, והמנגנון נענש על כך.</b></p><p class="box warn"><b>וההבדל אינו ניואנס — הוא הפך את המסקנה.</b> מ״מפסיד עד 6.92% ואינו ממקסם תשואה״ ל״כמעט תיקו, ומנצח בחמישה מעשרה תמהילים״.</p><p class="box good"><b>ולמה זה כאן ולא נמחק.</b> כי זו בדיוק הטעות שהמצגות האלה אמורות ללמד להימנע ממנה: <b>מדד מחיר אינו אותו דבר כמו קרן צוברת</b>, וההפרש הוא 2.3 נקודות בשנה — פי 1.87 בכסף אחרי שלושים שנה. <b>מי שמשווה קרן למדד בלי לבדוק איזה מדד, מקבל תשובה שגויה.</b></p></div>
+  <p class="src">סדרות ‎^GSPC ו-^SP500TR מ-1988 · התיקון בוצע ב-4.11.2026.</p>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="mechvs-buys">
+  <header><span class="eyebrow">ומה הוא קונה מעבר לתשואה</span><span class="pos" dir="ltr">4 / 5</span></header>
+  <h2>התיק שבחרתם נשאר התיק שיש לכם</h2>
+  <div class="body"><p class="lede"><b>התשואה כמעט תיקו. וזה מה שהמנגנון נותן מעבר לה, במספרים:</b></p><div class="scroll"><table><thead><tr><th class="lead">התמהיל</th><th>יעד הרכיב הכבד</th><th>הפקדה קבועה מסיימת ב</th><th>המנגנון</th></tr></thead><tbody><tr><td class="lead">XLKS40/IWDA20/SMH20/SPXS20</td><td dir="ltr">40%</td><td dir="ltr"><b>49.0%</b></td><td dir="ltr"><b>40.7%</b></td></tr><tr><td class="lead">SPXS80/SMH10/XLKS10</td><td dir="ltr">80%</td><td dir="ltr"><b>54.0%</b></td><td dir="ltr">61.9%</td></tr><tr><td class="lead">XLKS50/SMH30/IWDA10/SPXS10</td><td dir="ltr">50%</td><td dir="ltr">50.8%</td><td dir="ltr">45.7%</td></tr></tbody></table></div><p class="note">חציון כל נקודות ההתחלה, אחרי 25 שנה.</p><p class="box warn"><b>קראו את השורה הראשונה פעמיים.</b> יעד של 40% הפך ל-<b>49%</b> בהפקדה הקבועה. <b>זה לא שינוי שהחלטתם עליו</b> — זה פשוט מה שקרה כי רכיב אחד רץ. ובשורה השנייה, גרעין של 80% נשחק ל-<b>54%</b>.</p><p class="box good"><b>והסחיפה מהיעד נחתכת בכ-40%:</b> 45.5 נקודות בהפקדה הקבועה מול <b>27.3</b> עם המנגנון. <b>וגם התנודתיות יורדת</b>, אם כי מעט — בין עשירית נקודה לארבע עשיריות, עקבי בכל התמהילים.</p><p><b>אז הניסוח המדויק, אחרי התיקון:</b> המנגנון <b>אינו עולה כסף</b> — על פני הקטלוג הוא כמעט תיקו, ובתמהילים של נכסי צמיחה דומים הוא מוסיף עד 1.15%. <b>ומה שהוא עושה בוודאות הוא לשמור על התיק שבחרתם</b> — כלפי מעלה, כשרכיב רץ, וכלפי מטה, כשרכיב קורס.</p></div>
+  <p class="src">אותה הרצה · 4.11.2026.</p>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="mechvs-real">
+  <header><span class="eyebrow">ומול מה הוא באמת נמדד</span><span class="pos" dir="ltr">5 / 5</span></header>
+  <h2>הפקדה קבועה היא יריב משמעת גבוהה. אנשים לא עושים את זה</h2>
+  <div class="body"><p class="lede"><b>״הפקדה קבועה לפי משקלי היעד״ דורשת לקנות בדיוק אותם אחוזים כל חודש</b> — כולל בחודש שבו רכיב אחד ירד 40%. <b>זה לא מה שרוב האנשים עושים.</b></p><p><b>ומה שהם כן עושים נמדד, והוא מתועד בדוחות שהקרן הגישה.</b> קרן האינטרנט הסיני של KraneShares — <b>שאינה בקטלוג</b> — ירדה 82% בין פברואר 2021 לאוקטובר 2022 — <b>וסך הנכסים בה גדל ב-42%</b>, מ-3.66 ל-5.18 מיליארד דולר, כשמספר היחידות הוכפל פי 4.3. <b>אנשים קנו כל הדרך למטה, ויותר ככל שזה ירד יותר.</b></p><p class="box warn"><b>וזה מה שהמנגנון מונע, וגם זה נמדד.</b> בגרסה שלו שלפני 3.11.2026 הוא התעלם ממשקל היעד, ו<b>רכיב שירד 10% בלבד קיבל 80% מכל הפקדה — לנצח.</b> בתרחיש של ירידה 80% לאורך שנתיים זה שלח אליו <b>80% מכל הכסף</b> והפך אותו ל-61% מהתיק. <b>התיק היה שווה 132,050 ₪ מתוך 240,000 ₪ שהופקדו.</b> עם הגבול: <b>209,438 ₪.</b></p><p class="box good"><b>שבעים ושבעה אלף שקל הפרש, על אותן הפקדות בדיוק</b> — וזה לא מול הפקדה קבועה, <b>זה מול הגרסה הקודמת של המנגנון עצמו.</b> זו ההשוואה שמעניינת בפועל.</p></div>
+  <p class="src">דוחות N-CSR ל-31.3.2021 ו-N-CSRS ל-30.9.2022 של KraneShares Trust · הרצת שתי גרסאות המנגנון על אותו תרחיש.</p>
+  <footer><a href="./" class="crumb">המנגנון מול הפקדה קבועה</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">המנגנון מול הפקדה קבועה — פתיחה</option><option value="1">1. המנגנון קונה יותר בזול. השאלה אם זה מתורגם לכסף</option><option value="2">2. עשרה תמהילים, חמישה ניצחו — וההפרש קטן</option><option value="3">3. הגרסה הראשונה של המצגת הזאת הייתה שגויה</option><option value="4">4. התיק שבחרתם נשאר התיק שיש לכם</option><option value="5">5. הפקדה קבועה היא יריב משמעת גבוהה. אנשים לא עושים את זה</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

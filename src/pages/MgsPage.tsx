@@ -11,11 +11,11 @@ import { Disclaimer } from '../components/shared/Disclaimer';
 import { TrackingSection } from '../components/features/TrackingSection';
 import { formatCurrency } from '../utils/format';
 import {
-  MGS_ASSETS, MGS_RETURNS, milestonesFor, targetLeveraged, allocationFor, COHORTS,
+  MGS_ASSETS, MGS_RETURNS, milestonesFor, allocationFor, COHORTS,
 } from '../constants/mgsTracks';
 import type { MgsAsset } from '../constants/mgsTracks';
 import {
-  emptyBook, phaseOf, routeDeposit, projectMgs, insightFrom, leveragedWeight, ageAtMonth,
+  emptyBook, phaseOf, routeDeposit, projectMgs, insightFrom, driftFromTarget, ageAtMonth,
 } from '../utils/mgsEngine';
 import type { Phase } from '../utils/mgsEngine';
 import { Track1Tables } from '../components/mgs/Track1Tables';
@@ -24,8 +24,8 @@ const ASSETS = Object.keys(MGS_ASSETS) as MgsAsset[];
 
 const PHASE_LABEL: Record<Phase, { he: string; en: string; color: string }> = {
   accumulate: { he: 'צבירה', en: 'Accumulation', color: '#F87171' },
-  derisk: { he: 'ייצוב — הכל ל-MWRD', en: 'De-risk — all to MWRD', color: '#FBBF24' },
-  withdraw: { he: 'משיכה 4%', en: '4% withdrawals', color: '#34D399' },
+  derisk: { he: 'ייצוב — הכל ל-MWRD', en: 'De-risk — all to MWRD', color: '#FBBF4A' },
+  withdraw: { he: 'משיכה 4%', en: '4% withdrawals', color: '#4ADE80' },
 };
 
 /**
@@ -66,10 +66,12 @@ export function MgsPage() {
   const book = emptyBook();
   for (const a of ASSETS) book[a] = { value: holdings[a].value, basis: holdings[a].cost || holdings[a].value };
 
-  const liveWeight = leveragedWeight(book);
-  // The leverage target follows the investor's age, stepping down each year.
-  const trackCap = targetLeveraged(ageAtMonth(age, month));
-  const capPct = +(trackCap * 100).toFixed(0);
+  // **הסטייה ממשקל היעד, לא משקל המינוף.** המינוף הוסר מ-MGS
+  // ב-4.11.2026 ואיתו המחוון הקודם; מה שמעניין עכשיו הוא כמה
+  // התיק רחוק מהתמהיל שלו, כי זה מה שההפקדה הבאה מתקנת.
+  const liveDrift = driftFromTarget(book, ageAtMonth(age, month));
+  // מעל 5 נקודות אחוז נחשב סטייה שכדאי לשים לב אליה.
+  const DRIFT_WARN = 0.05;
   const thisMonthAmount = overrides[month] ?? deposit;
   const routing = routeDeposit(thisMonthAmount, book, age, month);
 
@@ -157,7 +159,7 @@ export function MgsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <span className={`text-[13px] font-semibold ${active ? 'text-gold' : 'text-text'}`}>{c.label}</span>
                   <span className="text-[10px] text-text-dim" dir="ltr">
-                    {(targetLeveraged(c.from) * 100).toFixed(0)}%
+                    {(((allocationFor(c.from).TECH ?? 0) + (allocationFor(c.from).SEMI ?? 0)) * 100).toFixed(0)}%
                   </span>
                 </div>
                 <p className="text-[10px] text-text-muted mt-1">
@@ -261,32 +263,31 @@ export function MgsPage() {
           )}
         </div>
 
-        {/* QQQ3 weight vs this track's own ceiling — QA item 3 */}
+        {/* הסטייה ממשקל היעד — החליפה את מחוון המינוף */}
         {phase === 'accumulate' && (
           <div className="mt-4">
             <div className="flex justify-between text-[11px] mb-1.5">
               <span className="text-text-muted">
-                {he ? `משקל QQQ3 בתיק מול ${capPct}%` : `QQQ3 weight vs ${capPct}%`}
+                {he ? 'סטייה ממשקל היעד' : 'Drift from target weight'}
               </span>
-              <span className={liveWeight >= trackCap ? 'text-danger font-semibold' : 'text-text'} dir="ltr">
-                {(liveWeight * 100).toFixed(2)}% / {capPct}%
+              <span className={liveDrift >= DRIFT_WARN ? 'text-danger font-semibold' : 'text-text'} dir="ltr">
+                {(liveDrift * 100).toFixed(2)} נק׳
               </span>
             </div>
             <div className="relative w-full bg-surface-4 rounded-full h-2.5 overflow-hidden">
               <div className="h-2.5 rounded-full transition-all"
-                style={{ width: `${Math.min(100, liveWeight * 100)}%`, background: liveWeight >= trackCap ? '#F87171' : '#A78BFA' }} />
-              <div className="absolute inset-y-0" style={{ insetInlineStart: `${trackCap * 100}%`, width: 2, background: '#D4AF37' }} />
+                style={{ width: `${Math.min(100, liveDrift / DRIFT_WARN * 50)}%`, background: liveDrift >= DRIFT_WARN ? '#F87171' : '#5EE6D0' }} />
+              <div className="absolute inset-y-0" style={{ insetInlineStart: '50%', width: 2, background: '#5EE6D0' }} />
             </div>
             <p className="text-[11px] mt-1.5 flex items-start gap-1.5">
-              {routing.leverageHalted ? (
-                <><Icon name="lock" size={12} className="text-danger mt-0.5 flex-shrink-0" />
-                  <span className="text-danger">{he
-                    ? 'QQQ3 הגיע ל-25% — הקנייה בו נעצרה. כל ההפקדה עוברת ל-I500 ו-EQQS.'
-                    : 'QQQ3 is at 25% — buying is halted. The whole deposit goes to I500 and EQQS.'}</span></>
+              {routing.onTarget ? (
+                <span className="text-text-dim">{he
+                  ? 'כל הרכיבים על משקל היעד או מעליו — ההפקדה מתחלקת לפי משקלי היעד.'
+                  : 'Every holding is at or above target — the deposit splits by the target weights.'}</span>
               ) : (
                 <span className="text-text-dim">{he
-                  ? 'מתחת ל-25% — ממשיכים לקנות QQQ3 לפי החלק שלו.'
-                  : 'Below 25% — QQQ3 is bought at its share.'}</span>
+                  ? 'ההפקדה מתחלקת לפי הפער מהיעד — מה שנפל מתחת לחלקו מקבל יותר, ואף רכיב אינו נדחף מעל היעד שלו.'
+                  : 'The deposit splits by the gap to target — whatever fell below its share gets more, and nothing is pushed past its target.'}</span>
               )}
             </p>
           </div>
@@ -316,7 +317,7 @@ export function MgsPage() {
 
       {/* ── Holdings ───────────────────────────────────────────────────── */}
       <Collapsible explain="holdings" title={he ? 'האחזקות שלי היום' : 'My holdings today'}
-                   subtitle={he ? 'שווי נוכחי וכמה שילמתם — קובע את משקל QQQ3, את המס ואת סדר המכירה' : 'Value and cost — drives the QQQ3 weight, tax and sale order'}>
+                   subtitle={he ? 'שווי נוכחי וכמה שילמתם — קובע את הסטייה מהיעד, את המס ואת סדר המכירה' : 'Value and cost — drives the drift from target, tax and sale order'}>
         <div className="p-4 space-y-2">
           {ASSETS.map(a => (
             <div key={a} className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
@@ -392,8 +393,8 @@ export function MgsPage() {
           <ComposedChart data={chart} margin={{ top: 5, right: 15, left: 15, bottom: 5 }}>
             <defs>
               <linearGradient id="mgsGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                <stop offset="5%" stopColor="#5EE6D0" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#5EE6D0" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -404,7 +405,7 @@ export function MgsPage() {
               formatter={v => `₪${Number(v).toLocaleString()}`}
               labelFormatter={v => (he ? `גיל ${v}` : `Age ${v}`)} />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
-            <Area type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#D4AF37" fill="url(#mgsGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#5EE6D0" fill="url(#mgsGrad)" strokeWidth={2} />
             <Line type="monotone" dataKey={he ? 'סך הפקדות' : 'Contributions'} stroke="#666" strokeDasharray="5 5" dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -453,7 +454,7 @@ export function MgsPage() {
                 <th className="text-start py-2">{he ? 'שלב' : 'Phase'}</th>
                 <th className="text-end py-2">{he ? 'סך הפקדות' : 'Contributions'}</th>
                 <th className="text-end py-2">{he ? 'שווי התיק' : 'Portfolio'}</th>
-                <th className="text-end py-2">QQQ3</th>
+                <th className="text-end py-2">{he ? 'סטייה' : 'Drift'}</th>
               </tr>
             </thead>
             <tbody>
@@ -468,8 +469,8 @@ export function MgsPage() {
                     <td className="py-2 text-[11px]" style={{ color: ph.color }}>{he ? ph.he : ph.en}</td>
                     <td className="py-2 text-end text-text-muted">{formatCurrency(r.deposited)}</td>
                     <td className="py-2 text-end text-gold font-medium">{formatCurrency(r.value)}</td>
-                    <td className={`py-2 text-end text-[11px] ${r.leveragedWeight >= trackCap ? 'text-danger' : 'text-text-dim'}`} dir="ltr">
-                      {(r.leveragedWeight * 100).toFixed(1)}%
+                    <td className={`py-2 text-end text-[11px] ${r.drift >= DRIFT_WARN ? 'text-danger' : 'text-text-dim'}`} dir="ltr">
+                      {(r.drift * 100).toFixed(1)} נק׳
                     </td>
                   </tr>
                 );
@@ -480,8 +481,8 @@ export function MgsPage() {
 
         <p className="text-[10px] text-text-dim mt-3 leading-relaxed">
           {he
-            ? 'תקרת ה-25% עוצרת קנייה של QQQ3 בלבד ולא מוכרת. לכן כשהוא עולה מהר יותר משאר התיק, משקלו יכול לעבור 25% — העמודה מציגה את המשקל בפועל. במשיכה נמכר קודם הנכס עם שיעור הרווח הגבוה ביותר. התחזית מבוססת על תשואות צפויות לכל נכס ואינה חיזוי.'
-            : 'The 25% cap halts QQQ3 buying only and never sells, so when it outgrows the rest its weight can pass 25% — the column shows the actual weight. Withdrawals sell the highest-margin asset first. A projection from expected returns, not a forecast.'}
+            ? 'ההפקדה קונה לעבר משקל היעד ואינה מוכרת. לכן רכיב שעלה מהר יותר משאר התיק יכול להישאר מעל חלקו — עמודת הסטייה מציגה את הפער הגדול ביותר מהיעד בפועל. במשיכה נמכר קודם הנכס עם שיעור הרווח הגבוה ביותר. התחזית מבוססת על תשואות צפויות לכל נכס ואינה חיזוי.'
+            : 'Deposits buy toward the target weights and never sell, so a holding that outgrows the rest can stay above its share — the drift column shows the largest actual gap from target. Withdrawals sell the highest-margin asset first. A projection from expected returns, not a forecast.'}
         </p>
       </Card>
 

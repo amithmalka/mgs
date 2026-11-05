@@ -7,7 +7,7 @@
  * directions — a monthly amount into a result, or a target into the amount it
  * needs.
  */
-import { SCENARIOS, TAX, WITHDRAW, btcRate, type ScenarioId } from '../constants/mgsScenarios';
+import { SCENARIOS, TAX, WITHDRAW, type ScenarioId } from '../constants/mgsScenarios';
 
 export const HANDOVER_AGE = 20;
 
@@ -15,8 +15,11 @@ export interface KidYear {
   year: number;
   age: number;
   deposited: number;
-  btc: number;
-  synthetic: number;
+  /** שרוול השבבים — SMH. **נקרא `btc` עד 4.11.2026**, והשם נשאר
+   *  אחרי שהביטקוין הוסר, מה שהפך אותו לשקר. */
+  smh: number;
+  /** שרוול ה-S&P 500 הסינתטי — SPXS. נקרא `synthetic` עד אותו תאריך. */
+  spxs: number;
   /** net of the tax owed on the gain so far */
   net: number;
 }
@@ -40,13 +43,13 @@ export function projectKid(
   monthlyDeposit: number,
 ): KidResult {
   const years = Math.max(1, HANDOVER_AGE - childAge);
-  const syn = SCENARIOS[scenario].rate.SYN;
+  const syn = SCENARIOS[scenario].rate.SPXS;
   let bv = 0, bc = 0, sv = 0, sc = 0;
   const rows: KidYear[] = [];
 
   for (let m = 1; m <= years * 12; m++) {
     const y = m / 12;
-    bv *= Math.pow(1 + btcRate(scenario, y), 1 / 12);
+    bv *= Math.pow(1 + SCENARIOS[scenario].rate.SMH, 1 / 12);
     sv *= Math.pow(1 + syn, 1 / 12);
 
     // The volatile half fades out at two points a year, by deposit only — and
@@ -61,7 +64,7 @@ export function projectKid(
       const owed = Math.max(0, val - basis) * TAX;
       rows.push({
         year: m / 12, age: childAge + m / 12, deposited: monthlyDeposit * m,
-        btc: bv, synthetic: sv, net: val - owed,
+        smh: bv, spxs: sv, net: val - owed,
       });
     }
   }

@@ -10,8 +10,8 @@ export function DividendChart({ data }: Props) {
       <BarChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
         <defs>
           <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#B8941F" stopOpacity={0.4} />
+            <stop offset="5%" stopColor="#5EE6D0" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="#1F9E8C" stopOpacity={0.4} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#222" />

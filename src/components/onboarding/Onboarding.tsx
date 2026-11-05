@@ -54,7 +54,7 @@ export function Onboarding() {
   const pickAge = (a: number) => { setAge(a); setGoal(recommendModel(a)); };
 
   const ready = age !== null && deposit !== null && goal !== null;
-  const preview = ready ? projectTrack('pess', goal as 1 | 2, age, deposit) : null;
+  const preview = ready ? projectTrack('real', goal as 1 | 2, age, deposit) : null;
   const years = age !== null ? horizonFor(age).reduce((a, b) => a + b, 0) : 0;
 
   const go = () => {

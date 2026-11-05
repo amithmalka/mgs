@@ -17,7 +17,7 @@
  *     משאיר פחות חשבונות — ולכן זו המדיניות כאן.
  */
 import {
-  SLEEVES, VOL, ASSUMPTION, TER, FX_DRAG, CPI, TAX, UP_CAP,
+  SLEEVES, VOL, ASSUMPTION, FX_DRAG, CPI, TAX, UP_CAP,
   withdrawRate, depositFor,
   type Sleeve, type Scenario, type Track, type Cohort,
 } from './mgsSim';
@@ -79,19 +79,30 @@ interface Acct {
   born: number; open: boolean;
 }
 const empty = (born: number): Acct => ({
-  sh: { BTC: 0, SEM: 0, TEC: 0 }, cE: 0, cT: 0, iE: 0, iT: 0, born, open: true,
+  sh: { SEM: 0, TEC: 0 }, cE: 0, cT: 0, iE: 0, iT: 0, born, open: true,
 });
+
+/** **דמי הניהול של המוצרים הישראליים — מקובעים כאן בכוונה.**
+ *
+ *  מסלול הקנייה בתל אביב הוסר מ-MGS ב-4.11.2026, ואיתו `TER.il`.
+ *  אבל **קרן השתלמות היא מוצר ישראלי וקונה מוצרים ישראליים**, ולכן
+ *  היא ממשיכה לשאת את דמי הניהול הגבוהים ולא את אלה של חו״ל.
+ *  להחליף אותם ב-`TER.fx` היה **מוריד 0.1 נקודה בשנה מהעלות
+ *  ומשפר את התשואה בלי שום הצדקה.** אומת 30.10.2026:
+ *  ביטקוין 0.20% (תכלית 1217835), שבבים 0.45% (קסם 1174119),
+ *  טכנולוגיה 0.15%. **ביטקוין הוסר ב-4.11.2026.** */
+const IL_TER: Record<Sleeve, number> = { SEM: 0.0045, TEC: 0.0015 };
 
 function onePath(o: StudyInput, months: number, r: () => number) {
   // מסלול מחירים — זהה למנוע הראשי, הנחות גיאומטריות בלי σ²/2 נוסף
   const mu = {} as Record<Sleeve, number>, sd = {} as Record<Sleeve, number>;
   for (const t of SLEEVES) {
-    mu[t] = Math.log(1 + ASSUMPTION[o.scenario][t] - FX_DRAG - TER.il[t]) / 12;
+    mu[t] = Math.log(1 + ASSUMPTION[o.scenario][t] - FX_DRAG - IL_TER[t]) / 12;
     sd[t] = VOL[t] / Math.sqrt(12);
   }
   const px = {} as Record<Sleeve, Float64Array>;
   for (const t of SLEEVES) px[t] = new Float64Array(months);
-  const cur = { BTC: 100, SEM: 100, TEC: 100 } as Record<Sleeve, number>;
+  const cur = { SEM: 100, TEC: 100 } as Record<Sleeve, number>;
   for (let m = 0; m < months; m++) {
     const z = [gauss(r), gauss(r), gauss(r)];
     for (let i = 0; i < 3; i++) {
@@ -103,7 +114,7 @@ function onePath(o: StudyInput, months: number, r: () => number) {
   }
 
   const accs: Acct[] = [empty(0)];
-  const peak = { BTC: 0, SEM: 0, TEC: 0 } as Record<Sleeve, number>;
+  const peak = { SEM: 0, TEC: 0 } as Record<Sleeve, number>;
   const cap = CEILING[o.status];
   const cm = Math.pow(1 + CPI, 1 / 12);
   let paid = 0, taken = 0, taxPaid = 0, yearTaken = 0, exemptIn = 0;

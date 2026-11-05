@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · מנגנון הקנייה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="buy-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 6</span></header>
+  <h1>מנגנון הקנייה</h1>
+  <p class="lede">לאן הולך כל שקל של ההפקדה החודשית, ולמה דווקא לשם</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-open">
+  <header><span class="eyebrow">והחלק שעושה את העבודה</span><span class="pos" dir="ltr">1 / 6</span></header>
+  <h2>לקנות כל חודש זה לא החלק המעניין. לאן — כן</h2>
+  <div class="body"><p class="lede"><b>התמהיל קובע מה מחזיקים. המנגנון קובע מה קונים החודש.</b> והשאלה הזאת חוזרת שתים עשרה פעמים בשנה, עשרים וחמש שנה — <b>שלוש מאות החלטות</b>, וכל אחת מהן קטנה.</p><p><b>הכלל עצמו הוא שורה אחת:</b> ההפקדה מתחלקת לפי <b>הפער בין משקל כל רכיב בתיק לבין משקל היעד שלו</b>, והפער מוכפל בהטיה לפי כמה הרכיב נפל מהשיא שלו.</p><p class="box good"><b>ומה זה אומר בפועל, בשתי שורות:</b>
+
+· <b>כשהכל עולה</b> — הרכיב <b>שעלה הפחות</b> הוא זה שהתרחק מהיעד, ולכן <b>הוא מקבל הכי הרבה.</b>
+· <b>כשרכיב נופל</b> — הוא נעשה תת־משקל, ולכן הוא מקבל יותר <b>לפי גודל הנפילה שלו.</b></p><p class="box warn"><b>ומה שחוסם אותו, וזה החלק החשוב:</b> הוא קונה <b>עד משקל היעד ואז נעצר.</b> רכיב שממשיך ליפול לנצח אינו מקבל יותר ויותר — הוא מתייצב על היעד שלו.</p></div>
+  <p class="src">הכלל מיושם ב-monthPlan.ts וב-MonthBuy.tsx — אותה לוגיקה בשני המקומות.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-up">
+  <header><span class="eyebrow">בעליות</span><span class="pos" dir="ltr">2 / 6</span></header>
+  <h2>מי שעלה הפחות מקבל הכי הרבה — וזה נמדד</h2>
+  <div class="body"><p class="lede"><b>תיק של 100,000₪ ביעד 40/30/30, הפקדה של 10,000₪.</b> אלה המספרים שהמנגנון מחזיר, בפועל:</p><div class="scroll"><table><thead><tr><th class="lead">העליות החודש</th><th>רכיב 1</th><th>רכיב 2</th><th>רכיב 3</th><th>הכי הרבה הולך ל</th></tr></thead><tbody><tr><td class="lead">+20% / +10% / <b>+2%</b></td><td dir="ltr">6.4%</td><td dir="ltr">34.8%</td><td dir="ltr"><b>58.8%</b></td><td dir="ltr">רכיב 3 — שעלה הפחות</td></tr><tr><td class="lead">+30% / +5% / <b>+1%</b></td><td dir="ltr"><b>0%</b></td><td dir="ltr">45.2%</td><td dir="ltr"><b>54.8%</b></td><td dir="ltr">רכיב 3 — שעלה הפחות</td></tr><tr><td class="lead"><b>+2%</b> / +10% / +20%</td><td dir="ltr"><b>70.8%</b></td><td dir="ltr">29.2%</td><td dir="ltr"><b>0%</b></td><td dir="ltr">רכיב 1 — שעלה הפחות</td></tr><tr><td class="lead">+5% / +5% / +5%</td><td dir="ltr">40%</td><td dir="ltr">30%</td><td dir="ltr">30%</td><td dir="ltr">בדיוק לפי היעד</td></tr></tbody></table></div><p class="note">ההטיה נבדקה בארבעת התרחישים, והרכיב שעלה הפחות קיבל את המקסימום בכל אחד מהם.</p><p><b>ושימו לב לשורה השנייה: הרכיב שעלה 30% קיבל אפס.</b> לא עשרה אחוזים ולא מינימום סמלי — <b>אפס.</b> הוא עבר את משקל היעד שלו בזכות העלייה, ואין שום סיבה לקנות עוד ממנו החודש.</p><p class="box good"><b>וזו לא קנייה ״בעליות״ ולא ״בירידות״ — זו קנייה לכיוון היעד.</b> היא נראית כמו קנייה בירידות כשרכיב נופל, וכמו קנייה של המפגר כשהכל עולה, <b>אבל זה אותו כלל אחד בשני מצבים.</b></p><p class="box warn"><b>ומה שהוא מונע:</b> בלי הכלל הזה, רכיב שעולה חזק הופך לחלק גדל והולך מהתיק, וכל הפקדה מגדילה אותו עוד. אחרי עשר שנים התיק אינו התמהיל שנבחר — <b>הוא הרכיב שהצליח ביותר, ורק הוא.</b></p></div>
+  <p class="src">הרצה ישירה על הלוגיקה שבקוד, 3.11.2026.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-down">
+  <header><span class="eyebrow">ובירידות</span><span class="pos" dir="ltr">3 / 6</span></header>
+  <h2>נופל 30% ומקבל 69% מההפקדה — ונעצר כשהוא חוזר</h2>
+  <div class="body"><p class="lede"><b>רכיב שנפל 10% בשלושה חודשים רצופים, יעד 40%.</b> זה מה שקרה לו, חודש אחר חודש:</p><div class="scroll"><table><thead><tr><th class="lead">חודש</th><th>שווי הרכיב</th><th>משקלו בתיק</th><th>מה הוא מקבל</th></tr></thead><tbody><tr><td class="lead">1</td><td dir="ltr">42,849₪</td><td dir="ltr">40.2%</td><td dir="ltr"><b>68.5%</b></td></tr><tr><td class="lead">2</td><td dir="ltr">45,260₪</td><td dir="ltr">40.1%</td><td dir="ltr"><b>67.0%</b></td></tr><tr><td class="lead">3</td><td dir="ltr">47,641₪</td><td dir="ltr">40.0%</td><td dir="ltr"><b>69.1%</b></td></tr><tr><td class="lead">4 · התאוששות</td><td dir="ltr">53,071₪</td><td dir="ltr">40.0%</td><td dir="ltr"><b>25.7%</b></td></tr><tr><td class="lead">6</td><td dir="ltr">64,423₪</td><td dir="ltr">40.0%</td><td dir="ltr">22.4%</td></tr><tr><td class="lead">10</td><td dir="ltr">89,243₪</td><td dir="ltr">40.0%</td><td dir="ltr"><b>15.2%</b></td></tr></tbody></table></div><p class="note">יעד 40%. שימו לב לעמודת המשקל: היא נשארת על 40.0% בכל החודשים — <b>זה המנגנון עובד.</b></p><p class="box good"><b>בחודשים 1 עד 3 הוא מקבל כמעט שבעים אחוז מההפקדה</b>, כי הוא תת־משקל וממשיך ליפול. <b>ומחודש 4, כשהוא מתאושש, הוא יורד ל-25% ומשם ל-15%</b> — כי הפער נסגר. <b>הוא נעצר מעצמו.</b></p><p class="box warn"><b>וזה ההבדל בין איזון מחדש לבין מיצוע כלפי מטה בלי גבול.</b> בגרסה שלפני 3.11.2026 הכלל התעלם ממשקל היעד, ו<b>רכיב שירד 10% בלבד קיבל 80% מכל הפקדה — לנצח.</b> בתרחיש של ירידה 80% לאורך שנתיים זה שלח אליו <b>80% מכל הכסף</b> והפך אותו ל-61% מהתיק. התיק היה שווה 132,050₪ מתוך 240,000₪ שהופקדו; עם הגבול הוא שווה <b>209,438₪.</b></p><p><b>וזה מה שקרה בפועל למשקיעי קרן אחת, שאינה בקטלוג שלנו ולא הייתה בו מעולם.</b> הקרן ירדה 82%, <b>וסך הנכסים בה גדל ב-42%</b> — אנשים קנו כל הדרך למטה. לא הקנייה בירידה הזיקה להם; <b>זה שלא היה לה גבול.</b></p></div>
+  <p class="src">הרצה ישירה על הקוד · נתוני הקרן מדוחות N-CSR ו-N-CSRS של KraneShares.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-track">
+  <header><span class="eyebrow">ולפי מסלול</span><span class="pos" dir="ltr">4 / 6</span></header>
+  <h2>כמה להטות לנופלים — שלוש תשובות, לא אחת</h2>
+  <div class="body"><p class="lede"><b>קנייה בירידה משתלמת רק אם יש זמן להתאוששות.</b> ולכן עוצמת ההטיה שונה בין המסלולים:</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>ההטיה</th><th>מה רכיב שירד 30% מקבל</th><th>ההיגיון</th></tr></thead><tbody><tr><td class="lead"><b>תזרים</b></td><td dir="ltr">0.5</td><td dir="ltr">~22%</td><td dir="ltr">מושך כסף בדרך — אין לו זמן להמתין להתאוששות</td></tr><tr><td class="lead"><b>תזרים וצמיחה</b></td><td dir="ltr">1</td><td dir="ltr">~25%</td><td dir="ltr">מושך מעט, והיתרה ממשיכה לעבוד</td></tr><tr><td class="lead"><b>צמיחה</b></td><td dir="ltr">1.5</td><td dir="ltr">~27%</td><td dir="ltr">אינו מושך כלל — ולכן יכול להרשות לעצמו להמתין</td></tr></tbody></table></div><p class="note">הדוגמה: יעד 20% לרכיב שירד 30%. ההטיה מוכפלת בגודל הנפילה, ולכן ההפרש גדל כשהנפילה עמוקה.</p><p><b>והמסלול נגזר מהתיק עצמו ולא מהגיל.</b> מי שבחר תמהיל בתנודתיות 13% מקבל את ההטיה המתונה <b>גם אם הוא בן עשרים</b> — כי מה שקובע הוא אופי התיק, לא גיל המשקיע. וזו אותה חלוקה שהקטלוג משתמש בה: עד 14.5%, 14.5–22.5%, ומעל.</p><p class="box good"><b>והתקרה זהה בכל המסלולים: פי 3 ממשקל היעד בהפקדה אחת.</b> היא נדירות נוגעת — הפער ליעד נסגר לפניה — אבל היא קיימת כגבול קשיח.</p></div>
+  <p class="src">DIP_TILT ו-DIP_CAP ב-monthPlan.ts.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-sell">
+  <header><span class="eyebrow">והצד השני</span><span class="pos" dir="ltr">5 / 6</span></header>
+  <h2>ומה קורה כשמושכים — לא מוכרים בהפסד</h2>
+  <div class="body"><p class="lede"><b>המשיכה כפופה לכלל אחד שעוקף הכל:</b> המערכת <b>אינה מוכרת רכיב שנסחר מתחת למחיר העלות הממוצע שלו.</b> אם כל הרכיבים מתחת לעלות — <b>לא נמשך כלום באותו חודש.</b></p><p><b>ולמה זה חשוב דווקא כאן.</b> מכירה בהפסד עושה שני דברים רעים יחד: היא נועלת את ההפסד, <b>והיא מקטינה את הקרן שצריכה להתאושש.</b> מי שמושך 4% מתיק שנפל 30% מוציא 5.7% מהשווי המקורי — והחלק שנשאר קטן מכדי לחזור.</p><p class="box good"><b>והמשיכה היא אחוז מהשווי העדכני, לא סכום קבוע.</b> 4% בשנה פירושו 0.333% בחודש ממה שיש <b>באותו חודש</b> — ולכן היא מצטמקת מעצמה בירידה ומתרחבת בעלייה.</p><p class="box warn"><b>ויש לזה מחיר, והוא נמדד.</b> בהרצה אחורה על המדדים, מכל נקודת התחלה אפשרית: החסימה ארכה <b>13 עד 15 חודשים במקרה החציוני, ועד 57 חודשים בנקודת ההתחלה הגרועה ביותר.</b> מי שבוחר תזרים צריך רזרבה שאינה בתיק.</p></div>
+  <p class="src">הכלל ב-monthPlan.ts · הבדיקה ב-withdrawTest.ts · מצגת המסלולים מפרטת את כל המספרים.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="buy-avg">
+  <header><span class="eyebrow">ומה שנרשם בדרך</span><span class="pos" dir="ltr">6 / 6</span></header>
+  <h2>המחיר הממוצע — ולמה הוא לא ממוצע של מחירים</h2>
+  <div class="body"><p class="lede"><b>המחיר הממוצע שלכם לרכיב הוא סך השקלים שהוכנסו חלקי סך היחידות שנקנו.</b> זה <b>לא</b> הממוצע של המחירים שבהם קניתם — וההבדל אינו זניח.</p><div class="scroll"><table><thead><tr><th class="lead"></th><th>קנייה א׳</th><th>קנייה ב׳</th><th>ממוצע מחירים</th><th>הממוצע הנכון</th></tr></thead><tbody><tr><td class="lead">סכום</td><td dir="ltr">10,000₪</td><td dir="ltr">10,000₪</td><td dir="ltr"></td><td dir="ltr"></td></tr><tr><td class="lead">מחיר</td><td dir="ltr">100₪</td><td dir="ltr">50₪</td><td dir="ltr">75₪</td><td dir="ltr"><b>66.67₪</b></td></tr><tr><td class="lead">יחידות</td><td dir="ltr">100</td><td dir="ltr">200</td><td dir="ltr"></td><td dir="ltr">300 יחידות</td></tr></tbody></table></div><p class="note">הסכום השני קנה פי שתיים יחידות, ולכן הוא שוקל פי שתיים בממוצע. <b>ממוצע מחירים פשוט היה מראה לכם מחיר גבוה ב-12.5% ממה שבאמת שילמתם.</b></p><p class="box good"><b>וזו בדיוק הנקודה של הקנייה בירידות:</b> כל שקל שנכנס בזול קונה יותר יחידות, <b>ולכן הוא מוריד את המחיר הממוצע יותר מכפי שהוא נראה.</b> המנגנון מנצל את זה במכוון — הוא מפנה יותר כסף לאיפה שהיחידות זולות.</p><p><b>והמחיר הממוצע הזה הוא גם מה שמחליט אם אפשר למשוך</b>, וגם הבסיס לחישוב המס: מס רווחי הון של 25% משולם על ההפרש בין מחיר המכירה למחיר הממוצע, ולא על כל התמורה.</p></div>
+  <p class="src">החישוב ב-lib/deposits.ts תחת positions() · §88 לפקודת מס הכנסה למדידת הרווח.</p>
+  <footer><a href="./" class="crumb">מנגנון הקנייה</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">מנגנון הקנייה — פתיחה</option><option value="1">1. לקנות כל חודש זה לא החלק המעניין. לאן — כן</option><option value="2">2. מי שעלה הפחות מקבל הכי הרבה — וזה נמדד</option><option value="3">3. נופל 30% ומקבל 69% מההפקדה — ונעצר כשהוא חוזר</option><option value="4">4. כמה להטות לנופלים — שלוש תשובות, לא אחת</option><option value="5">5. ומה קורה כשמושכים — לא מוכרים בהפסד</option><option value="6">6. המחיר הממוצע — ולמה הוא לא ממוצע של מחירים</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

@@ -76,7 +76,7 @@ export function MethodAndTrack() {
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: '#D4AF37', opacity: active ? 1 : 0.3 }} />
+                        style={{ background: '#5EE6D0', opacity: active ? 1 : 0.3 }} />
                   <span className={`text-[14px] font-bold ${active ? 'text-gold' : 'text-text'}`}>
                     {isRtl ? st.nameHe : st.nameEn}
                   </span>

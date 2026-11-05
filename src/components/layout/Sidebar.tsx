@@ -5,7 +5,7 @@ import { Icon } from '../shared/Icon';
 import type { IconName } from '../shared/Icon';
 import type { TranslationKey } from '../../i18n/translations';
 
-export type Tab = 'month' | 'dashboard' | 'mgs' | 'system' | 'build' | 'study' | 'kids' | 'academy';
+export type Tab = 'month' | 'dashboard' | 'mgs' | 'system' | 'build' | 'study' | 'kids' | 'academy' | 'tax';
 
 interface NavItem { id: Tab; key: TranslationKey; icon: IconName }
 interface NavGroup { key: TranslationKey; items: NavItem[] }
@@ -19,18 +19,12 @@ const GROUPS: NavGroup[] = [
   {
     key: 'navGroupMain',
     items: [
-      // the one screen the plan cannot be run without
-      { id: 'month', key: 'tabMonth', icon: 'cash' },
+      // לפי המסע ולא לפי הכלי: מה אני מחזיק → מה לקנות →
+      // איפה הכסף הפטור → למה.
       { id: 'dashboard', key: 'tabHome', icon: 'home' },
-      // MGS is the only method, so it is one tab carrying track, buys,
-      // projection, withdrawals and tracking together.
-      { id: 'mgs', key: 'tabMgs', icon: 'target' },
-      { id: 'system', key: 'tabSystem', icon: 'cash' },
-      // the same engine, on sleeves the investor picks instead of the fixed three
       { id: 'build', key: 'tabBuild', icon: 'target' },
-      // the same engine inside a study fund: ceiling, six-year wait, ladder
       { id: 'study', key: 'tabStudy', icon: 'cash' },
-      // the same growth engine, run from a child's age to twenty
+      { id: 'tax', key: 'tabTax', icon: 'cash' },
       { id: 'kids', key: 'tabKids', icon: 'sparkle' },
       { id: 'academy', key: 'tabAcademy', icon: 'academy' },
     ],
@@ -112,7 +106,7 @@ export function Sidebar({ activeTab, onTabChange, open, onClose }: SidebarProps)
                     >
                       <Icon name={item.icon} size={17} />
                       <span className="flex-1 truncate">{t(item.key, lang)}</span>
-                      {active && <span className="w-1 h-4 rounded-full" style={{ background: '#D4AF37' }} />}
+                      {active && <span className="w-1 h-4 rounded-full" style={{ background: '#5EE6D0' }} />}
                     </button>
                   );
                 })}

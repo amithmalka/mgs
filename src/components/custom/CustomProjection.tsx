@@ -6,7 +6,7 @@ import { formatCurrency } from '../../utils/format';
 import type { CustomSimRow } from '../../utils/customPortfolio';
 import type { CustomHolding } from '../../types';
 
-const SERIES_COLORS = ['#D4AF37', '#A78BFA', '#34D399', '#F59E0B', '#60A5FA', '#F472B6', '#FB923C', '#22D3EE'];
+const SERIES_COLORS = ['#5EE6D0', '#8193FA', '#4ADE80', '#8193FA', '#8193FA', '#F472B6', '#FB923C', '#22D3EE'];
 
 /** Year-by-year projection of the custom portfolio, total and per stock. */
 export function CustomProjection({ rows, holdings }: { rows: CustomSimRow[]; holdings: CustomHolding[] }) {
@@ -31,8 +31,8 @@ export function CustomProjection({ rows, holdings }: { rows: CustomSimRow[]; hol
         <AreaChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
           <defs>
             <linearGradient id="customGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+              <stop offset="5%" stopColor="#5EE6D0" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#5EE6D0" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -44,7 +44,7 @@ export function CustomProjection({ rows, holdings }: { rows: CustomSimRow[]; hol
           />
           <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
           <Area type="monotone" dataKey={labelDeposited} stroke="#555" fill="none" strokeDasharray="5 5" />
-          <Area type="monotone" dataKey={labelTotal} stroke="#D4AF37" fill="url(#customGrad)" />
+          <Area type="monotone" dataKey={labelTotal} stroke="#5EE6D0" fill="url(#customGrad)" />
         </AreaChart>
       </ResponsiveContainer>
 

@@ -1,0 +1,256 @@
+/** MGS · שקופית לכל קרן ולכל קומבינציה — **נוצרות מהנתונים**.
+ *
+ *  **למה מחוללות ולא כתובות ביד.** 25 קרנות ו-30 תמהילים הם 55
+ *  שקופיות. שקופית שנכתבת ביד מתיישנת ברגע שהקטלוג מתעדכן, ו-55
+ *  כאלה הן 55 הזדמנויות לסתירה. כאן כל שקופית נבנית מהקטלוג
+ *  ומהמנוע בזמן הטעינה.
+ */
+import type { Deck, Slide } from '../../types/deck';
+import { IRISH, BUY, TIER_HE, REPL, REPL_HE, LENDING, UMBRELLA, mix } from '../irish';
+import { FORWARD } from '../forward';
+import { DETAIL, CRASH, CRASH_OF } from '../funds-detail';
+import { HOLD, SWAP } from '../holdings-detail';
+import { COMBOS, COMBOS_TESTED, COMBOS_DROPPED, COMBOS_FUNDS, TRACK_HE, type TrackKey } from '../combos';
+
+const pc = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
+const sg = (v: number, d = 1) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
+
+const ROLE: Record<string, string> = {
+  calm: 'הבסיס — מחזיק את התיק כשהשאר נופל',
+  mid:  'מנוע הצמיחה — כאן התשואה ורוב התנודתיות',
+  hot:  'התבלין — במינון קטן מפזר, בגדול שולט',
+};
+
+/** שקופית אחת לקרן */
+function fundSlide(k: string): Slide | null {
+  const f = IRISH.find(x => x.k === k);
+  const b = BUY[k];
+  if (!f || !b) return null;
+  const det = DETAIL[k];
+  const a = FORWARD[k];
+  const crashes = CRASH_OF[k] ? CRASH[CRASH_OF[k]] : null;
+  const lend = LENDING[k];
+
+  return {
+    id: `f-${k}`,
+    eyebrow: `${TIER_HE[f.tier]} · ${ROLE[f.tier].split(' — ')[0]}`,
+    title: f.he,
+    blocks: [
+      { t: 'lede', text: f.desc },
+      { t: 'table', head: ['', ''], rows: [
+        ['הטיקר שקונים בו', `**${b.sym}** · ${b.ex === 'LSE' ? 'LSEETF' : b.ex} · ${b.cur}`],
+        ['ISIN', f.isin],
+        ['המקבילה האמריקאית', `${f.us} — **שאותה לא קונים**`],
+        ['עוקבת אחרי', det?.index ?? 'לא אומת'],
+        ['הוקמה', det?.born ?? 'לא אומת'],
+        ['נכסים מנוהלים', det?.aum ?? 'לא אומת'],
+        ['המנפיק', det?.by ?? 'לא אומת'],
+        ['מבנה משפטי', UMBRELLA[k] ?? 'plc'],
+        ['שיטת שחזור', REPL_HE[REPL[k] ?? 'physical']],
+        ['דמי ניהול', pc(f.ter, 2)],
+        ['השאלת ניירות', lend?.actual == null ? 'לא אומת'
+          : lend.actual === 0 ? 'אינה משאילה'
+          : `${pc(lend.actual, 2)} מהתיק${lend.max != null ? ` · תקרה ${pc(lend.max, 0)}` : ''}`],
+      ] },
+      { t: 'stats', items: [
+        { k: 'תשואה שנמדדה', v: sg(f.cagr), s: `${f.months} חודשים, בדולר`, tone: 'gold' },
+        { k: 'תנודתיות', v: pc(f.vol), s: 'סטיית תקן שנתית' },
+        { k: 'הנפילה שנמדדה', v: pc(f.dd), s: 'בחלון שנמדד', tone: 'warn' },
+        { k: 'ההנחה קדימה', v: a ? pc(a.real, 2) : 'לא אומת',
+          s: a ? a.src : 'אין מקור מפורסם', tone: 'up' },
+      ] },
+      ...(f.short ? [{ t: 'warn' as const,
+        text: `**חלון קצר.** הקרן נמדדה על ${f.months} חודשים בלבד, ורובם בשוק עולה. **המספרים שלמעלה אינם מייצגים מחזור שוק מלא.**` }] : []),
+      ...(crashes ? [{ t: 'table' as const,
+        head: ['מה שהמדד הזה באמת שרד', 'הנפילה', 'מתי', 'כמה זמן לחזור'],
+        rows: crashes.map(c => [c.what, c.fell, c.when, c.back]),
+        note: '**הקרן צעירה — המדד לא.** אלה הנפילות שהמדד ספג, מסגירה לסגירה. הקרן לא הייתה קיימת ברובן.' }] : []),
+    ],
+    src: `תשואה, תנודתיות ונפילה נמדדו על ${f.months} חודשים עד 11.2026, על הקרן האירית עצמה. נתוני ההקמה והנכסים מפקטשיט המנפיק. נפילות המדד מסדרות יומיות (FRED, Yahoo).`,
+  };
+}
+
+/** שקופית אחת לתמהיל */
+function comboSlide(c: typeof COMBOS[number], i: number): Slide {
+  const m = mix(c.parts.map(p => ({ k: p.k, w: p.w })));
+  const gain = c.naive - c.vol;
+  const fwd = c.parts.reduce((s, p) =>
+    s + (FORWARD[p.k]?.real ?? 0.075) * p.w / 100, 0);
+
+  return {
+    id: `c-${c.track}-${i}`,
+    eyebrow: `${TRACK_HE[c.track as TrackKey]} · תמהיל ${i + 1}`,
+    title: `תנודתיות ${pc(c.vol)} — ${c.parts.length} רכיבים`,
+    blocks: [
+      { t: 'table', head: ['הרכיב', 'משקל', 'רמה', 'הטיקר', 'תשואה', 'תנודתיות'],
+        rows: c.parts.map(p => {
+          const f = IRISH.find(x => x.k === p.k);
+          return [f?.he ?? p.k, `${p.w}%`, f ? TIER_HE[f.tier] : '—',
+            BUY[p.k]?.sym ?? '—', f ? sg(f.cagr) : '—', f ? pc(f.vol) : '—'];
+        }) },
+      { t: 'stats', items: [
+        { k: 'תשואה שנמדדה', v: sg(c.cagr), s: '60 חודשים', tone: 'gold' },
+        { k: 'תנודתיות', v: pc(c.vol), s: `בלי פיזור ${pc(c.naive)}` },
+        { k: 'מה הפיזור חסך', v: `${(gain * 100).toFixed(1)} נק׳`, s: 'תנודתיות שירדה', tone: 'up' },
+        { k: 'יחס תשואה-תנודתיות', v: c.ratio.toFixed(2), s: 'מעל 1.0 — טוב' },
+      ] },
+      { t: 'p', text: `**ההנחה קדימה לתמהיל הזה: ${pc(fwd, 2)}** — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. **זו לא התשואה שנמדדה**, והיא נמוכה ממנה בהרבה.` },
+      { t: 'p', text: gain > 0.04
+        ? `**והפיזור כאן עובד חזק:** ${pc(c.naive)} תנודתיות ירדו ל-${pc(c.vol)} — ${(gain * 100).toFixed(1)} נקודות, בלי לוותר על תשואה. זה קורה כי הרכיבים **לא נופלים יחד**.`
+        : `**הפיזור כאן צנוע** — ${(gain * 100).toFixed(1)} נקודות בלבד. סימן שהרכיבים **נעים יחד**, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.` },
+      { t: 'p', text: `**הנפילה המוערכת: ${pc(m.ddEst)}.** זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.` },
+    ],
+    src: `נבחר מתוך **${COMBOS_TESTED.toLocaleString('en-US')} שילובים** שנבדקו על ${COMBOS_FUNDS} הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.`,
+  };
+}
+
+/** שקופית שנייה לקרן: **מה היא באמת מחזיקה** */
+function holdSlide(k: string): Slide | null {
+  const f = IRISH.find(x => x.k === k);
+  const h = HOLD[k];
+  const sw = SWAP[k];
+  if (!f || (!h && !sw)) return null;
+
+  // קרן סינתטית — הסיפור הוא הפער בין מה שכתוב למה שיש
+  if (sw) {
+    return {
+      id: `h-${k}`,
+      eyebrow: 'מה היא באמת מחזיקה',
+      title: `${f.he} — הסל האמיתי`,
+      blocks: [
+        { t: 'lede', text: '**זו קרן סינתטית, ולכן מה שכתוב בדף המוצר אינו מה שהיא קנתה.** הטבלה שם נקראת ״Top exposures״ — אלה **משקלי המדד** שמגיעים דרך החוזה, לא הניירות שהקרן מחזיקה בכסף שלכם.' },
+        { t: 'table', head: ['מה', 'בדף המוצר', 'בסל האמיתי'],
+          rows: sw.claim.map(c => [c.what, c.sheet, c.real]),
+          note: '**איך יודעים שזה משקלי מדד:** המספרים בדף המוצר **זהים כמעט לחלוטין** לאלה של קרן פיזית על אותו מדד באותו תאריך. זה אימות צולב בין שני מנפיקים, לא פרשנות.' },
+        { t: 'table', head: ['האחזקות הפיזיות הגדולות בפועל', 'משקל'],
+          rows: sw.real.map(x => [x.co, `${x.w.toFixed(2)}%`]) },
+        { t: 'warn', text: sw.note },
+        { t: 'p', text: `**והצדדים הנגדיים לחוזה:** ${sw.banks.join(' · ')}. המבנה הוא **unfunded** — הקרן מחזיקה את הסל **בבעלות**, ובכשל של בנק היא מוכרת אותו ובונה חשיפה מחדש.` },
+      ],
+      src: `Invesco Markets plc, דוח כספי תקופתי ל-${sw.asOf}, Schedule of Investments — נתון מבוקר, לא מדף שיווקי.`,
+    };
+  }
+
+  const top3 = h!.top.slice(0, 3).reduce((n, x) => n + x.w, 0);
+  return {
+    id: `h-${k}`,
+    eyebrow: 'מה היא מחזיקה',
+    title: `${f.he} — עשר הגדולות`,
+    blocks: [
+      { t: 'table', head: ['החברה', 'משקל'],
+        rows: h!.top.map(x => [x.co, `${x.w.toFixed(2)}%`]) },
+      { t: 'stats', items: [
+        { k: 'ניירות בקרן', v: h!.n ? String(h!.n) : '—', s: 'סך האחזקות' },
+        { k: 'שלוש הגדולות', v: `${top3.toFixed(1)}%`, s: 'מהקרן',
+          tone: top3 > 0.4 * 100 ? 'warn' : undefined },
+        { k: 'עשר הגדולות', v: h!.sum ? pc(h!.sum, 1) : '—',
+          s: h!.sumByIssuer ? 'נתון של המנפיק' : 'חישוב מהנתונים', tone: 'gold' },
+      ] },
+      ...(h!.note ? [{ t: 'warn' as const, text: h!.note }] : []),
+      { t: 'p', text: `**וכך קוראים את זה:** ${h!.n ?? '—'} ניירות נשמעים כמו פיזור רחב — אבל ${h!.sum ? pc(h!.sum, 0) : ''} מהכסף יושב בעשר חברות בלבד. **המספר שקובע הוא המשקל, לא הכמות.**` },
+    ],
+    src: `מדף המוצר או קובץ הנתונים של המנפיק, נכון ל-${h!.asOf}. ${h!.sumByIssuer ? 'סך העשירייה הוא נתון מפורסם של המנפיק.' : 'סך העשירייה חושב מהנתונים — המנפיק אינו מפרסם אותו.'}`,
+  };
+}
+
+export const FUND_SLIDES: Slide[] =
+  IRISH.filter(f => BUY[f.k]).sort((a, b) => b.cagr - a.cagr)
+    .flatMap(f => [fundSlide(f.k), holdSlide(f.k)])
+    .filter((s): s is Slide => !!s);
+
+function slidesFor(t: TrackKey): Slide[] {
+  return COMBOS.filter(c => c.track === t)
+    .sort((a, b) => a.vol - b.vol)
+    .map((c, i) => comboSlide(c, i));
+}
+
+export const COMBO_SLIDES: Slide[] =
+  (['flow', 'both', 'growth'] as TrackKey[]).flatMap(slidesFor);
+
+/** המצגת: כל קרן בנפרד */
+// **EACH_FUND_DECK הועבר ל-generated-funds.ts ב-4.11.2026.**
+// הגרסה שהייתה כאן יצרה שקופית לכל אחת מ-26 הקרנות, כולל ארבע
+// על אותו S&P 500 ושתיים על זהב. **להסביר ארבע קרנות זהות זה
+// לא הסבר.** החדשה מציגה חמישה מדדים, פיזית וסינתטית לכל אחד.
+
+/** **מצגת לכל מסלול בנפרד.**
+ *
+ *  **למה שלוש ולא אחת.** מי שבא לבחור תמהיל כבר יודע באיזה מסלול
+ *  הוא נמצא — והוא לא צריך לעבור שלושים שקופיות כדי להגיע לשש
+ *  שרלוונטיות לו. וההיגיון שמאחורי הבחירה **שונה בכל מסלול**:
+ *  בתזרים מחפשים תיק שיהיה שם כשמושכים, בצמיחה מחפשים את התשואה
+ *  הגבוהה ביותר שאפשר לשאת. זה לא אותו סינון עם מספר אחר.
+ */
+const TRACK_OPEN: Record<TrackKey, { title: string; what: string; look: string[] }> = {
+  flow: {
+    title: 'תמהילים לתזרים — עד 14% תנודתיות',
+    what: 'התיק הזה **נבנה כדי להיות שם בדיוק כשמושכים ממנו**. כאן התנודתיות היא האויב, לא התשואה — כי מי שמושך מתוך נפילה **נועל אותה**, והקרן לא מתאוששת.',
+    look: [
+      '**מדד רחב כבסיס** — עולמי או S&P 500. אלה הרכיבים שנופלים הכי פחות עמוק.',
+      '**ומעט מאוד מהתבלין.** רכיב תנודתי במינון קטן עדיין מוסיף תשואה בלי להרים את התנודתיות הכוללת.',
+      '**והמתאם הוא מה שמאפשר את זה** — לא ההימנעות מתנודתיות, אלא שילוב שלה בחלקים שאינם זזים יחד.',
+    ],
+  },
+  both: {
+    title: 'תמהילים לתזרים וצמיחה — 14% עד 22%',
+    what: 'כאן מחפשים **שהקרן תמשיך לגדול גם בזמן שמושכים ממנה חלק**. זה הטווח שבו היחס בין תשואה לתנודתיות הוא **הגבוה ביותר בקטלוג כולו** — ולא במקרה: פה הפיזור עובד הכי קשה.',
+    look: [
+      '**מדד רחב כעוגן**, בדרך כלל 40%–60% מהתיק.',
+      '**ומנוע צמיחה אמיתי לצדו** — שבבים או טכנולוגיה, במשקל משמעותי ולא סמלי.',
+      '**ומדד רחב** — שמרדד את הנפילה בלי לוותר על כל הצמיחה.',
+    ],
+  },
+  growth: {
+    title: 'תמהילים לצמיחה — מעל 22% תנודתיות',
+    what: 'כאן מחפשים את **התשואה הגבוהה ביותר שאפשר לשאת**, בידיעה ש**לא נוגעים בכסף** עד סוף האופק. מי שימשוך באמצע נפילה של 40% ינעל אותה.',
+    look: [
+      '**רוב התיק במנועי צמיחה** — שבבים, טכנולוגיה, נאסד״ק.',
+      '**ומפזר אחד או שניים** — שבלעדיהם התנודתיות מגיעה ל-36%–42%.',
+      '**בלי אג״ח ובלי שקט.** מי שרוצה שקט נמצא במסלול הלא נכון.',
+    ],
+  },
+};
+
+function trackDeck(t: TrackKey): Deck {
+  const slides = slidesFor(t);
+  const o = TRACK_OPEN[t];
+  const vols = COMBOS.filter(c => c.track === t).map(c => c.vol);
+  const cagrs = COMBOS.filter(c => c.track === t).map(c => c.cagr);
+  return {
+    id: `combos-${t}`,
+    he: `תמהילי ${TRACK_HE[t]}`,
+    sub: `${slides.length} תמהילים — מה בכל אחד, ולמה דווקא הוא`,
+    tag: TRACK_HE[t],
+    slides: [
+      {
+        id: `open-${t}`,
+        eyebrow: TRACK_HE[t],
+        title: o.title,
+        blocks: [
+          { t: 'lede', text: o.what },
+          { t: 'stats', items: [
+            { k: 'תמהילים במסלול', v: String(slides.length), s: 'ששרדו את הסינון', tone: 'gold' },
+            { k: 'טווח תנודתיות', v: `${pc(Math.min(...vols))}–${pc(Math.max(...vols))}`, s: 'סטיית תקן שנתית' },
+            { k: 'טווח תשואה', v: `${sg(Math.min(...cagrs), 0)}–${sg(Math.max(...cagrs), 0)}`, s: '60 חודשים שנמדדו', tone: 'up' },
+          ] },
+          { t: 'p', text: '**מה מחפשים בתמהיל במסלול הזה:**' },
+          { t: 'bullets', items: o.look },
+          { t: 'p', text: `**וכולם נבחרו מתוך ${COMBOS_TESTED.toLocaleString('en-US')} שילובים** שנבדקו על ${COMBOS_FUNDS} הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר **רק בעל היחס הטוב ביותר** בין תשואה לתנודתיות.` },
+          { t: 'good', text: `**ואז הוסר עוד שלב — ${COMBOS_DROPPED} תמהילים שהיו ״נשלטים״.** תמהיל נשלט הוא כזה שיש ברשימה אחר עם **תשואה גבוהה יותר וגם תנודתיות נמוכה יותר** — כלומר אין שום סיבה לבחור בו. זו בדיוק ההגדרה של **החזית היעילה**.` },
+          ...(t === 'growth' ? [{ t: 'warn' as const,
+            text: '**והמספר שחייב לעמוד מול העיניים לפני שבוחרים כאן:** נאסד״ק 100 ירד **83%** בדוט-קום ולקח לו **15.6 שנים** לחזור. מדד השבבים ירד **87%** ולקח לו **17.7 שנים**. **זה קרה, וזה יכול לקרות שוב.**' }] : []),
+          ...(t === 'flow' ? [{ t: 'warn' as const,
+            text: '**והמחיר, שצריך לומר אותו:** התשואה כאן נמוכה יותר. **וזה לא כישלון — זה המוצר.** מי שלא צריך את הכסף עשרים שנה משלם כאן על ביטחון שאינו זקוק לו.' }] : []),
+          ...(t === 'both' ? [{ t: 'warn' as const,
+            text: '**והאזהרה:** בשנה גרועה המשיכה **תצא מתוך ירידה**. זה חלק מהעסקה, ולכן שיעור המשיכה כאן נמוך מזה של תזרים.' }] : []),
+        ],
+        src: `החישוב רץ על ${COMBOS_FUNDS} קרנות × כל חלוקת משקלים בקפיצות 10% לתמהילים של 2–4 רכיבים = ${COMBOS_TESTED.toLocaleString('en-US')} שילובים. התנודתיות מחושבת מ-378 מתאמים מדודים, לא כממוצע.`,
+      },
+      ...slides,
+    ],
+  };
+}
+
+export const FLOW_COMBOS_DECK = trackDeck('flow');
+export const BOTH_COMBOS_DECK = trackDeck('both');
+export const GROWTH_COMBOS_DECK = trackDeck('growth');

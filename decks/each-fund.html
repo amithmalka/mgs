@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · כל תעודה, אחת אחת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="each-fund-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 8</span></header>
+  <h1>כל תעודה, אחת אחת</h1>
+  <p class="lede">חמישה מדדים, עשר תעודות — מה כל אחת עושה, בשפה פשוטה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-how">
+  <header><span class="eyebrow">קודם, איך לקרוא את זה</span><span class="pos" dir="ltr">1 / 8</span></header>
+  <h2>תעודת סל היא סל. והשאלה היחידה היא מה יש בסל</h2>
+  <div class="body"><p class="lede"><b>תעודת סל אינה מניה ואינה חברה.</b> היא <b>סל</b> שקונה בשבילכם עשרות או מאות מניות בפעולה אחת, לפי רשימה שנקראת <b>מדד</b>.</p><p><b>ודוגמה שמסבירה הכל:</b> מדד ה-S&amp;P 500 הוא רשימה של 500 החברות הגדולות בארצות הברית. תעודה שעוקבת אחריו קונה את כל 500 — <b>בשקל אחד אתם בעלים של חלקיק מכל אחת מהן.</b> לא צריך לבחור מניות, ולא צריך לדעת מי תנצח.</p><p class="box good"><b>וזה בדיוק למה זה עובד:</b> אתם לא מהמרים על חברה. <b>אתם קונים את הכלכלה.</b> אם Apple תקרוס ו-NVIDIA תעלה, הסל פשוט מתעדכן — בלי שתעשו שום דבר, ובלי שתשלמו עמלה.</p><p><b>ולכל מדד יש בדרך כלל כמה תעודות שעוקבות אחריו</b>, ממנפיקים שונים. הן עושות אותו דבר, ונבדלות בשלושה דברים בלבד: <b>דמי הניהול, הגודל, ואם הן מחזיקות את המניות באמת או חוזה עם בנק.</b> על ההבדל השלישי יש מצגת שלמה.</p><p class="box warn"><b>וכאן יש עשר תעודות ולא עשרים ושש.</b> הקטלוג מכיל יותר, אבל ארבע מהן עוקבות אחרי אותו S&amp;P 500 בדיוק. <b>הצגנו אחת פיזית ואחת סינתטית לכל מדד</b> — זה כל מה שצריך כדי להבין את הבחירה.</p></div>
+  <p class="src">הגדרת מדד וקרן סל לפי דירקטיבת UCITS 2009/65/EC.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-spx">
+  <header><span class="eyebrow">מדד 1 מתוך 5</span><span class="pos" dir="ltr">2 / 8</span></header>
+  <h2>S&amp;P 500 — 500 החברות הגדולות באמריקה</h2>
+  <div class="body"><p class="lede"><b>זה המדד המוכר בעולם, ובעצם הבסיס של הכל.</b> 500 החברות הציבוריות הגדולות בארצות הברית, משוקללות לפי הגודל שלהן — כלומר החברה הגדולה תופסת יותר מקום.</p><p><b>מה שבפנים, לפי משקל:</b> Apple 7.59%, NVIDIA 7.52%, Microsoft 5.79%, Amazon 3.71%, Alphabet 2.52%, Broadcom 2.36% — <b>ואחריהן עוד 494 חברות.</b> בנקים, קמעונאות, תרופות, אנרגיה, ביטוח.</p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>CSPX</b> · iShares</td><td dir="ltr">את 500 המניות עצמן</td><td dir="ltr">0.07%</td><td dir="ltr"><b>157.6 מיליארד $</b></td></tr><tr><td class="lead"><b>SPXS</b> · Invesco</td><td dir="ltr"><b>חוזה עם בנקים</b></td><td dir="ltr"><b>0.05%</b></td><td dir="ltr">59.0 מיליארד $</td></tr></tbody></table></div><p class="box good"><b>מה המדד הזה עשה, על 42 שנים: 9.38% לשנה.</b> וזה <b>במחיר בלבד</b> — עם הדיבידנדים שהחברות חילקו, <b>11.42% לשנה.</b> שתי התעודות האלה צוברות את הדיבידנד פנימה, ולכן הן מקבלות את המספר הגבוה.</p><p class="box warn"><b>והגרוע שהיה: ירידה של 53%</b>, בין 2007 ל-2009. <b>והשנה הגרועה: מינוס 45%.</b> 20% מהשנים בהיסטוריה שלו הסתיימו בהפסד, <b>וההתאוששות החציונית שלו היא 22 חודשים</b> — האיטית מבין כל המדדים כאן, אבל גם הרדודה בעומק.</p><p><b>למי זה מתאים: לכולם, כגרעין.</b> זו התעודה שמי שלא יודע מה לעשות צריך להתחיל ממנה. <b>היא לא הכי מרשימה בתשואה, והיא הכי קשה להרוס איתה.</b></p></div>
+  <p class="src">אחזקות ל-31.5.2026 · תשואות המדד מסדרות ‎^GSPC ו-^SP500TR מ-1985 ומ-1988 · דמי ניהול מתשקיפי המנפיקים.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-world">
+  <header><span class="eyebrow">מדד 2 מתוך 5</span><span class="pos" dir="ltr">3 / 8</span></header>
+  <h2>MSCI World — אותו רעיון, אבל 23 מדינות</h2>
+  <div class="body"><p class="lede"><b>אותו היגיון כמו ה-S&amp;P 500, רק רחב יותר:</b> החברות הגדולות ב-<b>23 המדינות המפותחות</b> — ארצות הברית, יפן, בריטניה, גרמניה, קנדה, צרפת, אוסטרליה ועוד.</p><p><b>ובפועל זה עדיין בעיקר אמריקה.</b> האחזקות הגדולות זהות: Apple 5.54%, NVIDIA 5.18%, Microsoft 3.99%, Amazon 2.65% — <b>פשוט במשקלים קטנים יותר</b>, כי יש עוד מדינות לחלוק איתן את המקום. <b>כ-70% מהמדד הוא אמריקאי.</b></p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>IWDA</b> · iShares</td><td dir="ltr">את המניות עצמן, בדגימה</td><td dir="ltr">0.20%</td><td dir="ltr"><b>150.1 מיליארד $</b></td></tr><tr><td class="lead"><b>MXWO</b> · Invesco</td><td dir="ltr"><b>חוזה עם בנקים</b></td><td dir="ltr"><b>0.05%</b></td><td dir="ltr">—</td></tr></tbody></table></div><p class="note">״בדגימה״ פירושו שהיא מחזיקה את רוב המניות ולא את כולן — חברות קטנטנות שהשפעתן אפסית מדולגות, כדי לחסוך עמלות.</p><p class="box good"><b>מה שהוא קונה לכם: פיזור גיאוגרפי.</b> אם אמריקה תעבור עשור חלש ויפן או אירופה יעלו, המדד הזה מרגיש את זה והמדד האמריקאי לא. <b>מה שזה עולה: תשואה מעט נמוכה יותר</b>, כי אמריקה ניצחה את כולם בשלושים השנים האחרונות.</p><p><b>למי זה מתאים: למי שלא רוצה שכל הכסף שלו יהיה במדינה אחת.</b> וזו טענה הגיונית — <b>גם אם ההיסטוריה האחרונה לא תמכה בה.</b></p></div>
+  <p class="src">אחזקות ל-31.5.2026 · דמי ניהול מתשקיפי המנפיקים.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-allworld">
+  <header><span class="eyebrow">מדד 3 מתוך 5</span><span class="pos" dir="ltr">4 / 8</span></header>
+  <h2>FTSE All-World — והפעם גם השווקים המתעוררים</h2>
+  <div class="body"><p class="lede"><b>הרחב מכולם.</b> הוא כולל את 23 המדינות המפותחות <b>ועוד</b> את השווקים המתעוררים: סין, הודו, טייוואן, ברזיל, דרום אפריקה. <b>כ-4,000 חברות בסל אחד.</b></p><p><b>האחזקות הגדולות, שוב אותן חברות:</b> NVIDIA 5%, Apple 4.5%, Microsoft 3.6%, Alphabet 3.4%, Amazon 2.3% — <b>ואז TSMC הטייוואנית ב-1.8%</b>, שהיא הדוגמה הטובה למה שהמדד הזה מוסיף: היצרנית שמייצרת את השבבים של כל השאר, ואינה במדד האמריקאי.</p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>VWRA</b> · Vanguard</td><td dir="ltr">את המניות עצמן, בדגימה</td><td dir="ltr">0.14%</td><td dir="ltr"><b>62.2 מיליארד $</b></td></tr><tr><td class="lead">סינתטית</td><td dir="ltr"><b>אין כזו על המדד הזה</b></td><td dir="ltr">—</td><td dir="ltr">—</td></tr></tbody></table></div><p class="box warn"><b>ומה שצריך לדעת עליו: השווקים המתעוררים הם כ-10% ממנו, והם היו החלק החלש.</b> סין בפרט עברה עשור אבוד — מדד האינטרנט הסיני ירד 82% מפברואר 2021, ועד היום לא חזר. <b>אבל 10% זו חשיפה קטנה, וזה בדיוק העניין בפיזור.</b></p><p><b>למי זה מתאים: למי שרוצה החזקה אחת ולסגור את העניין.</b> זו תעודה שאפשר להחזיק לבד, בלי שום דבר אחר, ולישון טוב. <b>לא הכי צומחת, הכי פחות תלויה במשהו אחד.</b></p></div>
+  <p class="src">אחזקות ל-31.5.2026 · נתוני סין מדוחות KraneShares ל-SEC.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-ndx">
+  <header><span class="eyebrow">מדד 4 מתוך 5</span><span class="pos" dir="ltr">5 / 8</span></header>
+  <h2>נאסד״ק 100 — אותן חברות, בלי הבנקים</h2>
+  <div class="body"><p class="lede"><b>מאה החברות הגדולות בבורסת נאסד״ק, ללא חברות פיננסים.</b> ובפועל זה אומר: <b>אותן חברות ענק טכנולוגיות כמו ב-S&amp;P 500, אבל במשקלים כפולים</b> — כי אין 400 חברות אחרות לדלל אותן.</p><p><b>ההבדל נראה מיד:</b> Apple 8.14% כאן מול 7.59% ב-S&amp;P, NVIDIA 8.03%, Microsoft 6.21%, Amazon 4.37%, <b>Micron 4.29%</b> ו-<b>Tesla 3.5%</b> — שתיים שכמעט לא קיימות במדד הרחב.</p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>CNDX</b> · iShares</td><td dir="ltr">את 100 המניות עצמן</td><td dir="ltr">0.30%</td><td dir="ltr"><b>31.3 מיליארד $</b></td></tr><tr><td class="lead"><b>EQQS</b> · Invesco</td><td dir="ltr"><b>חוזה עם בנקים</b></td><td dir="ltr"><b>0.20%</b></td><td dir="ltr">3.2 מיליארד $</td></tr></tbody></table></div><p class="box good"><b>וזה המדד עם הנתונים הטובים ביותר שמדדנו: 14.37% לשנה על 41 שנים.</b> וההתאוששות החציונית שלו היא <b>7 חודשים</b> — <b>המהירה מכל המדדים כאן.</b> רק 17% מהשנים שלו הסתיימו בהפסד.</p><p class="box warn"><b>ומול זה: ירידה של 81% בהתפוצצות בועת הדוט־קום, והשנה הגרועה הייתה מינוס 67%.</b> וההתאוששות מהנפילה ההיא ארכה <b>178 חודשים — ארבע עשרה שנים ותשעה חודשים.</b> זה המדד שנותן הכי הרבה, <b>וגם זה שדורש הכי הרבה סבלנות כשהוא נופל.</b></p><p><b>למי זה מתאים: למי שיש לו אופק של עשרים שנה ומעלה ולא צריך את הכסף בדרך.</b> בתיק של ילד זה הגיוני. בתיק של מי שמושך תזרים בעוד חמש שנים — <b>לא.</b></p></div>
+  <p class="src">אחזקות ל-31.5.2026 · סדרת ‎^NDX מ-1985 · מדידת ההתאוששות מכל חלון בהיסטוריה.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-tech">
+  <header><span class="eyebrow">מדד 5 מתוך 5 — חלק א׳</span><span class="pos" dir="ltr">6 / 8</span></header>
+  <h2>טכנולוגיה — וכאן מתחיל הריכוז האמיתי</h2>
+  <div class="body"><p class="lede"><b>סקטור הטכנולוגיה בתוך ה-S&amp;P 500 בלבד.</b> לא 500 חברות, לא 100 — <b>רק חברות הטכנולוגיה.</b> ובפעם הראשונה המשקלים הופכים דרמטיים:</p><p><b>NVIDIA 20.51%, Apple 20.41%, Microsoft 15.88%</b> — <b>שלוש חברות הן 57% מהתעודה.</b> ואחריהן Broadcom 6.46%, Micron 3.97% ו-AMD 3.21%.</p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>IUIT</b> · iShares</td><td dir="ltr">את המניות עצמן</td><td dir="ltr">0.15%</td><td dir="ltr"><b>20.6 מיליארד $</b></td></tr><tr><td class="lead"><b>XLKS</b> · Invesco</td><td dir="ltr"><b>חוזה עם בנקים</b></td><td dir="ltr">0.14%</td><td dir="ltr">2.7 מיליארד $</td></tr></tbody></table></div><p class="box warn"><b>וכאן צריך להיות ישר: זה לא פיזור, זה הימור מרוכז על שלוש חברות.</b> ומה שהמדד הזה עשה על 28 שנים הוא <b>9.47% לשנה</b> — <b>כמו ה-S&amp;P 500</b>, אבל עם ירידה של <b>81%</b> במקום 53%, ושנה גרועה של <b>מינוס 59%</b>.</p><p class="box warn"><b>וההתאוששות מהנפילה ההיא ארכה 210 חודשים — שבע עשרה שנים וחצי.</b> מי שקנה טכנולוגיה בשיא מרץ 2000 חזר לנקודת האיזון בספטמבר 2017.</p><p class="box good"><b>ומצד שני, החציון שלו הוא 12 חודשים</b> — רוב הירידות שלו הן שנה. <b>כלומר: בדרך כלל מהיר, ופעם בדור קטסטרופלי.</b> זה בדיוק הפרופיל שמנגנון הקנייה שלנו בנוי בשבילו.</p><p><b>למי זה מתאים: כתוספת, לא כגרעין.</b> 20% עד 40% מתיק שיש בו גם מדד רחב. <b>מי ששם את כל הכסף כאן לוקח סיכון שהוא כנראה לא מבין.</b></p></div>
+  <p class="src">אחזקות ל-31.5.2026 · סדרת XLK מ-1999 · מדידת ההתאוששות מכל חלון.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-semi">
+  <header><span class="eyebrow">מדד 5 מתוך 5 — חלק ב׳</span><span class="pos" dir="ltr">7 / 8</span></header>
+  <h2>שבבים — המנוע שמפעיל את כל השאר</h2>
+  <div class="body"><p class="lede"><b>החברות שמייצרות את השבבים.</b> לא את התוכנה, לא את הטלפון — <b>את הרכיב הפיזי</b> שבלעדיו שום דבר אחר לא עובד. בינה מלאכותית, רכב חשמלי, מחשבים, טלפונים.</p><p><b>ושימו לב כמה זה מפוזר יותר ממה שחושבים:</b> AMD 10.99%, TSMC 9.98%, Micron 9.88%, NVIDIA 9.73%, Broadcom 9.18%, SK Hynix 8.83% — <b>שש חברות, כל אחת כ-10%.</b> אין פה חברה אחת ששולטת.</p><div class="scroll"><table><thead><tr><th class="lead">התעודה</th><th>מה היא מחזיקה</th><th>דמי ניהול</th><th>גודל</th></tr></thead><tbody><tr><td class="lead"><b>SMH</b> · VanEck</td><td dir="ltr">את 25 המניות עצמן</td><td dir="ltr">0.35%</td><td dir="ltr"><b>8.3 מיליארד $</b></td></tr><tr><td class="lead">סינתטית</td><td dir="ltr"><b>אין כזו אירית</b></td><td dir="ltr">—</td><td dir="ltr">—</td></tr></tbody></table></div><p class="note">דמי הניהול כאן הגבוהים בקטלוג — 0.35%. על 3,000 ₪ בחודש לשלושים שנה זה כ-620,000 ₪, וצריך לדעת את זה.</p><p class="box good"><b>וזה הנכס עם התשואה הגבוהה שמדדנו: 14.75% לשנה על 32 שנים.</b> וההתאוששות החציונית שלו — <b>11 חודשים, המהירה מכל הנכסים התנודתיים כאן.</b></p><p class="box warn"><b>והמחיר: ירידה של 83%, שנה גרועה של מינוס 56%, ו-33% מהשנים הסתיימו בהפסד.</b> אחת מכל שלוש שנים. <b>וההתאוששות הארוכה הייתה 210 חודשים.</b></p><p><b>למי זה מתאים: לאופק ארוך, ובמינון.</b> בתיק של ילד מהלידה — הגיוני, ואפילו 20%. <b>למי שמושך כסף — לא, ובטח לא בכבדות.</b> וזו בדיוק הסיבה שהקטלוג מחלק לשלושה מסלולים.</p></div>
+  <p class="src">אחזקות ל-31.5.2026 · סדרת ‎^SOX מ-1994 · מדידת ההתאוששות מכל חלון.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="each-fund-summary">
+  <header><span class="eyebrow">והטבלה שאפשר לצלם</span><span class="pos" dir="ltr">8 / 8</span></header>
+  <h2>חמישה מדדים, זה כל ההבדל ביניהם</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">המדד</th><th>תשואה לשנה</th><th>הנפילה</th><th>התאוששות חציונית</th><th>שנים שליליות</th></tr></thead><tbody><tr><td class="lead"><b>נאסד״ק 100</b></td><td dir="ltr"><b>14.37%</b></td><td dir="ltr">−81%</td><td dir="ltr"><b>7 ח׳</b></td><td dir="ltr"><b>17%</b></td></tr><tr><td class="lead"><b>שבבים</b></td><td dir="ltr"><b>14.75%</b></td><td dir="ltr">−83%</td><td dir="ltr">11 ח׳</td><td dir="ltr">33%</td></tr><tr><td class="lead"><b>טכנולוגיה</b></td><td dir="ltr">9.47%</td><td dir="ltr">−81%</td><td dir="ltr">12 ח׳</td><td dir="ltr">22%</td></tr><tr><td class="lead"><b>S&amp;P 500</b></td><td dir="ltr">9.38%</td><td dir="ltr"><b>−53%</b></td><td dir="ltr">22 ח׳</td><td dir="ltr">20%</td></tr><tr><td class="lead">MSCI World ועולמי</td><td dir="ltr">קרוב ל-S&amp;P</td><td dir="ltr">רדודה יותר</td><td dir="ltr">—</td><td dir="ltr">—</td></tr></tbody></table></div><p class="note">כל התשואות <b>במחיר בלבד</b>, בלי דיבידנד — כלומר בצד השמרני. עם הדיבידנד ה-S&amp;P נתן 11.42%.</p><p class="box good"><b>ומה שהטבלה אומרת בשורה אחת:</b> <b>הנאסד״ק והשבבים נתנו הכי הרבה</b>, והם גם נפלו הכי עמוק והתאוששו הכי מהר. <b>ה-S&amp;P 500 נתן פחות, ונפל בחצי מהעומק.</b> זה כל הטרייד־אוף, ואין בו קסם.</p><p><b>ולכן הקטלוג מחלק לשלושה מסלולים:</b> מי שמושך כסף מקבל מדד רחב בעיקר; מי שלא מושך כלל יכול להחזיק שבבים וטכנולוגיה בכבדות; <b>ומי שבאמצע — באמצע.</b> זה לא עניין של אומץ, <b>זה עניין של מתי צריך את הכסף.</b></p></div>
+  <p class="src">סדרות המדדים: ‎^NDX מ-1985, ‎^SOX מ-1994, XLK מ-1999, ‎^GSPC מ-1985 · מדידה מ-4.11.2026.</p>
+  <footer><a href="./" class="crumb">כל תעודה, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">כל תעודה, אחת אחת — פתיחה</option><option value="1">1. תעודת סל היא סל. והשאלה היחידה היא מה יש בסל</option><option value="2">2. S&amp;P 500 — 500 החברות הגדולות באמריקה</option><option value="3">3. MSCI World — אותו רעיון, אבל 23 מדינות</option><option value="4">4. FTSE All-World — והפעם גם השווקים המתעוררים</option><option value="5">5. נאסד״ק 100 — אותן חברות, בלי הבנקים</option><option value="6">6. טכנולוגיה — וכאן מתחיל הריכוז האמיתי</option><option value="7">7. שבבים — המנוע שמפעיל את כל השאר</option><option value="8">8. חמישה מדדים, זה כל ההבדל ביניהם</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

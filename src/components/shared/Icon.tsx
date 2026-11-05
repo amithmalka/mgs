@@ -76,11 +76,11 @@ export function Icon({ name, size = 16, className = '' }: IconProps) {
  */
 const DOT_COLORS = {
   red: '#F87171',
-  yellow: '#FBBF24',
-  green: '#34D399',
+  yellow: '#FBBF4A',
+  green: '#4ADE80',
   orange: '#FB923C',
   brown: '#A1887F',
-  gold: '#D4AF37',
+  gold: '#5EE6D0',
 } as const;
 
 export type DotColor = keyof typeof DOT_COLORS;

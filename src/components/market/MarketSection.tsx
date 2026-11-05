@@ -10,7 +10,7 @@ import type { BoardRow } from './MarketBoard';
 import { CandleChart } from './CandleChart';
 import { CandleGuide } from './CandleGuide';
 
-const UP = '#34D399';
+const UP = '#4ADE80';
 const DOWN = '#F87171';
 
 /**
@@ -37,7 +37,7 @@ export function MarketSection() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [updatedAt, setUpdatedAt] = useState<string>('');
-  const [focus, setFocus] = useState('BTC/USD');
+  const [focus, setFocus] = useState('SPY');
 
   const refresh = useCallback(async () => {
     setLoading(true); setErr('');

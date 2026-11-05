@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · שלושת המסלולים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="tracks-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 11</span></header>
+  <h1>שלושת המסלולים</h1>
+  <p class="lede">תזרים, תזרים וצמיחה, צמיחה — איך כל אחד בנוי ומה ההיגיון</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-open">
+  <header><span class="eyebrow">המנגנון</span><span class="pos" dir="ltr">1 / 11</span></header>
+  <h2>שלוש תשובות לשאלות שונות</h2>
+  <div class="body"><p class="lede">שלושת המסלולים <b>אינם שלוש דרגות של אותו דבר</b>. הם שלוש תשובות לשאלה אחת: <b>מתי אתם צריכים את הכסף.</b></p><ul><li><b>תזרים</b> — אני צריך הכנסה עכשיו, ולאורך כל הדרך.</li><li><b>תזרים וצמיחה</b> — אני צריך חלק עכשיו, והשאר ימשיך לעבוד.</li><li><b>צמיחה</b> — אני לא נוגע בזה שנים, ורוצה שזה יגדל כמה שאפשר.</li></ul><p class="box warn"><b>אין כאן ״הטוב ביותר״.</b> מסלול שמושך יותר משאיר פחות — וזה לא חיסרון, זו המטרה שלו. להשוות ביניהם לפי הסכום הסופי זה להשוות תשובות לשאלות שונות.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-table">
+  <header><span class="eyebrow">ההבדל</span><span class="pos" dir="ltr">2 / 11</span></header>
+  <h2>מה באמת מבדיל ביניהם</h2>
+  <div class="body"><p>שני דברים, ושניהם אמיתיים: <b>כמה התיק מתנדנד</b>, ו<b>מתי מתחילים למשוך ממנו</b>.</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>תנודתיות</th><th>מתי מתחילים למשוך</th><th>הקצב בשלב הצבירה</th><th>אחרי עצירת ההפקדות</th></tr></thead><tbody><tr><td class="lead">תזרים</td><td dir="ltr">עד 14%</td><td dir="ltr">שנה 2</td><td dir="ltr">1% → 4%</td><td dir="ltr">5.0%</td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">14%–22%</td><td dir="ltr">שנה 5</td><td dir="ltr">1% → 4%</td><td dir="ltr">4.5%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">מעל 22%</td><td dir="ltr">לא מושך כלל</td><td dir="ltr">—</td><td dir="ltr">אין משיכות</td></tr></tbody></table></div><p>שימו לב לעמודה השלישית. <b>תזרים מתחיל למשוך בשנה 2</b> — תוך כדי שעדיין מפקידים. זה לא באג, זה כל הרעיון: מי שחי מהכסף לא מחכה עשרים שנה.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-flow">
+  <header><span class="eyebrow">מסלול 1</span><span class="pos" dir="ltr">3 / 11</span></header>
+  <h2>תזרים — חיים מהכסף בזמן שבונים אותו</h2>
+  <div class="body"><p class="lede">תנודתיות <b>עד 14%</b>. התיק נבנה כדי <b>להיות שם בדיוק כשמושכים ממנו</b>.</p><div class="scroll"><table><thead><tr><th class="lead">שנה</th><th>שיעור המשיכה</th><th>מה קורה</th></tr></thead><tbody><tr><td class="lead">1</td><td dir="ltr">0%</td><td dir="ltr">שנה ראשונה — צוברים בלבד</td></tr><tr><td class="lead">2–5</td><td dir="ltr">1%</td><td dir="ltr">המשיכה מתחילה, קטנה, תוך כדי הפקדות</td></tr><tr><td class="lead">6</td><td dir="ltr">2%</td><td dir="ltr">עולה — התיק כבר נושא את עצמו</td></tr><tr><td class="lead">7</td><td dir="ltr">3%</td><td dir="ltr">עולה</td></tr><tr><td class="lead">8 ואילך</td><td dir="ltr">4%</td><td dir="ltr">הקצב המלא בשלב הצבירה</td></tr><tr><td class="lead">אחרי העצירה</td><td dir="ltr">5%</td><td dir="ltr">ההפקדות נגמרו, המשיכה גדלה</td></tr></tbody></table></div><p class="note"><b>השיעור הוא אחוז מהיתרה, לא סכום קבוע.</b> ולכן המשיכה החודשית <b>עולה</b> עם השנים — אותו אחוז, מיתרה שגדלה.</p><p class="box good"><b>למי זה מתאים:</b> מי שצריך השלמת הכנסה, או שחי מהתיק. <b>למי לא:</b> מי שלא צריך את הכסף עשרים שנה — הוא משלם על ביטחון שאינו זקוק לו.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-both">
+  <header><span class="eyebrow">מסלול 2</span><span class="pos" dir="ltr">4 / 11</span></header>
+  <h2>תזרים וצמיחה — חלק להכנסה, חלק ממשיך לעבוד</h2>
+  <div class="body"><p class="lede">תנודתיות <b>14%–22%</b>. המשיכה מתחילה <b>בשנה 5</b>, לא בשנה 2.</p><div class="scroll"><table><thead><tr><th class="lead">שנה</th><th>שיעור המשיכה</th><th>מה קורה</th></tr></thead><tbody><tr><td class="lead">1–4</td><td dir="ltr">0%</td><td dir="ltr">צוברים בלבד — נותנים לתיק להיבנות</td></tr><tr><td class="lead">5–10</td><td dir="ltr">1%</td><td dir="ltr">משיכה קטנה מתחילה</td></tr><tr><td class="lead">11 ואילך</td><td dir="ltr">4%</td><td dir="ltr">הקצב המלא</td></tr><tr><td class="lead">אחרי העצירה</td><td dir="ltr">4.5%</td><td dir="ltr">מעט פחות מתזרים — כי התיק תנודתי יותר</td></tr></tbody></table></div><p>למה פחות מתזרים אחרי העצירה? כי <b>תיק תנודתי יותר צריך למשוך פחות</b>. משיכה גדולה מתוך נפילה נועלת את הנפילה.</p><p class="box good"><b>למי זה מתאים:</b> מי שרוצה גם הכנסה וגם שהקרן תגדל. <b>האזהרה:</b> בשנה גרועה המשיכה תצא מתוך ירידה.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-growth">
+  <header><span class="eyebrow">מסלול 3</span><span class="pos" dir="ltr">5 / 11</span></header>
+  <h2>צמיחה — לא נוגעים, והזמן עושה את העבודה</h2>
+  <div class="body"><p class="lede">תנודתיות <b>מעל 22%</b>. <b>אפס משיכות</b>, בשום שלב, עד סוף האופק.</p><p class="box warn"><b>מי שימשוך באמצע נפילה של 40% ינעל אותה, והקרן לא תתאושש.</b> זה המסלול היחיד שבו משיכה אחת הורסת את כל ההיגיון.</p><p>אבל — <b>וזו הנקודה שחייבת להיאמר</b> — צמיחה אינה ״בלי תזרים לעולם״. אחרי שההפקדות נעצרות התיק גדול, ו<b>אחוז קטן מסכום גדול הוא הכנסה גדולה יותר</b> ממה שמסלול שקט היה נותן.</p><div class="stats"><div class="stat up"><span class="k">תזרים, בסוף האופק</span><span class="n" dir="ltr">24,021₪</span><span class="s">לחודש, 5% מהיתרה</span></div><div class="stat gold"><span class="k">צמיחה, מאותה נקודה</span><span class="n" dir="ltr">52,128₪</span><span class="s">לחודש, 4% מיתרה גדולה פי 2.7</span></div></div><p><b>ההבדל הוא מתי התזרים מתחיל, לא אם.</b></p></div>
+  <p class="src">הרצת מנוע: 400 מסלולים · תמהיל עולמי 40% · טכנולוגיה 40% · שבבים 20% · הפקדה 2,300₪ · קבוצה 30-40 · 20 שנות הפקדה ועוד 20.</p>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-why">
+  <header><span class="eyebrow">ההיגיון</span><span class="pos" dir="ltr">6 / 11</span></header>
+  <h2>למה שלושה ולא אחד</h2>
+  <div class="body"><p>כי <b>התנודתיות אינה סיכון אחיד</b> — היא תלויה לגמרי בשאלה מתי אתם צריכים את הכסף.</p><div class="vs"><div class="col"><h4>נפילה של 35% למי שלא מושך</h4><ul><li>שנתיים–שלוש של אי־נוחות על המסך</li><li>ההפקדות קונות יותר יחידות דווקא עכשיו</li><li>הקרן מתאוששת, ובדרך כלל מעל</li><li><b>עלות בפועל: אפס</b></li></ul></div><div class="col"><h4>אותה נפילה למי שמושך 5% בשנה</h4><ul><li>כל משיכה מוכרת יחידות במחיר נמוך</li><li>נשארות פחות יחידות להתאושש איתן</li><li>הקרן קטנה יותר כשהשוק חוזר</li><li><b>זה מה שנקרא סיכון רצף התשואות</b></li></ul></div></div><p>אותו שוק, אותה נפילה, <b>שתי תוצאות הפוכות</b>. זו הסיבה היחידה שיש כאן שלושה מסלולים ולא אחד.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-choose">
+  <header><span class="eyebrow">הבחירה</span><span class="pos" dir="ltr">7 / 11</span></header>
+  <h2>הגיל הוא קירוב. האופק הוא התשובה</h2>
+  <div class="body"><p>המערכת מציעה מסלול לפי גיל — אבל <b>זו הצעה, לא קביעה</b>.</p><div class="scroll"><table><thead><tr><th class="lead">גיל</th><th>ההצעה</th><th>למה</th></tr></thead><tbody><tr><td class="lead">מתחת ל-40</td><td dir="ltr">צמיחה</td><td dir="ltr">אופק של עשרים שנה ומעלה</td></tr><tr><td class="lead">40–55</td><td dir="ltr">תזרים וצמיחה</td><td dir="ltr">האופק ארוך אבל כבר לא בלתי מוגבל</td></tr><tr><td class="lead">55 ומעלה</td><td dir="ltr">תזרים</td><td dir="ltr">אם המשיכה קרובה, התנודתיות היא האויב</td></tr></tbody></table></div><p class="box warn"><b>האופק קובע, לא הגיל.</b> מי שיצטרך את הכסף בעוד שלוש שנים שייך לתזרים גם בגיל 30. מי שלא ייגע בו שייך לצמיחה גם בגיל 60.</p><p>בדף ״לבחור תיק״: מזינים גיל, והמסלול המוצע מודגש בטאבים. לוחצים עליו — או בוחרים אחר.</p></div>
+  
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-wd-schedule">
+  <header><span class="eyebrow">ולוח המשיכות</span><span class="pos" dir="ltr">8 / 11</span></header>
+  <h2>אחוז אחד בהתחלה, ארבעה אחר כך — ולמה דווקא ככה</h2>
+  <div class="body"><p class="lede"><b>לוח המשיכות הוא שתי מדרגות בלבד</b>, והמדרגה הראשונה קיימת כדי שלא תצטרכו לחכות שנים בלי כלום:</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>הלוח</th><th>ההיגיון</th></tr></thead><tbody><tr><td class="lead"><b>תזרים</b></td><td dir="ltr"><b>1% לשנה בשנים 1–5, ומשנה 6 — 4%</b></td><td dir="ltr">מי שבחר אותו צריך את הכסף — ואחרי שש שנות הפקדה התיק יכול</td></tr><tr><td class="lead"><b>תזרים וצמיחה</b></td><td dir="ltr"><b>1% לשנה בשנים 1–9, ומשנה 10 — 4%</b></td><td dir="ltr">מוכן להמתין עוד ארבע שנים כדי שהקרן תהיה גדולה כשהמשיכה מתחילה</td></tr><tr><td class="lead"><b>צמיחה</b></td><td dir="ltr"><b>אין משיכה לאורך התקופה כלל</b></td><td dir="ltr">הכל נשאר בתוך התיק עד סוף האופק</td></tr></tbody></table></div><p><b>אחוז אחד בשנה הוא תזרים שהתיק כמעט לא מרגיש</b> — 0.083% בחודש. לכן הוא יכול לרוץ מהשנה הראשונה בלי לפגוע בצבירה. <b>ארבעה אחוזים הם התזרים האמיתי</b>, והוא נדחה עד שהקרן גדולה מספיק לשאת אותו.</p><p class="box good"><b>והמדרגה היא אחוז מהשווי העדכני, לא סכום קבוע.</b> 4% בשנה פירושו 0.333% בחודש ממה שיש <b>באותו חודש</b> — ולכן המשיכה מצטמקת מעצמה בירידה ומתרחבת בעלייה. זה מה שמונע ממשיכה לחסל קרן שנפלה.</p></div>
+  <p class="src">הלוח מוגדר ב-mgsSim.ts תחת RAMP. 1% ו-4% לשנה, מחולקים ל-12.</p>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-wd-blocked">
+  <header><span class="eyebrow">והשאלה הקשה</span><span class="pos" dir="ltr">9 / 11</span></header>
+  <h2>האם תמיד יהיה ממה למשוך? לא — ומדדנו כמה זמן</h2>
+  <div class="body"><p class="lede"><b>המערכת אינה מוכרת מתחת למחיר העלות הממוצע שלכם.</b> זה מה שמונע ממשיכה לנעול הפסד — <b>אבל זה גם אומר שכשהתיק מתחת לעלות, אין משיכה בכלל.</b> זו לא תקלה, זו ההגנה עצמה. והשאלה הנכונה היא כמה זמן היא יכולה להימשך.</p><p><b>אז בדקנו.</b> כל קומבינציה הורצה <b>אחורה על המדדים שמאחוריה, מכל נקודת התחלה אפשרית בהיסטוריה</b> — בין 214 ל-269 נקודות לכל תמהיל. בכל הרצה: הפקדה חודשית 20 שנה, אופק 25 שנה, ולוח המשיכות המלא.</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>התמהיל</th><th>חודשים חסומים</th><th>הרצף · חציון</th><th>הרצף הגרוע</th></tr></thead><tbody><tr><td class="lead">תזרים</td><td dir="ltr">VWRA50/SPXS40/XLKS10</td><td dir="ltr">8.4%</td><td dir="ltr"><b>14 ח׳</b></td><td dir="ltr"><b>48 ח׳</b></td></tr><tr><td class="lead">תזרים</td><td dir="ltr">SPXS60/MXWO30/SMH10</td><td dir="ltr">9.7%</td><td dir="ltr"><b>15 ח׳</b></td><td dir="ltr"><b>39 ח׳</b></td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">SPXS80/SMH10/XLKS10</td><td dir="ltr">8.2%</td><td dir="ltr"><b>14 ח׳</b></td><td dir="ltr"><b>40 ח׳</b></td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">MXWO40/XLKS30/IWDA20/SMH10</td><td dir="ltr">6.8%</td><td dir="ltr"><b>14 ח׳</b></td><td dir="ltr"><b>50 ח׳</b></td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">XLKS40/IWDA20/SMH20/SPXS20</td><td dir="ltr">6.8%</td><td dir="ltr"><b>13 ח׳</b></td><td dir="ltr"><b>57 ח׳</b></td></tr><tr><td class="lead"><b>צמיחה</b></td><td dir="ltr">כל החמישה</td><td dir="ltr"><b>0%</b></td><td dir="ltr"><b>0</b></td><td dir="ltr"><b>0</b></td></tr></tbody></table></div><p class="note">חציון כל נקודות ההתחלה. ״הרצף הגרוע״ הוא נקודת ההתחלה הגרועה ביותר שנמדדה בכלל.</p><p class="box warn"><b>התשובה בשתי שורות.</b> במקרה החציוני החסימה ארכה <b>שלושה עשר עד חמישה עשר חודשים.</b> בנקודת ההתחלה הגרועה ביותר שנמדדה היא ארכה <b>39 עד 57 חודשים — שלוש עד כמעט חמש שנים בלי משיכה.</b></p><p class="box good"><b>ומה זה אומר מעשית.</b> מי שבוחר תזרים צריך <b>רזרבה שאינה בתיק</b> — כי התיק מתוכנן להגן על עצמו, ולפעמים ההגנה הזאת פירושה שהוא לא ישלם. <b>וצמיחה אינה נחסמת אף פעם, כי היא אינה מושכת</b> — זה לא יתרון של המסלול, זו ההגדרה שלו.</p></div>
+  <p class="src">הרצה אחורה על SOX, XLK, NDX ו-S&amp;P 500 · 3.11.2026 · הנתונים ב-withdrawTest.ts.</p>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-wd-cost">
+  <header><span class="eyebrow">ומה זה עושה לתשואה</span><span class="pos" dir="ltr">10 / 11</span></header>
+  <h2>הנזילות עולה 23% עד 27% מההון — וזה המספר המלא</h2>
+  <div class="body"><p class="lede"><b>אותה הרצה בדיוק, פעם עם משיכות ופעם בלי.</b> כל המספרים הם <b>מכפיל על סך ההפקדות</b>, חציון כל נקודות ההתחלה:</p><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>בלי משיכות</th><th>נשאר בתיק</th><th>נמשך בדרך</th><th>סה״כ</th><th>מה שאבד</th></tr></thead><tbody><tr><td class="lead">תזרים</td><td dir="ltr">4.84×</td><td dir="ltr">2.80×</td><td dir="ltr">0.85×</td><td dir="ltr"><b>3.64×</b></td><td dir="ltr"><b>24.7%</b></td></tr><tr><td class="lead">תזרים</td><td dir="ltr">4.57×</td><td dir="ltr">2.73×</td><td dir="ltr">0.78×</td><td dir="ltr"><b>3.51×</b></td><td dir="ltr"><b>23.2%</b></td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">5.60×</td><td dir="ltr">3.40×</td><td dir="ltr">0.91×</td><td dir="ltr"><b>4.31×</b></td><td dir="ltr"><b>22.9%</b></td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">8.88×</td><td dir="ltr">5.28×</td><td dir="ltr">1.19×</td><td dir="ltr"><b>6.47×</b></td><td dir="ltr"><b>27.1%</b></td></tr><tr><td class="lead"><b>צמיחה</b></td><td dir="ltr">15.97×</td><td dir="ltr">15.97×</td><td dir="ltr">0.00×</td><td dir="ltr"><b>15.97×</b></td><td dir="ltr"><b>0%</b></td></tr></tbody></table></div><p class="note">25 שנים, הפקדות ל-20 שנה, על המדדים שמאחורי כל תמהיל.</p><p class="box good"><b>והקריאה הנכונה של ״24% עולה״: זה לא כסף שאבד — זה כסף שנמשך והוצא.</b> עמודת ״נמשך בדרך״ היא מה שהגיע ליד, ו״סה״כ״ הוא שניהם יחד. <b>מה שכן אבד הוא ההרכבה על הכסף שיצא</b> — וזה ההפרש בין 4.84 מכפיל ל-3.64.</p><p class="box warn"><b>וההשוואה שחייבת להיאמר במלואה.</b> תזרים מסתיים ב-<b>3.64 מכפיל</b> סך הכל. צמיחה מסתיימת ב-<b>15.97 — פי 4.4 ממנו.</b> זה מה שעולה להיות נזיל, ואפשר להציג אותו במספר.</p><p><b>זו לא טעות בבחירה — זו המחיר שלה.</b> מי שצריך 4% בשנה מגיל שש משלם עליהם ארבע חמישיות מההון הסופי. מי שלא צריך אותם מקבל את ההפרש. <b>שני המסלולים נכונים לאנשים שונים, וזה המספר שמבדיל ביניהם.</b></p></div>
+  <p class="src">אותה הרצה אחורה · חציון 214–269 נקודות התחלה · הנתונים ב-withdrawTest.ts.</p>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="tracks-four-ways">
+  <header><span class="eyebrow">והשיעור שמתחיל מהמספר בדף</span><span class="pos" dir="ltr">11 / 11</span></header>
+  <h2>אותו תיק, ארבע דרכים לחשב אותו — וארבע תשובות</h2>
+  <div class="body"><p class="lede"><b>500 ₪ בחודש לילד, מהלידה, עשרים שנה.</b> אותו תמהיל בדיוק, אותן הפקדות. וזה מה שיוצא, תלוי <b>איך</b> מחשבים:</p><div class="scroll"><table><thead><tr><th class="lead">איך חושבים</th><th>מה יוצא</th><th>מה זה מניח</th></tr></thead><tbody><tr><td class="lead"><b>הרכבה שטוחה</b></td><td dir="ltr">391,178 ₪</td><td dir="ltr">שכל שנה נותנת 12.38% בדיוק</td></tr><tr><td class="lead"><b>הרצה על ההיסטוריה</b></td><td dir="ltr"><b>545,472 ₪</b></td><td dir="ltr">חציון כל 93 חלונות העשרים שנה, עם ההפקדות</td></tr><tr><td class="lead">ועם מנגנון הקנייה</td><td dir="ltr">549,656 ₪</td><td dir="ltr">המנגנון מוסיף 0.77% בחציון</td></tr><tr><td class="lead"><b>ועם הדיבידנדים</b></td><td dir="ltr"><b>599,093 ₪</b></td><td dir="ltr">המדידה המלאה</td></tr></tbody></table></div><p class="note">הפער בין השורה הראשונה לאחרונה הוא <b>53%</b> — על אותו תיק, אותן הפקדות ואותה היסטוריה.</p><p class="box warn"><b>ולמה השטוחה נותנת הכי מעט, אף שהיא משתמשת בחציון הנמדד.</b> כי היא מניחה שכל שנה זהה. <b>כשמפקידים כל חודש, הסדר של השנים משנה</b> — וברוב החלונות ההיסטוריים השנים החזקות הגיעו מאוחר, כלומר על כסף גדול יותר. <b>ההרכבה השטוחה מוחקת את האפקט הזה.</b></p><p class="box good"><b>וזו הסיבה שבדף הנחיתה מוצג 545,472 ולא 599,093.</b> המספר שמוצג <b>מוריד את הדיבידנדים משלושה מדדים ומוריד את המנגנון</b> — כלומר הוא נמוך מהמדידה המלאה בכ-9%. <b>זו בחירה, והיא כתובה שם במפורש.</b></p><p><b>ומה שחייב להיאמר לצד כל ארבעת המספרים:</b> החציון אינו הבטחה. <b>החלון הגרוע ביותר שנמדד נתן 296,090 ₪</b> — עדיין פי 2.5 מההפקדות, אבל חצי מהחציון. וזה <b>חלון שקרה</b>, לא אומדן.</p></div>
+  <p class="src">הרצה על 93 חלונות של 20 שנה · S&amp;P 500 בתשואה כוללת מ-1988, נאסד״ק 100 מ-1985, SOX מ-1994, XLK מ-1999 · 4.11.2026.</p>
+  <footer><a href="./" class="crumb">שלושת המסלולים</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">שלושת המסלולים — פתיחה</option><option value="1">1. שלוש תשובות לשאלות שונות</option><option value="2">2. מה באמת מבדיל ביניהם</option><option value="3">3. תזרים — חיים מהכסף בזמן שבונים אותו</option><option value="4">4. תזרים וצמיחה — חלק להכנסה, חלק ממשיך לעבוד</option><option value="5">5. צמיחה — לא נוגעים, והזמן עושה את העבודה</option><option value="6">6. למה שלושה ולא אחד</option><option value="7">7. הגיל הוא קירוב. האופק הוא התשובה</option><option value="8">8. אחוז אחד בהתחלה, ארבעה אחר כך — ולמה דווקא ככה</option><option value="9">9. האם תמיד יהיה ממה למשוך? לא — ומדדנו כמה זמן</option><option value="10">10. הנזילות עולה 23% עד 27% מההון — וזה המספר המלא</option><option value="11">11. אותו תיק, ארבע דרכים לחשב אותו — וארבע תשובות</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

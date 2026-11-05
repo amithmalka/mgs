@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { usePlanStore, planMonth, thisMonth,
          nextDepositDate, daysUntilDeposit } from '../store/planStore';
 import { buildMonth, applyMonth, type Reason } from '../utils/monthPlan';
+import { MonthBuy } from '../components/build/MonthBuy';
 import { SLEEVE_HE, cohortFor, milestonesFor, type SleeveId } from '../constants/mgsScenarios';
 import { fetchPrices } from '../lib/marketData';
 import type { PriceInfo } from '../lib/marketData';
@@ -16,8 +17,11 @@ import { supabase } from '../lib/supabase';
  * bought: the fall from peak that drives the month's split is the index's
  * own, and so it is the same number whichever vehicle tracks that index.
  */
+/** הסימול שממנו נשלף המחיר. כל שמונה הקרנות נסחרות ב-LSE בדולר,
+ *  ולכן אין כאן המרת מטבע ואין שני קווים לאותה קרן. */
 const TICKER: Partial<Record<SleeveId, string>> = {
-  BTC: 'BTC/USD', SMH: 'SMH', XLK: 'XLK', WORLD: 'URTH',
+  SPXS: 'SPXS.L', CSPX: 'CSPX.L', MXWO: 'MXWO.L', IWDA: 'IWDA.L',
+  VWRA: 'VWRA.L', XLKS: 'XLKS.L', WTEC: 'WTEC.L', SMH: 'SMH.L',
 };
 
 /**
@@ -31,29 +35,50 @@ const TICKER: Partial<Record<SleeveId, string>> = {
  * exchange at all and the vehicle is an Israeli trust — also not US-situs,
  * but on a weaker-documented footing. `why` says which case it is.
  */
+/** **מה קונים בפועל — הקו הדולרי ב-LSE, דרך אינטראקטיב ישראל.**
+ *
+ *  **הוחלף מהיסוד ב-4.11.2026.** הטבלה שעמדה כאן הייתה **טבלת
+ *  קנייה בשקלים בבורסת תל אביב**, ובראשה **תעודת סל ביטקוין
+ *  ישראלית (תכלית 1217835)** — נכס שאינו UCITS, שאינו בקטלוג,
+ *  ושמחזיר את המשקיע לחשיפת מס עיזבון. גם השבבים נקנו שם דרך
+ *  תעודה ישראלית, כי לא הייתה קרן אירית נסחרת בת״א.
+ *
+ *  **מעתה: שמונה קרנות איריות, בורסה אחת, מטבע אחד.** `irish`
+ *  מסומן `true` בכולן — קרן אירית צוברת היא תאגיד, ולכן אינה
+ *  נכס בעל סיטוס אמריקאי. המחירים והמטבע אומתו מול הבורסה
+ *  ב-4.11.2026: כל שמונה הקווים נקובים בדולר.
+ */
 const BUY_AS: Partial<Record<SleeveId, {
   sym: string; num: string; isin: string; fee?: string;
   irish: boolean; why: string;
 }>> = {
-  BTC: { sym: 'תכלית סל ביטקוין', num: '1217835', isin: 'IL0012178351',
-         fee: '0.20%', irish: false,
-         why: 'אין בעולם קרן אירית על ביטקוין — UCITS לא מתיר קריפטו. ' +
-              'זו קרן סל ישראלית של מיטב, חשופה דרך חוזים וקרנות סל זרות ' +
-              'ולא מחזיקה ביטקוין עצמו.' },
-  SMH: { sym: 'קסם ETF שבבים', num: '1174119', isin: 'IL0011741191',
-         fee: '0.45%', irish: false,
-         why: 'אין אף קרן שבבים אירית רשומה בתל אביב. זו קרן סל ישראלית ' +
-              'על אותו מדד בדיוק — MVIS US Listed Semiconductor 25, ' +
-              'המדד שעליו נמדדו ההנחות כאן.' },
-  XLK: { sym: 'IUIT', num: '1159193', isin: 'IE00B3WJKG14',
-         fee: '0.15%', irish: true,
-         why: 'iShares S&P 500 Information Technology — אירלנד, צוברת, ' +
-              'מחזיקה את המניות עצמן ולא חוזה חילופין.' },
-  WORLD: { sym: 'iShares MSCI ACWI', num: '1159235', isin: 'IE00B6R52259',
-           fee: '0.20%', irish: true,
-           why: 'iShares MSCI All Country World, תת-קרן של iShares V plc, ' +
-                'אירלנד, צוברת — ״income will be included in their value״ ' +
-                'בלשון ה-KIID מ-3.9.2026.' },
+  SPXS: { sym: 'SPXS', num: 'LSE · USD', isin: 'IE00B3YCGJ38', fee: '0.05%', irish: true,
+          why: 'Invesco S&P 500 UCITS ETF — אירלנד, צוברת, חוזה חילופין. ' +
+               'הזולה בקטלוג, ובעלת היתרון המדוד של 0.20 נקודות על הפיזית ' +
+               'בזכות הפטור מניכוי מס הדיבידנד האמריקאי.' },
+  CSPX: { sym: 'CSPX', num: 'LSE · USD', isin: 'IE00B5BMR087', fee: '0.07%', irish: true,
+          why: 'iShares Core S&P 500 UCITS ETF — אירלנד, צוברת, **מחזיקה ' +
+               'את 504 המניות עצמן**. זו החלופה למי שאינו רוצה חוזה חילופין.' },
+  MXWO: { sym: 'MXWO', num: 'LSE · USD', isin: 'IE00B60SX394', fee: '0.05%', irish: true,
+          why: 'Invesco MSCI World UCITS ETF — 23 שווקים מפותחים, חוזה ' +
+               'חילופין. אינה משאילה ניירות בכלל.' },
+  IWDA: { sym: 'IWDA', num: 'LSE · USD', isin: 'IE00B4L5Y983', fee: '0.20%', irish: true,
+          why: 'iShares Core MSCI World UCITS ETF — מחזיקה 1,250 מניות ' +
+               'בדגימה. **משאילה 11.2% מהתיק בפועל**, עד 22%.' },
+  VWRA: { sym: 'VWRA', num: 'LSE · USD', isin: 'IE00BK5BQT80', fee: '0.14%', irish: true,
+          why: 'Vanguard FTSE All-World UCITS ETF — 3,821 מניות, מפותחים ' +
+               '**וגם מתעוררים**. הרחבה ביותר בקטלוג.' },
+  XLKS: { sym: 'XLKS', num: 'LSE · USD', isin: 'IE00B3VSSL01', fee: '0.14%', irish: true,
+          why: 'Invesco Technology S&P US Select Sector — חוזה חילופין. ' +
+               'המדד מגביל כל חברה ל-20%, ולכן הוא פחות מרוכז מ-S&P 500 ' +
+               'Information Technology.' },
+  WTEC: { sym: 'WTEC', num: 'LSE · USD', isin: 'IE00BYTRRD19', fee: '0.30%', irish: true,
+          why: 'State Street SPDR MSCI World Technology — 132 מניות, ' +
+               'החזקה פיזית מלאה. החלופה לטכנולוגיה בלי חוזה חילופין.' },
+  SMH: { sym: 'SMH', num: 'LSE · USD', isin: 'IE00BMC38736', fee: '0.35%', irish: true,
+         why: 'VanEck Semiconductor UCITS ETF — **25 מניות בלבד**, הקרן ' +
+              'המרוכזת ביותר בקטלוג. החזקה פיזית מלאה. הקו בליש״ט הוא ' +
+              'SMGB — לא אותו נייר.' },
 };
 
 const REASON: Record<Reason, { label: string; tone: string }> = {
@@ -74,7 +99,22 @@ const dayName = (d: Date) => `${d.getDate()} ב${MONTHS_HE[d.getMonth()]}`;
  * due. This is the screen the plan cannot be run without, because it is the
  * only place that knows what is held and what each sleeve has already done.
  */
-export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs') => void } = {}) {
+export function MonthPage({ onNavigate }: { onNavigate?: (tab: 'mgs' | 'build') => void } = {}) {
+  // **התיק שנבחר גובר על המנוע הישן.** מי שבחר רכיבים רואה את
+  // החלוקה על התיק שלו; מי שלא — מוזמן לבחור. שלושת הרכיבים
+  // הקבועים אינם מוצגים יותר.
+  return (
+    <div className="term">
+      <MonthBuy onBuild={() => onNavigate?.('build')} />
+    </div>
+  );
+}
+
+/** המנוע הישן — שלושת הרכיבים הקבועים. **אינו מוצג יותר**: התיק
+ *  נגזר ממה שהמשקיע בחר. נשמר בקוד ולא נמחק, כפי שסוכם. */
+// @ts-expect-error — נשמר בכוונה ואינו בשימוש
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function LegacyMonth({ onNavigate }: { onNavigate?: (tab: 'mgs' | 'build') => void } = {}) {
   const { age } = useMgsStore();
   const { simulationParams } = useStore();
   const deposit = simulationParams.monthlyDeposit;

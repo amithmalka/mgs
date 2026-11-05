@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLangStore } from '../../store/langStore';
 import type { Candle } from '../../lib/marketData';
 
-const UP = '#34D399';
+const UP = '#4ADE80';
 const DOWN = '#F87171';
 
 /**

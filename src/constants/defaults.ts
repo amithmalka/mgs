@@ -19,11 +19,28 @@ export interface AssetMeta {
   leveraged: boolean;
 }
 
+/** **שונה ב-4.11.2026 — ירדו מכאן המינוף והנאסד״ק.**
+ *
+ *  **המינוף.** `dbxb` החזיקה את `DBXB`, קרן S&P 500 **ממונפת פי שתיים**,
+ *  והיא הייתה 15% מהתמהיל שהחנות נפתחת עליו. אין מינוף במערכת, ולכן
+ *  המפתח מצביע עכשיו על **SMH** — שרוול השבבים. זו אותה העברה שנעשתה
+ *  ב-`mgsStore` כשהוסרה `QQQ3`: המנוע שהמינוף נתן נמצא היום בשבבים,
+ *  בלי הריבית על ההלוואה ובלי שחיקת האיפוס היומי.
+ *
+ *  **הנאסד״ק.** `eqqs` החזיקה את `EQQS`, נאסד״ק 100 סינתטית. הנאסד״ק
+ *  הוצא מכל המסלולים, ולכן המפתח מצביע עכשיו על **XLKS** — טכנולוגיה.
+ *
+ *  **ושלושת המפתחות האחרים כוונו לקטלוג בן שמונה הקרנות:** `p500`
+ *  ל-SPXS ו-`xmwo` ל-IWDA. שמות המפתחות נשארו כדי לא לשבור מצב שמור
+ *  אצל משתמשים קיימים — הם מזהים מקום בתמהיל, לא נייר.
+ *
+ *  אין בזה המלצה ואין בזה ייעוץ פיננסי.
+ */
 export const ASSET_META: Record<AssetClass, AssetMeta> = {
-  dbxb: { primaryTicker: 'DBXB', fallbackTicker: 'CSPX', proxyTicker: 'SSO',  label: 'S&P 500 ×2 ממונף', index: 'S&P 500 2× Leveraged', color: '#DC2626', role: 'red',   leveraged: true  },
-  eqqs: { primaryTicker: 'EQQS', fallbackTicker: 'CNDX', proxyTicker: 'QQQ',  label: 'נאסד״ק 100',       index: 'NASDAQ 100',          color: '#EF4444', role: 'red',   leveraged: false },
-  p500: { primaryTicker: 'XSPX', fallbackTicker: 'CSPX', proxyTicker: 'SPY',  label: 'S&P 500',          index: 'S&P 500',             color: '#34D399', role: 'green', leveraged: false },
-  xmwo: { primaryTicker: 'XMWO', fallbackTicker: 'IWDA', proxyTicker: 'URTH', label: 'MSCI World',        index: 'MSCI World',          color: '#10B981', role: 'green', leveraged: false },
+  dbxb: { primaryTicker: 'SMH',  fallbackTicker: 'SMH',  proxyTicker: 'SMH',  label: 'שבבים · SMH',      index: 'MarketVector US Listed Semiconductor 10% Capped', color: '#F87171', role: 'red',   leveraged: false },
+  eqqs: { primaryTicker: 'XLKS', fallbackTicker: 'WTEC', proxyTicker: 'XLK',  label: 'טכנולוגיה · XLKS', index: 'S&P Select Sector Capped 20% Technology',        color: '#F87171', role: 'red',   leveraged: false },
+  p500: { primaryTicker: 'SPXS', fallbackTicker: 'CSPX', proxyTicker: 'SPY',  label: 'S&P 500',          index: 'S&P 500',             color: '#4ADE80', role: 'green', leveraged: false },
+  xmwo: { primaryTicker: 'IWDA', fallbackTicker: 'VWRA', proxyTicker: 'URTH', label: 'MSCI World',       index: 'MSCI World',          color: '#4ADE80', role: 'green', leveraged: false },
 };
 
 /** Vanilla "green" anchors (S&P 500 + MSCI World — the Phase-B targets). */
@@ -71,47 +88,41 @@ export const DEFAULT_GOAL: Goal = {
   yearsToInvest: 10,
 };
 
-/**
- * Per-asset expected annual returns (%) — based on real historical data:
+/** **הנחות התשואה — נכתבו מחדש ב-4.11.2026, ושלוש שורות ירדו.**
  *
- * S&P 500 (SPY/VOO):     ~10.5%/yr since 1957 | conservative: weak decade (2000-2009), aggressive: bull run
- * Nasdaq 100 (QQQ):      ~16%/yr since 1985   | one of the best-performing indices long-term
- * Bitcoin (IBIT/FBTC):   CAGR 2015-2024 ~70%+ | conservative = adoption plateau, moderate = sustained growth
- * International (VXUS):  ~6-7%/yr             | typically lags US markets
- * Gold (GLD/IAU):        ~7-8%/yr 20yr avg    | inflation hedge, slow but steady
- * Dividend ETF (SCHD):   ~10-12%/yr total ret | ~4% yield + ~7% price appreciation
- */
-/**
- * IMPORTANT — Why Bitcoin rates are lower than its historical CAGR:
+ *  **מה שהיה כאן.** הערות שמסבירות ריביות של ביטקוין — למה 70% בשנה
+ *  לא מוקרנים קדימה, ואיך הוא ממודל כנכס מתבגר. **ביטקוין אינו
+ *  במערכת:** UCITS אוסרת קריפטו בקרן אירית, ולכן אין לו גרסה שאפשר
+ *  לקנות דרך אינטראקטיב ישראל בלונדון. גם `SCHD`, `VXUS` וזהב הוזכרו
+ *  שם, ואף אחד מהם אינו בקטלוג.
  *
- * Bitcoin's 10-year historical CAGR (2015-2024) was ~70%+, but this was during
- * the early adoption phase. As any asset matures, returns normalise downward.
- * For a 20-30 year projection, using 70% would produce mathematically absurd
- * results (e.g. ₪1,000/month → hundreds of millions). Instead, we model Bitcoin
- * as it transitions from a speculative asset toward a digital store of value:
- *   Conservative  = crypto winter / regulatory headwinds
- *   Moderate      = gradual institutionalisation, ~Gold-like growth + premium
- *   Aggressive    = continued adoption cycle, volatile but high compounding
- */
-/**
- * Weighted returns with default 30/30/15/25 allocation (S&P/Nasdaq/BTC/SCHD):
- *   Conservative ≈  7.2%   Moderate ≈ 13.5%   Aggressive ≈ 18.9%
+ *  **ומה שחשוב מזה: המספרים עצמם ירדו.** `dbxb` הניחה **18% בשנה**
+ *  בתרחיש הבסיס ו-28% באגרסיבי — הנחות של נייר ממונף פי שתיים. אין
+ *  מינוף במערכת, והשורה מכוונת עכשיו לשבבים.
  *
- * Bitcoin note: rates are below its historical CAGR (~70%+) intentionally.
- * Using historical BTC rates over 30yr produces mathematically absurd totals.
- * We model BTC as a maturing institutional asset, not the early-adoption phase.
+ *  **המספרים כאן זהים לאלה שב-`mgsTracks.ts`,** שהוא מקור האמת
+ *  להנחות התשואה, כדי שלא יהיה פער בין שני המסלולים:
+ *
+ *    I500 / p500  — S&P 500
+ *    TECH / eqqs  — טכנולוגיה · Damodaran NYU ינואר 2026, 9.64% גיאומטרי
+ *    SEMI / dbxb  — שבבים · Damodaran NYU ינואר 2026, 10.72%, בטא 1.52
+ *    MWRD / xmwo  — מדד עולמי
+ *
+ *  **התרחיש האגרסיבי אינו תחזית.** הוא מה שקורה אם העשור הבא דומה
+ *  לעשור שעבר, והעשור שעבר היה מהחזקים בהיסטוריה.
+ *
+ *  אין בזה המלצה ואין בזה ייעוץ פיננסי.
  */
 export const ASSET_RETURNS: Record<string, Record<AssetClass, number>> = {
-  // dbxb = 2× leveraged S&P (high return, high volatility drag in weak years)
-  conservative: { dbxb: 6,  eqqs: 9,  p500: 7,  xmwo: 5  },
-  moderate:     { dbxb: 18, eqqs: 14, p500: 10, xmwo: 8  },
-  aggressive:   { dbxb: 28, eqqs: 20, p500: 14, xmwo: 11 },
+  conservative: { dbxb: 7,  eqqs: 7,  p500: 7,  xmwo: 5  },
+  moderate:     { dbxb: 11, eqqs: 10, p500: 10, xmwo: 8  },
+  aggressive:   { dbxb: 15, eqqs: 13, p500: 14, xmwo: 11 },
 };
 
 export const SCENARIOS = {
   conservative: { label: 'Conservative', color: '#888' },
-  moderate: { label: 'Moderate', color: '#D4AF37' },
-  aggressive: { label: 'Aggressive', color: '#34D399' },
+  moderate: { label: 'Moderate', color: '#5EE6D0' },
+  aggressive: { label: 'Aggressive', color: '#4ADE80' },
 };
 
 export const TRANSITION_THRESHOLD = 1500000;

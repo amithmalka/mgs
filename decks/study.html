@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · קרן השתלמות וגמל להשקעה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="study-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 9</span></header>
+  <h1>קרן השתלמות וגמל להשקעה</h1>
+  <p class="lede">למה זה כסף חינם, מה התקרות, ולמי כל אחד מהם מתאים</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-free">
+  <header><span class="eyebrow">קרן השתלמות</span><span class="pos" dir="ltr">1 / 9</span></header>
+  <h2>למה קוראים לזה כסף חינם</h2>
+  <div class="body"><p class="lede">כי יש שם <b>שלוש הטבות נפרדות</b>, וכל אחת מהן שווה כסף בפני עצמה.</p><ul><li><b>ההפקדה של המעסיק (7.5%) היא שכר שלא הייתם מקבלים אחרת.</b> 14,141₪ בשנה נכנסים לקרן <b>במלואם</b> — פטורים ממס הכנסה, מביטוח לאומי ומדמי בריאות.</li><li><b>לעצמאי — ניכוי שחוסך גם מס הכנסה וגם ביטוח לאומי.</b> במס שולי 35% ההטבה המשולבת היא <b>52.83%</b> מכל שקל מוכר.</li><li><b>ופטור מלא ממס רווחי הון.</b> 25% על הרווח הריאלי שפשוט לא משולמים — עד 30% למי שמעל מדרגת היסף.</li></ul><p class="box good"><b>כמה זה שווה בפועל:</b> כדי שעובד יקבל 14,141₪ <b>נטו</b> כשכר, במס שולי 35%, המעסיק היה צריך לשלם כ-21,755₪ ברוטו. <b>הקרן נותנת פי 1.54 את אותו כסף.</b></p></div>
+  <p class="src">סעיפים 3(ה), 9(16א), 9(16ב), 17(5א) לפקודה · לוח עזר רשות המסים 2026.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-ceil">
+  <header><span class="eyebrow">התקרות</span><span class="pos" dir="ltr">2 / 9</span></header>
+  <h2>התקרות המדויקות — 2026</h2>
+  <div class="body"><div class="stats"><div class="stat"><span class="k">עצמאי — הפקדה מוטבת</span><span class="n" dir="ltr">20,566₪</span><span class="s">7% מההכנסה, עד 293,397₪</span></div><div class="stat"><span class="k">שכיר — הפקדה מוטבת</span><span class="n" dir="ltr">18,854₪</span><span class="s">10% מהשכר, עד 15,712₪ לחודש</span></div><div class="stat"><span class="k">שניהם יחד</span><span class="n" dir="ltr">39,420₪</span><span class="s">שני חשבונות נפרדים</span></div><div class="stat"><span class="k">לחודש, שניהם</span><span class="n" dir="ltr">3,285₪</span><span class="s">מעל זה — לברוקר</span></div></div><p class="note">שנות ההפקדה לפי קבוצת גיל: 20-30 → 25 · 30-40 → 20 · 40-50 → 15 · 50-60 → 10 · 60-70 → 10.</p><div class="scroll"><table><thead><tr><th class="lead">עצמאי — שלוש שכבות</th><th>הסכום</th><th>מה מקבלים</th></tr></thead><tbody><tr><td class="lead">עד 13,203₪</td><td dir="ltr">4.5% מ-293,397₪</td><td dir="ltr"><b>ניכוי</b> + פטור ממס רווחי הון</td></tr><tr><td class="lead">13,203 עד 20,566₪</td><td dir="ltr">היתר</td><td dir="ltr">אין ניכוי — <b>אבל כן פטור</b> ממס רווחי הון</td></tr><tr><td class="lead">מעל 20,566₪</td><td dir="ltr">—</td><td dir="ltr">הרווחים חייבים 25%. <b>אין טעם</b></td></tr></tbody></table></div><div class="scroll"><table><thead><tr><th class="lead">שכיר</th><th>השיעור</th><th>הסכום</th></tr></thead><tbody><tr><td class="lead">משכורת קובעת</td><td dir="ltr">—</td><td dir="ltr">15,712₪ לחודש · 188,544₪ לשנה</td></tr><tr><td class="lead">המעסיק</td><td dir="ltr">7.5%</td><td dir="ltr">1,178₪ לחודש · <b>14,141₪ לשנה</b></td></tr><tr><td class="lead">העובד</td><td dir="ltr">2.5%</td><td dir="ltr">393₪ לחודש · 4,714₪ לשנה</td></tr><tr><td class="lead"><b>סך הפקדה מוטבת</b></td><td dir="ltr"><b>10%</b></td><td dir="ltr"><b>1,571₪ לחודש · 18,854₪ לשנה</b></td></tr></tbody></table></div><p class="note"><b>ותנאי שרוב הציבור לא מכיר:</b> כדי שחלק המעסיק ייחשב מוטב, העובד חייב להפקיד <b>לפחות שליש</b> ממה שהמעסיק מפקיד. עובד שמסרב להפקיד את 2.5% שלו <b>מסכן את ההטבה כולה</b>.</p><p class="box warn"><b>והתקרות קפואות.</b> חוק שפורסם ב-26.12.2024 הקפיא את עדכון סעיף 120ב לשנים <b>2025–2027</b> — כלומר המספרים האלה זהים לאלה של 2024, ויישארו כך גם ב-2027.</p></div>
+  <p class="src">לוח עזר רשות המסים 2026, פרק ג׳ · הושווה ישירות ללוח 2025 — אותם מספרים בדיוק.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-worth">
+  <header><span class="eyebrow">הכימות</span><span class="pos" dir="ltr">3 / 9</span></header>
+  <h2>כמה ההטבה שווה בשקלים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">שכיר בתקרה, תשואה ריאלית 5%</th><th>6 שנים</th><th>20 שנה</th></tr></thead><tbody><tr><td class="lead">סך ההפקדות</td><td dir="ltr">113,126₪</td><td dir="ltr">377,088₪</td></tr><tr><td class="lead">יתרה צפויה</td><td dir="ltr">~132,159₪</td><td dir="ltr">~648,560₪</td></tr><tr><td class="lead">שווי הפטור ממס רווחי הון</td><td dir="ltr">4,758₪</td><td dir="ltr"><b>67,868₪</b></td></tr><tr><td class="lead">שווי ההטבה בהפקדה (35%)</td><td dir="ltr">29,696₪</td><td dir="ltr"><b>98,986₪</b></td></tr><tr><td class="lead"><b>סך ההטבה</b></td><td dir="ltr"><b>~34,450₪</b></td><td dir="ltr"><b>~166,850₪</b></td></tr><tr><td class="lead"><b>כאחוז מההפקדות</b></td><td dir="ltr"><b>~30%</b></td><td dir="ltr"><b>~44%</b></td></tr></tbody></table></div><p class="note"><b>וזה עוד לפני</b> החיסכון בדמי ביטוח לאומי ובריאות.</p><p class="box good"><b>בדיקת שפיות מול המקור הרשמי:</b> נייר הכלכלן הראשי באוצר קובע שבעשירון העליון <b>״למעלה ממחצית מההפקדה ממומנת בפועל על ידי המדינה״</b>, ושההטבה המצטברת על 36 שנות חיסכון היא <b>~173 אלף ₪</b>. החישובים כאן מתכנסים לאותו סדר גודל.</p></div>
+  <p class="src">אגף הכלכלן הראשי, משרד האוצר, &quot;על הטבת המס בקרן השתלמות&quot;, אוקטובר 2025.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-six">
+  <header><span class="eyebrow">הכללים</span><span class="pos" dir="ltr">4 / 9</span></header>
+  <h2>שש שנים — ושלושת החריגים</h2>
+  <div class="body"><p><b>הוותק נספר לחשבון, לא להפקדה.</b> כל שקל שמופקד אחר כך נזיל באותו מועד שהחשבון נזיל.</p><div class="scroll"><table><thead><tr><th class="lead">המצב</th><th>הוותק הנדרש</th></tr></thead><tbody><tr><td class="lead">רגיל</td><td dir="ltr"><b>6 שנים</b> ממועד התשלום הראשון</td></tr><tr><td class="lead">הגיע לגיל פרישה</td><td dir="ltr"><b>3 שנים</b></td></tr><tr><td class="lead">לצורך השתלמות</td><td dir="ltr"><b>3 שנים</b></td></tr><tr><td class="lead"><b>פטירה</b></td><td dir="ltr"><b>אין דרישת ותק כלל</b> — פטור מלא</td></tr></tbody></table></div><p class="box warn"><b>ו״גיל פרישה״ אינו 67 לכולם.</b> לפי חוק גיל פרישה 2004: <b>67 לגברים</b>, ולנשים <b>עולה בהדרגה מ-62 ל-65</b>. אישה שנולדה במרץ 1963 מגיעה לגיל הפרישה ב-63 ו-3 חודשים.</p><ul><li><b>כל משיכה סוגרת את החשבון</b> להפקדות — למעט משיכת <b>עד שליש</b> לצורך השתלמות בישראל, שאינה נחשבת משיכה.</li><li><b>ומשיכה מוקדמת יקרה מאוד:</b> הרווחים ממוסים ב<b>שיעור השולי המלא</b>, לא ב-25%, והקרן מנכה בשיעור המרבי — <b>47%</b>.</li><li><b>מעבר ממעמד שכיר לעצמאי לא מאפס את הוותק.</b> תקנה 1(ב) לתקנות 1993 ממזגת את שני החשבונות לאחד.</li></ul></div>
+  <p class="src">סעיפים 9(16א), 9(16ב), 125ג(ד)(5) לפקודה · תקנות 1993 · חוזר רשות המסים 29.7.2020.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-both">
+  <header><span class="eyebrow">שכיר וגם עצמאי</span><span class="pos" dir="ltr">5 / 9</span></header>
+  <h2>שתי קרנות במקביל — מה בטוח ומה לא</h2>
+  <div class="body"><div class="stats"><div class="stat gold"><span class="k">שכיר</span><span class="n" dir="ltr">18,854₪</span><span class="s">לשנה</span></div><div class="stat gold"><span class="k">עצמאי</span><span class="n" dir="ltr">20,566₪</span><span class="s">לשנה</span></div><div class="stat up"><span class="k">יחד</span><span class="n" dir="ltr">39,420₪</span><span class="s">בשני חשבונות נפרדים</span></div></div><p><b>הבסיס המשפטי:</b> §9(16א) מגדיר הפקדה מוטבת לשכיר, §9(16ב) לעצמאי. <b>אלה שתי הוראות פטור נפרדות, עם שתי תקרות נפרדות, ואין בפקודה שום הוראה שמצליבה ביניהן.</b></p><p><b>וחיזוק נוסף:</b> תקנה 1(ב) לתקנות 1993 <b>נדרשת במפורש</b> כדי למזג חשבון שכיר וחשבון עצמאי — מה שמלמד שכברירת מחדל <b>אלה שני חשבונות נפרדים</b>.</p><p class="box warn"><b>ומה שחייבים לומר בכנות: אין חוזר רשמי של רשות המסים שקובע זאת במפורש.</b> חיפשנו, ולא מצאנו. זו <b>פרקטיקה מבוססת עם היגיון חוקי מובהק</b> — ולא אסמכתא פורמלית. לתיק אמיתי: אישור רואה חשבון או בקשת החלטת מיסוי.</p><p class="box warn"><b>ועוד דגל:</b> כלל הפחתת <b>הניכוי</b> לשכיר-עצמאי (ההכנסה הקובעת פחות המשכורת שעליה הופקד) הוא <b>קונצנזוס מקצועי מוחלט</b> — אבל <b>לא אותר בנוסח סעיף 17(5א)</b> ולא בשום חוזר. המערכת מיישמת אותו כי הוא השמרני, וזה נרשם כאן בפירוש.</p></div>
+  <p class="src">סעיפים 9(16א), 9(16ב), 17(5א) לפקודה · תקנות מס הכנסה (חשבונות שונים בקרן השתלמות), תשנ״ג-1993, תקנה 1(ב) · לא אותר חוזר של רשות המסים בנושא.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-risk">
+  <header><span class="eyebrow">הסיכון</span><span class="pos" dir="ltr">6 / 9</span></header>
+  <h2>ומה עומד על הפרק</h2>
+  <div class="body"><p><b>נייר מדיניות רשמי של אגף הכלכלן הראשי באוצר, אוקטובר 2025</b>, ממליץ לצמצם משמעותית את ההטבה.</p><div class="stats"><div class="stat warn"><span class="k">עלות ההטבה 2024</span><span class="n" dir="ltr">10.7 מיליארד₪</span><span class="s">השלישית בגודלה בישראל</span></div><div class="stat warn"><span class="k">לשלושת העשירונים העליונים</span><span class="n" dir="ltr">71%</span><span class="s">מההטבה בהפקדה</span></div><div class="stat "><span class="k">מפקידים בעשירון התחתון</span><span class="n" dir="ltr">9%</span><span class="s">מול 83% בעליון</span></div></div><ul><li><b>חלופה 1 (המועדפת):</b> הפחתת תקרת השכר ב-25% — מ-15,712₪ ל-<b>11,784₪</b>. חיסכון ~1.7 מיליארד₪.</li><li><b>חלופה 2:</b> ביטול הפטור ממס רווחי הון. ~2.2 מיליארד₪.</li><li><b>חלופה 3:</b> הגבלת הפטור לשש השנים הראשונות.</li></ul><p class="box good"><b>והסטטוס נכון להיום: לא חוקק דבר, וההטבה בתוקף במלואה.</b> ב-26.10.2025 שר האוצר הוריד את ההצעה מהפרק; התכנית הכלכלית ל-2026 אינה כוללת שום צעד בקרן השתלמות; התקרות פורסמו בינואר 2026 <b>ללא שינוי</b>; ודוח ועדת הארביטראז׳ מיולי 2026 קובע במפורש שהמלצותיו <b>אינן נוגעות לקרן השתלמות</b>.</p><p class="box warn"><b>אבל זו המלצה מקצועית עומדת</b> שחוזרת כל מחזור תקציב ונבלמת פוליטית. ו-2027 תתנהל בתקציב המשכי — כלומר הכלי החקיקתי הרגיל לא קיים בשנה הבאה. <b>זו סיבה להתחיל עכשיו ולא בעוד שנתיים.</b></p></div>
+  <p class="src">אגף הכלכלן הראשי, אוקטובר 2025 · התכנית הכלכלית 2026 · דוח ועדת הארביטראז׳, יולי 2026.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-gemel">
+  <header><span class="eyebrow">גמל להשקעה</span><span class="pos" dir="ltr">7 / 9</span></header>
+  <h2>קופת גמל להשקעה — הכלי השני</h2>
+  <div class="body"><div class="stats"><div class="stat gold"><span class="k">תקרה 2026</span><span class="n" dir="ltr">83,641₪</span><span class="s">לשנה, **לאדם** — לא למשפחה</span></div><div class="stat "><span class="k">ב-2025 היה</span><span class="n" dir="ltr">81,711₪</span><span class="s">צמוד מדד, מתעדכן ב-1 בינואר</span></div><div class="stat up"><span class="k">משפחה בת 4</span><span class="n" dir="ltr">334,564₪</span><span class="s">לכל ילד תיק משלו</span></div></div><p><b>ושימו לב להבדל המבני:</b> תקרת הגמל <b>צמודה ועלתה</b>; תקרות קרן ההשתלמות <b>הוקפאו עד 2027</b>. שתי מערכות הצמדה שונות לגמרי.</p><ul><li><b>בזמן שהכסף בפנים — אפס מס.</b> אין אירוע מס על דיבידנד, ריבית או מכירה שהקופה מבצעת.</li><li><b>במשיכה רגילה</b> — הרווח ממוסה כהכנסה מריבית, <b>״בשיעור שלא יעלה על 25%״</b>. זו <b>תקרה, לא שיעור קבוע</b> — מי שהשולי שלו נמוך יותר זכאי להחזר.</li><li><b>ובגיל 60 — ההטבה הגדולה.</b> העברה לקופה משלמת קצבה וקבלה <b>כקצבה חודשית</b> → הרווחים <b>לא ממוסים כלל</b>, והקצבה פטורה ממס הכנסה <b>ואינה מנצלת את תקרת הפטור לקצבה מזכה</b>.</li></ul><p class="box good"><b>והיתרון היומיומי שרוב האנשים מפספסים: מעבר בין מסלולים ובין גופים אינו אירוע מס.</b> סעיף 3(ה4)(3) יוצר את אירוע המס רק על <b>משיכה</b> — והעברה אינה משיכה. בתיק רגיל, מעבר ממנייתי לסולידי מחייב מכירה ו-25% מס מיידי.</p></div>
+  <p class="src">סעיף 22(א) לחוק קופות גמל · סעיפים 3(ה4)(3), 9א, 125ג(ב) לפקודה · גלובס 18.12.2025.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-gemelvs">
+  <header><span class="eyebrow">ההשוואה</span><span class="pos" dir="ltr">8 / 9</span></header>
+  <h2>למי גמל להשקעה מתאים — ולמי לא</h2>
+  <div class="body"><div class="vs"><div class="col"><h4>מתאים ל</h4><ul><li>בן 45+ שיכול להתחייב לקצבה מגיל 60 — <b>שם ההטבה שווה הכל</b></li><li><b>מי שמשנה פרופיל סיכון</b> — המעבר בלי אירוע מס מהותי</li><li>חשבונות לילדים — <b>תקרה לכל נפש</b></li><li>העברה למוטבים מחוץ להליך צוואה</li><li>מי שהכנסתו תהיה נמוכה בגיל המשיכה</li></ul></div><div class="col"><h4>לא מתאים ל</h4><ul><li><b>משקיע פאסיבי שלא מוכר לעולם</b> — דמי הניהול מנצחים את דחיית המס</li><li><b>אזרח אמריקאי</b> — זה PFIC, אחד המוצרים הבעייתיים ביותר</li><li>מי שרוצה ETF אירי ספציפי או מניות בודדות</li><li>מי שיודע שימשוך הונית לפני 60</li><li>מי שמשקיע מעל 83,641₪ בשנה</li></ul></div></div><p class="box warn"><b>והחיסרון הכמותי:</b> דמי ניהול מהצבירה ~0.5%–0.75% מול TER של 0.07% בקרן אירית. בתשואה 7%, פער של 0.55% שוחק <b>~9% מהתיק אחרי 20 שנה ו-~17% אחרי 40</b>.</p><p class="box good"><b>ולגבי מס עיזבון אמריקאי — אין חשיפה.</b> מה שמחזיקים הוא <b>זכות כלפי החברה המנהלת הישראלית</b> — נכס שניתן לאכיפה נגד תושב ישראל, לא נכס אמריקאי. המניות שבתוך הקופה שייכות ל<b>קופה</b>, והמס חל רק על עיזבונות של <b>יחידים</b>.</p><p class="box warn"><b>אבל זה ניתוח מהחוק, לא אישור.</b> לא נמצא Revenue Ruling או PLR של ה-IRS שעוסק ספציפית בקופת גמל ישראלית. ההיגיון איתן — הוא לא ״מאושר״. <b>ולאזרח אמריקאי זה לא תקף בכלל.</b></p></div>
+  <p class="src">IRC §2104(a) · Treas. Reg. §20.2104-1(a)(4) · מחשבון דמי ניהול, רשות שוק ההון.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="study-gemelrisk">
+  <header><span class="eyebrow">ושם גם</span><span class="pos" dir="ltr">9 / 9</span></header>
+  <h2>ועדת הארביטראז׳ — מה מתוכנן לגמל</h2>
+  <div class="body"><p><b>ב-2.7.2026 פורסם דוח מסכם של ועדה בראשות מנכ״ל משרד האוצר</b>, בחתימת מנהל רשות המסים, הממונה על שוק ההון ויו״ר רשות ני״ע.</p><p class="box warn"><b>ההמלצה המרכזית: הפטור יוגבל לתקרת צבירה מצטברת של 200,000₪ לכל החיים</b> — חוצה־מוצרים (גמל להשקעה + פוליסת חיסכון + קרנות נאמנות יחד). <b>לא תקרה שנתית — תקרה מצטברת.</b></p><p>ומעל התקרה — <b>כל</b> ההטבות מבוטלות: דחיית המס, הפטור במעבר בין מסלולים, <b>והפטור בגיל 60</b>.</p><p class="box good"><b>אבל הוראות המעבר מגנות על הקיים:</b> צבירה קיימת נכנסת <b>ללא אירוע מס</b>, ומי שצבירתו כבר מעל התקרה <b>יוכל עדיין למשוך בקצבה בפטור מגיל 60</b> — הוא פשוט לא יוכל להפקיד עוד בהטבה.</p><p><b>וזו תובנה מעשית:</b> אם ההמלצה תחוקק, <b>הכסף שנצבר עד אז מוגן</b>. זה טיעון להפקיד עכשיו.</p><p class="box warn"><b>סטטוס: המלצות בלבד, טרם חוקק דבר.</b> נדרשים תיקוני חקיקה בפקודה ובחוק קופות גמל <b>וגם</b> הקמת תשתית טכנולוגית. <b>אין באמור ייעוץ מס.</b></p></div>
+  <p class="src">דוח מסכם, הצוות לצמצום הפערים במכשירי השקעה, משרד האוצר, יולי 2026, סעיפים 5.1, 5.3, 12.1–12.5, 13.6.</p>
+  <footer><a href="./" class="crumb">קרן השתלמות וגמל להשקעה</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">קרן השתלמות וגמל להשקעה — פתיחה</option><option value="1">1. למה קוראים לזה כסף חינם</option><option value="2">2. התקרות המדויקות — 2026</option><option value="3">3. כמה ההטבה שווה בשקלים</option><option value="4">4. שש שנים — ושלושת החריגים</option><option value="5">5. שתי קרנות במקביל — מה בטוח ומה לא</option><option value="6">6. ומה עומד על הפרק</option><option value="7">7. קופת גמל להשקעה — הכלי השני</option><option value="8">8. למי גמל להשקעה מתאים — ולמי לא</option><option value="9">9. ועדת הארביטראז׳ — מה מתוכנן לגמל</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

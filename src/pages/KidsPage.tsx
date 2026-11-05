@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { KidsGrowth } from '../components/build/KidsGrowth';
 import { useOnboardingStore } from '../store/onboardingStore';
 import { KidsIntro } from '../components/onboarding/KidsIntro';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import {
   simulate, medianNoise,
-  SLEEVES, SLEEVE_HE, VOL, ASSUMPTION,
+  SLEEVES, SLEEVE_HE, ASSUMPTION,
   type Scenario, type Market,
 } from '../utils/mgsSim';
 
@@ -13,7 +14,6 @@ const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
 const SALARY_AGES = [20, 25] as const;
 const QUICK_DEPOSITS = [250, 500, 1000, 1500, 2000];
 const TARGETS = [3000, 5000, 10000, 20000];
-const SCN: Record<Scenario, string> = { pess: 'פסימי', real: 'ריאלי' };
 
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
@@ -62,10 +62,22 @@ function Num({ value, min, max, step, unit, onCommit }: {
  * lump handed over. Nothing is sold on the way, so the first tax event is the
  * first withdrawal.
  */
-export function KidsPage() {
+export function KidsPage({ onNavigate }: { onNavigate?: (t: 'build') => void } = {}) {
+  // **צמיחה בלבד, על התיק שנבחר.** המנוע הישן עם שלושת הרכיבים
+  // הקבועים נשמר בקוד ואינו מוצג.
+  return (
+    <div className="term">
+      <KidsGrowth onBuild={() => onNavigate?.('build')} />
+    </div>
+  );
+}
+
+// @ts-expect-error — נשמר בכוונה ואינו בשימוש
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function LegacyKids() {
   const { kidsDone, childAge: savedAge, childDeposit } = useOnboardingStore();
-  const [scenario, setScenario] = useState<Scenario>('real');
-  const [market, setMarket] = useState<Market>('il');
+  const scenario: Scenario = 'real';   // תרחיש יחיד — הפסימי ירד
+  const [market] = useState<Market>('fx');
   const [childAge, setChildAge] = useState(savedAge);
   const [deposit, setDeposit] = useState(childDeposit);
   const [salaryAge, setSalaryAge] = useState<number>(20);
@@ -115,8 +127,6 @@ export function KidsPage() {
             <b>{(ASSUMPTION[q.scenario][k] * 100).toFixed(2)}%</b>
           </span>
         ))}
-        <span className="tk"><span className="sym">תנודתיות ביטקוין</span>
-          <b className="dn">{(VOL.BTC * 100).toFixed(1)}%</b></span>
         <span className="tk"><span className="sym">המשכורת נפתחת</span>
           <b className="gold">גיל {q.salaryAge}</b></span>
         <span className="tk"><span className="sym">מס · רווח ריאלי</span><b className="dn">25%</b></span>
@@ -155,13 +165,6 @@ export function KidsPage() {
             <Num value={growth} min={0} max={5} step={0.5} unit="%" onCommit={setGrowth} />
             <span className="glab">לראות עד</span>
             <Num value={after} min={5} max={50} step={5} unit="שנים אחרי" onCommit={setAfter} />
-            <span className="glab">התרחיש</span>
-            {(['pess', 'real'] as Scenario[]).map(s => (
-              <Opt key={s} on={q.scenario === s} onClick={() => setScenario(s)}>{SCN[s]}</Opt>
-            ))}
-            <span className="glab">איפה קונים</span>
-            <Opt on={q.market === 'il'} onClick={() => setMarket('il')}>ת״א בשקלים</Opt>
-            <Opt on={q.market === 'fx'} onClick={() => setMarket('fx')}>חו״ל</Opt>
           </div>
           <p className="note">
             מפקידים <b>{startYear} שנים</b>, מגיל {childAge} עד גיל {q.salaryAge}, והעליה

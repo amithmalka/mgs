@@ -38,8 +38,8 @@ const thisMonth = () => {
 };
 
 const emptyHoldings = (): Record<MgsAsset, Holding> => ({
-  I500: { value: 0, cost: 0 }, EQQS: { value: 0, cost: 0 },
-  QQQ3: { value: 0, cost: 0 }, MWRD: { value: 0, cost: 0 },
+  I500: { value: 0, cost: 0 }, TECH: { value: 0, cost: 0 },
+  SEMI: { value: 0, cost: 0 }, MWRD: { value: 0, cost: 0 },
 });
 
 const DEFAULT_AGE = 30;
@@ -74,17 +74,38 @@ export const useMgsStore = create<MgsState>()(
     }),
     {
       name: 'mgs-engine',
-      version: 3,
+      version: 4,
       /**
-       * v1 and v2 stored a chosen track and horizon. Both are now derived from
-       * age alone, so they are simply dropped; anything else the user set —
-       * age, holdings, one-off deposits — carries over untouched.
+       * **v1–v2** stored a chosen track and horizon. Both are now derived from
+       * age alone, so they are dropped.
+       *
+       * **v3 → v4 (4.11.2026): נאסד״ק הוסר מ-MGS.** `EQQS` (נאסד״ק 100)
+       * ו-`QQQ3` (נאסד״ק 100 ממונף פי 3) הוחלפו ב-`TECH` וב-`SEMI`.
+       *
+       * **מי שכבר שמר החזקות חייב לקבל אותן בחזרה ולא תיק ריק**, ולכן
+       * הערכים מועברים: EQQS → TECH ו-QQQ3 → SEMI. זו ההעברה הנכונה
+       * כלכלית — נאסד״ק הלא ממונף הוא שכבת הטכנולוגיה, והממונף היה
+       * הרכיב התנודתי שמוליכים למחצה תופסים את מקומו — אבל **היא
+       * מעבירה שווי בין ניירות שונים**, והמשתמש צריך לעבור על המספרים.
+       * השדה `cost` נשמר כדי שחישוב המס לא יתאפס.
        */
-      migrate: (persisted) => {
-        const s = persisted as Partial<MgsState> & { trackId?: string; horizonYears?: number };
-        if (!s) return s as MgsState;
+      migrate: (persisted, from) => {
+        const s = persisted as (Partial<MgsState> & {
+          trackId?: string; horizonYears?: number;
+          holdings?: Record<string, Holding>;
+        }) | undefined;
+        if (!s) return s as unknown as MgsState;
         const { trackId: _t, horizonYears: _h, ...rest } = s;
         void _t; void _h;
+        if (from < 4 && rest.holdings) {
+          const h = rest.holdings as Record<string, Holding>;
+          const next = emptyHoldings();
+          next.I500 = h.I500 ?? next.I500;
+          next.MWRD = h.MWRD ?? next.MWRD;
+          next.TECH = h.TECH ?? h.EQQS ?? next.TECH;
+          next.SEMI = h.SEMI ?? h.QQQ3 ?? next.SEMI;
+          (rest as Partial<MgsState>).holdings = next;
+        }
         return rest as MgsState;
       },
     }

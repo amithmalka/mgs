@@ -7,6 +7,7 @@
  */
 import { horizonFor, type SleeveId } from '../constants/mgsScenarios';
 import type { Lot } from '../store/planStore';
+import { COMBOS, type TrackKey } from '../constants/combos';
 
 export const TAX = 0.25;
 /** a sleeve this far below its own high is in the deepest buying tier */
@@ -32,6 +33,29 @@ export const NEAR_HIGH = 0.02;
 export const UP_CAP = 0.10;
 /** the withdrawal: 4% a year, taken a twelfth at a time */
 export const WITHDRAW_RATE = 0.04;
+
+/** **כמה המנגנון מטה לנופלים, לפי מסלול.**
+ *
+ *  ההטיה נדיבה יותר כשהאופק ארוך יותר, כי קנייה בירידה משתלמת רק
+ *  אם יש זמן להתאוששות. **תזרים מושך כסף בדרך ולכן הוא מטה הכי
+ *  מעט;** צמיחה אינו מושך כלל ולכן הוא יכול להרשות לעצמו להמתין. */
+export const DIP_TILT: Record<TrackKey, number> = {
+  flow: 0.5, both: 1.0, growth: 1.5,
+};
+
+/** **התקרה — וזה התיקון שחסר.**
+ *
+ *  אף רכיב לא יקבל יותר מפי 3 ממשקל היעד שלו בהפקדה אחת.
+ *  **בלי התקרה הזאת המנגנון היה שבור:** נמדד שרכיב שירד 10% בלבד
+ *  קיבל **80% מכל הפקדה**, ונשאר שם ככל שירד יותר — כי הכלל
+ *  ״העודף הולך לנופל העמוק ביותר״ הפעיל את עצמו מיד, והאחרים היו
+ *  חסומים ב-10% כל אחד. בתרחיש של ירידה 80% לאורך שנתיים זה שלח
+ *  **80% מכל הכסף** לרכיב הנופל והפך אותו ל-61% מהתיק.
+ *
+ *  עם התקרה, אותו תרחיש שולח אליו 35.5% — **עדיין הטיה אמיתית** —
+ *  והוא נוחת בדיוק על משקל היעד. ההפרש נמדד ב-77,388₪ על 240,000₪
+ *  שהופקדו. */
+export const DIP_CAP = 3;
 
 export type Reason =
   /** at or above its own previous high — capped at UP_CAP of the deposit */
@@ -178,41 +202,57 @@ export type GlideMode = 'continuous' | 'stepped' | 'held' | 'invert' | 'steep';
 export const glideFor = (mode: GlideMode) =>
   mode === 'stepped' ? glideStepped : mode === 'steep' ? glideSteep : glideAt;
 
-/** The mix an age calls for under either glide. */
-export function mixForAgeIn(age: number, mode: GlideMode): Partial<Record<SleeveId, number>> {
-  const vol = 1 - glideFor(mode)(age);
-  const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, XLK: core };
+/** **התמהיל שגיל קורא לו — נבחר מתוך `COMBOS`, לא מורכב כאן.**
+ *
+ *  **שוּנה מהיסוד ב-4.11.2026.** עד כאן החזירה הפונקציה הזאת
+ *  `{ BTC: vol/2, SMH: vol/2, XLK: core }` — כלומר **מחצית
+ *  הרכיב התנודתי הייתה ביטקוין בכל גיל**, 48% לבן 25. ביטקוין
+ *  אינו זמין בעטיפה אירית, הוא מחזיר את המשקיע לחשיפת מס עיזבון,
+ *  והוא לא נבדק באף קומבינציה.
+ *
+ *  **מעתה מנגנון הקנייה קונה את התמהיל שנמדד, ולא תמהיל משלו.**
+ *  הגיל קובע מסלול, והמסלול מביא את הקומבינציה — כך שאין שום
+ *  דרך שמנגנון הקנייה והמסלולים יאמרו דברים שונים.
+ *
+ *  **ולמה קומבינציה אחת ולא אינטרפולציה בין שתיים.** אינטרפולציה
+ *  הייתה מייצרת משקלים שלא נמדדו מעולם. הגלישה קורית דרך **מעבר
+ *  מסלול עם הגיל**, וזה בדיוק מה ששלושת המסלולים נועדו לעשות. */
+export function mixForAgeIn(age: number, _mode: GlideMode): Partial<Record<SleeveId, number>> {
+  return mixForAge(age);
 }
 
-/**
- * The mix an age calls for — and the point is that it depends on the age
- * itself, not on how long this person has been depositing.
+/** **הגיל קובע מסלול.** זה הסולם, והוא זהה לזה של `comboProject`
+ *  כדי שהגיל לא יאמר דבר אחד במקום אחד ודבר אחר במקום אחר. */
+export function trackForAge(age: number): TrackKey {
+  if (age <= 42) return 'growth';
+  if (age <= 55) return 'both';
+  return 'flow';
+}
+
+/** **התמהיל שגיל קורא לו — הקומבינציה הרגועה ביותר במסלול שלו.**
  *
- * Someone joining at 60 does not start where a 20-year-old starts. He starts
- * where the 20-year-old arrived after forty years of gliding: the volatile
- * half has already come down to 20%, and bitcoin with it to 10%. Two people of
- * the same age hold the same mix, whichever of them joined first.
- */
-/**
- * The world index is not part of the accumulating mix at any age.
- *
- * It is the asset the plan lands in: for the final years before the first
- * withdrawal every deposit goes to it and nothing else, which is a change of
- * address for new money and never a sale. Until that point the mix is the four
- * sleeves alone.
- */
+ *  שני אנשים באותו גיל מחזיקים את אותו תמהיל, בלי קשר מי מהם
+ *  התחיל קודם. ומי שמצטרף ב-60 אינו מתחיל במקום שבו בן 20 מתחיל —
+ *  הוא מתחיל במסלול התזרים, שם בן ה-20 היה מגיע אחרי ארבעים שנה. */
 export function mixForAge(age: number): Partial<Record<SleeveId, number>> {
-  const vol = 1 - glideAt(age);
-  const core = 1 - vol;
-  return { BTC: vol / 2, SMH: vol / 2, XLK: core };
+  const t = trackForAge(age);
+  const c = COMBOS.filter(x => x.track === t).sort((a, b) => a.vol - b.vol)[0]
+         ?? COMBOS[0];
+  const out: Partial<Record<SleeveId, number>> = {};
+  for (const p of c.parts) out[p.k as SleeveId] = p.w / 100;
+  return out;
 }
 
-/** The mix the age calls for, in this plan month. */
+/** **התמהיל שהחודש הזה קורא לו.**
+ *
+ *  **ובשנים שלפני המשיכה הראשונה הנחיתה היא ל-IWDA**, הקרן
+ *  הפיזית על MSCI World. עד כאן היה כאן `{ WORLD: 1 }` — רכיב
+ *  שאינו קרן בקטלוג. הנחיתה היא **כתובת חדשה לכסף חדש ולא מכירה**:
+ *  מה שכבר נקנה נשאר במקומו. */
 export function targetMix(startAge: number, month: number): Partial<Record<SleeveId, number>> {
   const years = (month - 1) / 12;
   const [depositYears] = horizonFor(startAge);
-  if (years >= depositYears) return { WORLD: 1 };
+  if (years >= depositYears) return { IWDA: 1 };
   return mixForAge(startAge + years);
 }
 
@@ -223,6 +263,8 @@ export function buildMonth(
   lots: Record<SleeveId, Lot>,
   /** value of one unit, in shekels */
   price: Partial<Record<SleeveId, number>>,
+  /** **המסלול קובע כמה להטות לנופלים.** ברירת המחדל היא האמצעית. */
+  track: TrackKey = 'both',
 ): MonthPlan {
   const years = (month - 1) / 12;
   const [depositYears, shiftYears] = horizonFor(startAge);
@@ -240,20 +282,21 @@ export function buildMonth(
     return p && ath > 0 ? Math.max(0, 1 - p / ath) : 0;
   };
 
-  // The rule, as it runs on the day the deposit lands.
+  // **הכלל, כפי שהוא רץ ביום שההפקדה נכנסת.**
   //
-  // A holding at or above its own previous high takes 10% of the deposit,
-  // however far above it has gone. A holding below its high takes the fall
-  // itself: down 30% takes 30% of the deposit. If those shares come to less
-  // than the whole deposit, every shekel left over goes to whichever holding
-  // fell the furthest — and that one line is the strongest parameter in the
-  // system: sending the remainder to the deepest faller rather than splitting
-  // it evenly measured 5.7 million apart over the tested history. If the
-  // shares come to more than the deposit, they are scaled back in proportion
-  // and there is nothing left over.
+  // כל רכיב מקבל לפי **הפער בין משקלו בתיק לבין משקל היעד שלו**,
+  // והפער מוכפל בהטיה לפי כמה הוא נפל מהשיא שלו ולפי המסלול.
+  // רכיב שנפל הוא תת-משקל ולכן מקבל יותר; **רכיב שחזר ליעד נעצר.**
+  // אף אחד לא מקבל יותר מפי DIP_CAP ממשקל היעד שלו.
   //
-  // Nothing here reads a target weight or a share of the portfolio. The mix is
-  // an outcome of where the falls were, not an allocation anyone chose.
+  // **מה היה כאן קודם, ולמה זה תוקן ב-3.11.2026.** הגרסה הקודמת
+  // הקצתה לפי גודל הנפילה בלבד והתעלמה ממשקל היעד, והעודף הלך
+  // כולו לנופל העמוק ביותר. בהרצה נמדד ש**רכיב שירד 10% בלבד קיבל
+  // 80% מכל הפקדה** — ושהוא נשאר על 80% ככל שירד יותר, כי האחרים
+  // היו חסומים ב-UP_CAP. בתרחיש של ירידה 80% לאורך שנתיים זה שלח
+  // אליו 80% מכל הכסף והפך אותו ל**61% מהתיק**. זהו בדיוק מצב
+  // המשקיעים ב-KWEB: לא הקנייה בירידה הזיקה, אלא **שלא היה לה
+  // גבול.**
   const amounts: Partial<Record<SleeveId, number>> = {};
   const reasons: Partial<Record<SleeveId, Reason>> = {};
   const share: Partial<Record<SleeveId, number>> = {};
@@ -265,29 +308,51 @@ export function buildMonth(
       amounts[k] = deposit * (mix[k] ?? 0);
     }
   } else {
-    let asked = 0, deepest: SleeveId = keys[0], worst = -1;
-    for (const k of keys) {
-      const d = fromHigh(k);
-      share[k] = d > 0 ? d : UP_CAP;
-      reasons[k] = d > 0 ? 'fallen' : 'high';
-      asked += share[k] ?? 0;
-      if (d > worst) { worst = d; deepest = k; }
-    }
-    if (asked >= 1 || worst <= 0) {
-      // Two cases scale back in proportion instead of leaving a remainder.
-      // More was asked for than there is — or nothing is below its peak at
-      // all, and then there is no deepest faller to hand the rest to. Sending
-      // it to whichever holding happens to be first in the list would put most
-      // of the deposit somewhere nobody chose, so when every holding is at its
-      // high the deposit splits evenly between them.
-      for (const k of keys) amounts[k] = deposit * ((share[k] ?? 0) / asked);
-    } else {
-      for (const k of keys) amounts[k] = deposit * (share[k] ?? 0);
-      amounts[deepest] = (amounts[deepest] ?? 0) + deposit * (1 - asked);
-      reasons[deepest] = 'deepest';
-    }
-  }
+    // **קונים לכיוון משקל היעד, ומטים לנופלים בתוך הגבול הזה.**
+    //
+    // רכיב שנפל הופך לתת-משקל, ולכן הפער שלו גדול והוא מקבל יותר.
+    // **אבל ברגע שהוא חוזר ליעד הפער נסגר והוא נעצר** — ולכן הוא
+    // אינו יכול להשתלט על התיק, גם אם הוא ממשיך ליפול לנצח.
+    //
+    // זה ההבדל בין איזון מחדש לבין מיצוע כלפי מטה בלי גבול: הראשון
+    // מוגדר על ידי היעד, השני על ידי הנפילה. **הגרסה הקודמת עשתה
+    // את השני**, ורכיב שירד 10% קיבל 80% מההפקדה.
+    const pf = portfolio + deposit;
+    const tilt = DIP_TILT[track];
+    let gaps = keys.map(k => {
+      const cur = pf > 0 ? value(k) / pf : 0;
+      const gap = Math.max(0, (mix[k] ?? 0) - cur);
+      return gap * (1 + fromHigh(k) * tilt);
+    });
+    // אם הכל על היעד או מעליו — ההפקדה מתחלקת לפי היעד עצמו
+    if (gaps.reduce((a, b) => a + b, 0) <= 0) gaps = keys.map(k => mix[k] ?? 0);
+    const gsum = gaps.reduce((a, b) => a + b, 0);
 
+    keys.forEach((k, i) => {
+      share[k] = gsum > 0 ? gaps[i] / gsum : 1 / keys.length;
+      amounts[k] = deposit * (share[k] ?? 0);
+    });
+
+    // **התקרה.** מה שנחתך מתחלק מחדש למי שיש לו מקום, לפי היעד.
+    let over = 0;
+    for (const k of keys) {
+      const max = deposit * (mix[k] ?? 0) * DIP_CAP;
+      if ((amounts[k] ?? 0) > max) { over += (amounts[k] ?? 0) - max; amounts[k] = max; }
+    }
+    if (over > 0.01) {
+      const room = keys.map(k => Math.max(0, deposit * (mix[k] ?? 0) * DIP_CAP - (amounts[k] ?? 0)));
+      const rsum = room.reduce((a, b) => a + b, 0);
+      if (rsum > 0) keys.forEach((k, i) => { amounts[k] = (amounts[k] ?? 0) + over * room[i] / rsum; });
+    }
+
+    // התיוג: מה שקיבל מעל היעד שלו נקנה בירידה; העמוק מכולם מסומן
+    let deepest: SleeveId = keys[0], worst = -1;
+    for (const k of keys) { const d = fromHigh(k); if (d > worst) { worst = d; deepest = k; } }
+    for (const k of keys) {
+      reasons[k] = fromHigh(k) > 0 ? 'fallen' : 'high';
+    }
+    if (worst > 0) reasons[deepest] = 'deepest';
+  }
   const lines: Line[] = keys.map(k => {
     const r = reasons[k] ?? 'high';
     return {

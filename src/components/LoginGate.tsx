@@ -114,7 +114,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
         style={{ background: 'rgba(18,17,15,0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(212,175,55,0.18)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
         <div className="text-center mb-7">
           <div style={{ fontWeight: 800, fontSize: '2rem', letterSpacing: '0.18em',
-            background: 'linear-gradient(135deg,#9A7B2E,#D4AF37 40%,#F5E6A3 55%,#D4AF37 70%,#9A7B2E)',
+            background: 'linear-gradient(135deg,#9A7B2E,#5EE6D0 40%,#BFE9FF 55%,#5EE6D0 70%,#9A7B2E)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>MGS</div>
           <p style={{ fontSize: '0.62rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#8A8A8A', marginTop: 4 }}>Money Growth System</p>
           <p style={{ color: '#C9C4B8', fontSize: '0.9rem', marginTop: 18 }}>{title}</p>
@@ -133,7 +133,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
           {notice && <p style={{ color: '#7FB58A', fontSize: '0.8rem' }}>{notice}</p>}
           <button type="submit" disabled={busy}
             className="w-full rounded-lg py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg,#B8941F,#D4AF37,#F5E6A3)', color: '#1a1505', border: 'none', cursor: 'pointer' }}>
+            style={{ background: 'linear-gradient(135deg,#1F9E8C,#5EE6D0,#BFE9FF)', color: '#1a1505', border: 'none', cursor: 'pointer' }}>
             {busy ? 'רגע…' : cta}
           </button>
         </form>
@@ -210,7 +210,7 @@ function SetPassword({ onDone }: { onDone: () => void }) {
             {error && <p style={{ color: '#F87171', fontSize: '0.8rem' }}>{error}</p>}
             <button type="submit" disabled={busy}
               className="w-full rounded-lg py-3 text-sm font-semibold disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg,#B8941F,#D4AF37,#F5E6A3)', color: '#1a1505', border: 'none', cursor: 'pointer' }}>
+              style={{ background: 'linear-gradient(135deg,#1F9E8C,#5EE6D0,#BFE9FF)', color: '#1a1505', border: 'none', cursor: 'pointer' }}>
               {busy ? 'שומר…' : 'שמירת סיסמה'}
             </button>
             <button type="button" onClick={onDone}

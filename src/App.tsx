@@ -3,34 +3,47 @@ import { Sidebar, TopBar } from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import { HomePage } from './pages/HomePage';
 import { AcademyPage } from './pages/AcademyPage';
-import { MonthPage } from './pages/MonthPage';
-import { TracksPage } from './pages/TracksPage';
 import { KidsPage } from './pages/KidsPage';
 import { BuildPage } from './pages/BuildPage';
 import { StudyPage } from './pages/StudyPage';
-import { SystemPage } from './pages/SystemPage';
 import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
 import { Disclaimer } from './components/shared/Disclaimer';
 import { Onboarding } from './components/onboarding/Onboarding';
 import { useOnboardingStore } from './store/onboardingStore';
+import { TaxPage } from './pages/TaxPage';
+import { CommandPalette } from './components/shared/CommandPalette';
 
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
-  month: MonthPage,
+  // ״מה קונים החודש״ התמזג לתוך ״התיק שלי״; ״מסלולים״ ו״מערכת״
+  // ירדו מהתפריט. הדפים נשמרו בריפו ולא נמחקו.
+  month: HomePage,
   dashboard: HomePage,
   // MGS is the projection page; the month's buy list lives in MgsPage and is
   // kept in the repo, ready to be routed again.
-  mgs: TracksPage,
-  system: SystemPage,
+  mgs: HomePage,
+  system: AcademyPage,
   kids: KidsPage,
   build: BuildPage,
   study: StudyPage,
+  tax: TaxPage,
   academy: AcademyPage,
 };
 
+/** הטאב נשמר ב-hash כדי שרענון לא יזרוק אותך חזרה לדף הבית, ושיהיה
+ *  אפשר לשלוח קישור לטאב מסוים. */
+function tabFromHash(): Tab {
+  const h = window.location.hash.replace('#', '');
+  return (h in pages ? h : 'dashboard') as Tab;
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('month');
+  const [activeTab, setTab] = useState<Tab>(tabFromHash);
+  const setActiveTab = (t: Tab) => {
+    setTab(t);
+    if (window.location.hash !== `#${t}`) window.location.hash = t;
+  };
   const [menuOpen, setMenuOpen] = useState(false);
   const { allocations, addNotification, transitionThreshold } = useStore();
   const { lang } = useLangStore();
@@ -52,6 +65,26 @@ function App() {
     }
   }, []);
 
+  /** הרמז ״גוללים לצדדים״ מופיע רק בטבלה שבאמת גולשת.
+   *  CSS אינו יכול להשוות scrollWidth ל-clientWidth, ולכן זה כאן. */
+  useEffect(() => {
+    const markScrollers = () => {
+      document.querySelectorAll<HTMLElement>('.term .scroll').forEach(el => {
+        el.classList.toggle('has-x', el.scrollWidth > el.clientWidth + 2);
+      });
+    };
+    markScrollers();
+    const t = window.setTimeout(markScrollers, 600);
+    window.addEventListener('resize', markScrollers);
+    return () => { window.clearTimeout(t); window.removeEventListener('resize', markScrollers); };
+  });
+
+  useEffect(() => {
+    const sync = () => setTab(tabFromHash());
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+
   const ActivePage = pages[activeTab];
   const isRtl = lang === 'he';
 
@@ -70,6 +103,9 @@ function App() {
 
   return (
     <div className="min-h-screen noise-bg relative" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* ⌘K מכל מקום — שתי הקשות לכל אחת מתשע הלשוניות */}
+      <CommandPalette onPick={setActiveTab} />
+
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}

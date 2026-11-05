@@ -22,8 +22,8 @@ export function ScenarioChart({ conservative, moderate, aggressive }: Props) {
       <AreaChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
         <defs>
           <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+            <stop offset="5%" stopColor="#5EE6D0" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#5EE6D0" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -36,7 +36,7 @@ export function ScenarioChart({ conservative, moderate, aggressive }: Props) {
         <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
         <Area type="monotone" dataKey="Deposited" stroke="#555" fill="none" strokeDasharray="5 5" />
         <Area type="monotone" dataKey="Conservative" stroke={SCENARIOS.conservative.color} fill="none" />
-        <Area type="monotone" dataKey="Moderate" stroke="#D4AF37" fill="url(#goldGrad)" />
+        <Area type="monotone" dataKey="Moderate" stroke="#5EE6D0" fill="url(#goldGrad)" />
         <Area type="monotone" dataKey="Aggressive" stroke={SCENARIOS.aggressive.color} fill="none" />
       </AreaChart>
     </ResponsiveContainer>

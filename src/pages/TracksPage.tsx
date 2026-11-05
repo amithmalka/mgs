@@ -27,18 +27,13 @@ const TRACKS: Record<Track, { name: string; rule: string; tag: string }> = {
   },
 };
 const COHORTS: Cohort[] = ['20-30', '30-40', '40-50', '50-60', '60-70'];
-const SCN: Record<Scenario, string> = { pess: 'פסימי', real: 'ריאלי' };
+const SCN: Record<Scenario, string> = { real: 'ריאלי' };
 const TARGETS = [5000, 10000, 20000, 30000, 50000];
 
 /** every assumption, the body that published it and the date — nothing invented */
 const SOURCE: Record<Scenario, Array<[string, string, string]>> = {
   real: [
     ['ביטקוין', '16.60%', 'JPMorgan · התרחיש השורי שלהם עצמם · LTCMA 2027'],
-    ['שבבים', '10.72%', 'Damodaran · NYU Stern · 66 פירמות · 5.1.2026'],
-    ['טכנולוגיה', '9.64%', 'Damodaran · סקטור התוכנה · 309 פירמות'],
-  ],
-  pess: [
-    ['ביטקוין', '10.00%', 'JPMorgan AM · LTCMA 2027 · הבסיס, לא השורי'],
     ['שבבים', '10.72%', 'Damodaran · NYU Stern · 66 פירמות · 5.1.2026'],
     ['טכנולוגיה', '9.64%', 'Damodaran · סקטור התוכנה · 309 פירמות'],
   ],
@@ -55,16 +50,6 @@ const WHY: Record<Scenario, Array<[string, string]>> = {
      'בחלון 9.2014–10.2026 הביטקוין עשה כ-54% בשנה, והשבבים והטכנולוגיה הרבה מעל 10.72% ו-9.64%.'],
     ['ומה שמאזן את זה',
      'גם כאן הירידה המקסימלית החציונית מעל 80%, ואחוזון 10 נמוך פי 19 מהחציון — יותר מהפסימי. הנחה גבוהה לא מקטינה את התנודתיות, היא מזיזה את המרכז.'],
-  ],
-  pess: [
-    ['כל ההפרש בין שני התרחישים הוא הביטקוין',
-     'השבבים והטכנולוגיה זהים בשניהם. הפסימי לוקח את הבסיס של JPMorgan במקום התרחיש השורי: 10.0% במקום 16.6%. זה כל השינוי.'],
-    ['אבל מול הקונצנזוס המוסדי זה לא פסימי אלא הגבוה שקיים',
-     'מי שאינו מוכר קריפטו מפרסם: Meketa 2.9%, מורגן סטנלי 6.0%, JPMorgan 10.0% — חציון 6.0%. ‏10.0% הוא המספר הגבוה ביותר שגוף שאינו מוכר קריפטו פרסם מעולם.'],
-    ['ומה שקיים ונמוך מזה — ולא נלקח',
-     'Meketa 2.9%. ‏GMO מינוס 5.0% למניות ארה״ב. ‏Schilling ו-Uhlig ב-Journal of Monetary Economics 106 (2019): בשיווי משקל התשואה הדולרית הצפויה אפס. וחציון 19 התחזיות למניות ארה״ב הוא 6.24%.'],
-    ['והחולשה המשותפת לשני התרחישים',
-     'שתי הנחות מתוך שלוש תלויות באדם אחד — דאמודראן, המקור הסקטוריאלי היחיד בעולם. אין אף בית השקעות שמפרסם תשואה צפויה לסקטור.'],
   ],
 };
 
@@ -131,7 +116,7 @@ export function TracksPage() {
   const [track, setTrack] = useState<Track>('both');
   const [cohort, setCohort] = useState<Cohort>('30-40');
   const [scenario, setScenario] = useState<Scenario>('real');
-  const [market, setMarket] = useState<Market>('fx');
+  const [market] = useState<Market>('fx');
   // העלייה השנתית נבחרת, עד 5%. היה 7% קבוע, שהוא מעל כל
 // תרחיש שכר סביר ושימש כאילו הוא נתון.
   const [growth, setGrowth] = useState(3);
@@ -190,7 +175,7 @@ export function TracksPage() {
         {SLEEVES.map(k => (
           <span className="tk" key={`v${k}`}>
             <span className="sym">תנודתיות {SLEEVE_HE[k]}</span>
-            <b className={k === 'BTC' ? 'dn' : undefined}>{(VOL[k] * 100).toFixed(1)}%</b>
+            <b >{(VOL[k] * 100).toFixed(1)}%</b>
           </span>
         ))}
         <span className="tk"><span className="sym">מתאם שבבים·טכנולוגיה</span><b>0.88</b></span>
@@ -228,12 +213,9 @@ export function TracksPage() {
           )}
           <div className="grp">
             <span className="glab">התרחיש</span>
-            {(['pess', 'real'] as Scenario[]).map(s => (
+            {(['real'] as Scenario[]).map(s => (
               <Opt key={s} on={scenario === s} onClick={() => setScenario(s)}>{SCN[s]}</Opt>
             ))}
-            <span className="glab">איפה קונים</span>
-            <Opt on={market === 'fx'} onClick={() => setMarket('fx')}>חו״ל</Opt>
-            <Opt on={market === 'il'} onClick={() => setMarket('il')}>ת״א בשקלים</Opt>
           </div>
           <div className="grp">
             <span className="glab">הפקדה חודשית</span>
@@ -303,19 +285,10 @@ export function TracksPage() {
         <p className="note">
           כל ההפרש בין שני התרחישים הוא <b>הביטקוין</b> — השבבים והטכנולוגיה זהים בשניהם,
           כי אין בעולם מקור גבוה יותר מדאמודראן. דמי הניהול כלולים
-          ({market === 'fx' ? 'חו״ל' : 'ת״א'}: {(TER[market].BTC * 100).toFixed(2)}% ·{' '}
+          ({market === 'fx' ? 'חו״ל' : 'ת״א'}: 
           {(TER[market].SEM * 100).toFixed(2)}% · {(TER[market].TEC * 100).toFixed(2)}%),
           ועוד 0.4% בשנה הפרשי מט״ח כרוח נגדית.
         </p>
-        {market === 'il' && (
-          <p className="note">
-            <b>הניירות בת״א, בשקלים.</b> ביטקוין — תכלית סל 1217835.
-            שבבים — קסם ETF 1174119, על אותו מדד שעליו נמדדו ההנחות כאן.
-            טכנולוגיה — IUIT 1159193, <b>אירית צוברת</b>.
-            על ביטקוין ועל שבבים <b>אין קרן אירית הנסחרת בתל אביב</b>,
-            ולכן שני אלה הם קרנות סל ישראליות. הפירוט המלא בלשונית ״החודש״.
-          </p>
-        )}
       </section>
 
       <section>

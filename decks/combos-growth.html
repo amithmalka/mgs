@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · תמהילי צמיחה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="combos-growth-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 6</span></header>
+  <h1>תמהילי צמיחה</h1>
+  <p class="lede">5 תמהילים — מה בכל אחד, ולמה דווקא הוא</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-open-growth">
+  <header><span class="eyebrow">צמיחה</span><span class="pos" dir="ltr">1 / 6</span></header>
+  <h2>תמהילים לצמיחה — מעל 22% תנודתיות</h2>
+  <div class="body"><p class="lede">כאן מחפשים את <b>התשואה הגבוהה ביותר שאפשר לשאת</b>, בידיעה ש<b>לא נוגעים בכסף</b> עד סוף האופק. מי שימשוך באמצע נפילה של 40% ינעל אותה.</p><div class="stats"><div class="stat gold"><span class="k">תמהילים במסלול</span><span class="n" dir="ltr">5</span><span class="s">ששרדו את הסינון</span></div><div class="stat "><span class="k">טווח תנודתיות</span><span class="n" dir="ltr">23%–32%</span><span class="s">סטיית תקן שנתית</span></div><div class="stat up"><span class="k">טווח תשואה</span><span class="n" dir="ltr">+21%–+27%</span><span class="s">60 חודשים שנמדדו</span></div></div><p><b>מה מחפשים בתמהיל במסלול הזה:</b></p><ul><li><b>רוב התיק במנועי צמיחה</b> — שבבים, טכנולוגיה, נאסד״ק.</li><li><b>ומפזר אחד או שניים</b> — שבלעדיהם התנודתיות מגיעה ל-36%–42%.</li><li><b>בלי אג״ח ובלי שקט.</b> מי שרוצה שקט נמצא במסלול הלא נכון.</li></ul><p><b>וכולם נבחרו מתוך 196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר <b>רק בעל היחס הטוב ביותר</b> בין תשואה לתנודתיות.</p><p class="box good"><b>ואז הוסר עוד שלב — 0 תמהילים שהיו ״נשלטים״.</b> תמהיל נשלט הוא כזה שיש ברשימה אחר עם <b>תשואה גבוהה יותר וגם תנודתיות נמוכה יותר</b> — כלומר אין שום סיבה לבחור בו. זו בדיוק ההגדרה של <b>החזית היעילה</b>.</p><p class="box warn"><b>והמספר שחייב לעמוד מול העיניים לפני שבוחרים כאן:</b> נאסד״ק 100 ירד <b>83%</b> בדוט-קום ולקח לו <b>15.6 שנים</b> לחזור. מדד השבבים ירד <b>87%</b> ולקח לו <b>17.7 שנים</b>. <b>זה קרה, וזה יכול לקרות שוב.</b></p></div>
+  <p class="src">החישוב רץ על 17 קרנות × כל חלוקת משקלים בקפיצות 10% לתמהילים של 2–4 רכיבים = 196,587 שילובים. התנודתיות מחושבת מ-378 מתאמים מדודים, לא כממוצע.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-c-growth-0">
+  <header><span class="eyebrow">צמיחה · תמהיל 1</span><span class="pos" dir="ltr">2 / 6</span></header>
+  <h2>תנודתיות 23% — 4 רכיבים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>משקל</th><th>רמה</th><th>הטיקר</th><th>תשואה</th><th>תנודתיות</th></tr></thead><tbody><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">50%</td><td dir="ltr">בינוני</td><td dir="ltr">XLKS</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td></tr><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">30%</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">SMH</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td></tr><tr><td class="lead">MSCI World · iShares</td><td dir="ltr">10%</td><td dir="ltr">רגוע</td><td dir="ltr">IWDA</td><td dir="ltr">+11.8%</td><td dir="ltr">13%</td></tr><tr><td class="lead">S&amp;P 500 · Invesco swap</td><td dir="ltr">10%</td><td dir="ltr">רגוע</td><td dir="ltr">SPXS</td><td dir="ltr">+13.7%</td><td dir="ltr">14%</td></tr></tbody></table></div><div class="stats"><div class="stat gold"><span class="k">תשואה שנמדדה</span><span class="n" dir="ltr">+21.3%</span><span class="s">60 חודשים</span></div><div class="stat "><span class="k">תנודתיות</span><span class="n" dir="ltr">23%</span><span class="s">בלי פיזור 24%</span></div><div class="stat up"><span class="k">מה הפיזור חסך</span><span class="n" dir="ltr">1.4 נק׳</span><span class="s">תנודתיות שירדה</span></div><div class="stat "><span class="k">יחס תשואה-תנודתיות</span><span class="n" dir="ltr">0.95</span><span class="s">מעל 1.0 — טוב</span></div></div><p><b>ההנחה קדימה לתמהיל הזה: 9.53%</b> — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. <b>זו לא התשואה שנמדדה</b>, והיא נמוכה ממנה בהרבה.</p><p><b>הפיזור כאן צנוע</b> — 1.4 נקודות בלבד. סימן שהרכיבים <b>נעים יחד</b>, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.</p><p><b>הנפילה המוערכת: -30%.</b> זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.</p></div>
+  <p class="src">נבחר מתוך <b>196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-c-growth-1">
+  <header><span class="eyebrow">צמיחה · תמהיל 2</span><span class="pos" dir="ltr">3 / 6</span></header>
+  <h2>תנודתיות 25% — 2 רכיבים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>משקל</th><th>רמה</th><th>הטיקר</th><th>תשואה</th><th>תנודתיות</th></tr></thead><tbody><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">70%</td><td dir="ltr">בינוני</td><td dir="ltr">XLKS</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td></tr><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">30%</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">SMH</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td></tr></tbody></table></div><div class="stats"><div class="stat gold"><span class="k">תשואה שנמדדה</span><span class="n" dir="ltr">+22.9%</span><span class="s">60 חודשים</span></div><div class="stat "><span class="k">תנודתיות</span><span class="n" dir="ltr">25%</span><span class="s">בלי פיזור 26%</span></div><div class="stat up"><span class="k">מה הפיזור חסך</span><span class="n" dir="ltr">1.0 נק׳</span><span class="s">תנודתיות שירדה</span></div><div class="stat "><span class="k">יחס תשואה-תנודתיות</span><span class="n" dir="ltr">0.93</span><span class="s">מעל 1.0 — טוב</span></div></div><p><b>ההנחה קדימה לתמהיל הזה: 9.96%</b> — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. <b>זו לא התשואה שנמדדה</b>, והיא נמוכה ממנה בהרבה.</p><p><b>הפיזור כאן צנוע</b> — 1.0 נקודות בלבד. סימן שהרכיבים <b>נעים יחד</b>, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.</p><p><b>הנפילה המוערכת: -32%.</b> זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.</p></div>
+  <p class="src">נבחר מתוך <b>196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-c-growth-2">
+  <header><span class="eyebrow">צמיחה · תמהיל 3</span><span class="pos" dir="ltr">4 / 6</span></header>
+  <h2>תנודתיות 27% — 2 רכיבים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>משקל</th><th>רמה</th><th>הטיקר</th><th>תשואה</th><th>תנודתיות</th></tr></thead><tbody><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">50%</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">SMH</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td></tr><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">50%</td><td dir="ltr">בינוני</td><td dir="ltr">XLKS</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td></tr></tbody></table></div><div class="stats"><div class="stat gold"><span class="k">תשואה שנמדדה</span><span class="n" dir="ltr">+24.4%</span><span class="s">60 חודשים</span></div><div class="stat "><span class="k">תנודתיות</span><span class="n" dir="ltr">27%</span><span class="s">בלי פיזור 28%</span></div><div class="stat up"><span class="k">מה הפיזור חסך</span><span class="n" dir="ltr">1.2 נק׳</span><span class="s">תנודתיות שירדה</span></div><div class="stat "><span class="k">יחס תשואה-תנודתיות</span><span class="n" dir="ltr">0.91</span><span class="s">מעל 1.0 — טוב</span></div></div><p><b>ההנחה קדימה לתמהיל הזה: 10.18%</b> — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. <b>זו לא התשואה שנמדדה</b>, והיא נמוכה ממנה בהרבה.</p><p><b>הפיזור כאן צנוע</b> — 1.2 נקודות בלבד. סימן שהרכיבים <b>נעים יחד</b>, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.</p><p><b>הנפילה המוערכת: -34%.</b> זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.</p></div>
+  <p class="src">נבחר מתוך <b>196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-c-growth-3">
+  <header><span class="eyebrow">צמיחה · תמהיל 4</span><span class="pos" dir="ltr">5 / 6</span></header>
+  <h2>תנודתיות 29% — 3 רכיבים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>משקל</th><th>רמה</th><th>הטיקר</th><th>תשואה</th><th>תנודתיות</th></tr></thead><tbody><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">70%</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">SMH</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td></tr><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">20%</td><td dir="ltr">בינוני</td><td dir="ltr">XLKS</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td></tr><tr><td class="lead">S&amp;P 500 · Invesco swap</td><td dir="ltr">10%</td><td dir="ltr">רגוע</td><td dir="ltr">SPXS</td><td dir="ltr">+13.7%</td><td dir="ltr">14%</td></tr></tbody></table></div><div class="stats"><div class="stat gold"><span class="k">תשואה שנמדדה</span><span class="n" dir="ltr">+25.0%</span><span class="s">60 חודשים</span></div><div class="stat "><span class="k">תנודתיות</span><span class="n" dir="ltr">29%</span><span class="s">בלי פיזור 29%</span></div><div class="stat up"><span class="k">מה הפיזור חסך</span><span class="n" dir="ltr">1.0 נק׳</span><span class="s">תנודתיות שירדה</span></div><div class="stat "><span class="k">יחס תשואה-תנודתיות</span><span class="n" dir="ltr">0.88</span><span class="s">מעל 1.0 — טוב</span></div></div><p><b>ההנחה קדימה לתמהיל הזה: 10.18%</b> — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. <b>זו לא התשואה שנמדדה</b>, והיא נמוכה ממנה בהרבה.</p><p><b>הפיזור כאן צנוע</b> — 1.0 נקודות בלבד. סימן שהרכיבים <b>נעים יחד</b>, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.</p><p><b>הנפילה המוערכת: -35%.</b> זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.</p></div>
+  <p class="src">נבחר מתוך <b>196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="combos-growth-c-growth-4">
+  <header><span class="eyebrow">צמיחה · תמהיל 5</span><span class="pos" dir="ltr">6 / 6</span></header>
+  <h2>תנודתיות 32% — 2 רכיבים</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הרכיב</th><th>משקל</th><th>רמה</th><th>הטיקר</th><th>תשואה</th><th>תנודתיות</th></tr></thead><tbody><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">90%</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">SMH</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td></tr><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">10%</td><td dir="ltr">בינוני</td><td dir="ltr">XLKS</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td></tr></tbody></table></div><div class="stats"><div class="stat gold"><span class="k">תשואה שנמדדה</span><span class="n" dir="ltr">+26.9%</span><span class="s">60 חודשים</span></div><div class="stat "><span class="k">תנודתיות</span><span class="n" dir="ltr">32%</span><span class="s">בלי פיזור 33%</span></div><div class="stat up"><span class="k">מה הפיזור חסך</span><span class="n" dir="ltr">0.4 נק׳</span><span class="s">תנודתיות שירדה</span></div><div class="stat "><span class="k">יחס תשואה-תנודתיות</span><span class="n" dir="ltr">0.83</span><span class="s">מעל 1.0 — טוב</span></div></div><p><b>ההנחה קדימה לתמהיל הזה: 10.61%</b> — ממוצע משוקלל של ההנחות המפורסמות לרכיביו, לפני דמי ניהול. <b>זו לא התשואה שנמדדה</b>, והיא נמוכה ממנה בהרבה.</p><p><b>הפיזור כאן צנוע</b> — 0.4 נקודות בלבד. סימן שהרכיבים <b>נעים יחד</b>, ומי שמחפש פיזור אמיתי צריך רכיב שמתואם חלש יותר.</p><p><b>הנפילה המוערכת: -39%.</b> זו הערכה מהפיזור שנמדד, לא נפילה שקרתה לתמהיל הזה בדיוק.</p></div>
+  <p class="src">נבחר מתוך <b>196,587 שילובים</b> שנבדקו על 17 הקרנות עם היסטוריה מלאה. בכל רמת תנודתיות נשמר רק התמהיל עם היחס הטוב ביותר.</p>
+  <footer><a href="./" class="crumb">תמהילי צמיחה</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">תמהילי צמיחה — פתיחה</option><option value="1">1. תמהילים לצמיחה — מעל 22% תנודתיות</option><option value="2">2. תנודתיות 23% — 4 רכיבים</option><option value="3">3. תנודתיות 25% — 2 רכיבים</option><option value="4">4. תנודתיות 27% — 2 רכיבים</option><option value="5">5. תנודתיות 29% — 3 רכיבים</option><option value="6">6. תנודתיות 32% — 2 רכיבים</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

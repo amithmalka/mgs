@@ -116,7 +116,7 @@ export function MonthlyTracker({ blendedReturn }: { blendedReturn: number }) {
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
                 <Line type="monotone" dataKey={labelPlan} stroke="#555" strokeDasharray="5 5" dot={false} />
-                <Line type="monotone" dataKey={labelActual} stroke="#D4AF37" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey={labelActual} stroke="#5EE6D0" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           )}

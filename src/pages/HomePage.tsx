@@ -1,14 +1,16 @@
 import { useMemo } from 'react';
+import { useMyPortfolio } from '../store/myPortfolio';
+import { MyPlanCard } from '../components/build/MyPlanCard';
+import { MonthBuy } from '../components/build/MonthBuy';
+import { DepositLog } from '../components/build/DepositLog';
+import { DepositReminder } from '../components/build/DepositReminder';
+import { ceilingFor } from '../constants/studyFunds';
 import { useLangStore } from '../store/langStore';
-import { useStore } from '../store';
 import { useMgsStore } from '../store/mgsStore';
 import { Card } from '../components/layout/Card';
-import { Collapsible } from '../components/layout/Collapsible';
 import { Icon } from '../components/shared/Icon';
 import type { IconName } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
-import { MarketSection } from '../components/market/MarketSection';
-import { MarketTiles } from '../components/market/MarketTiles';
 
 import { cohortFor, milestonesFor } from '../constants/mgsScenarios';
 import { projectTrack } from '../utils/trackProject';
@@ -57,17 +59,40 @@ function Door({ icon, title, body, stats, cta, onGo }: {
 export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
   const { lang } = useLangStore();
   const he = lang !== 'en';
-  const { simulationParams } = useStore();
+
   const { age } = useMgsStore();
-  const deposit = simulationParams.monthlyDeposit;
+  // מקור אחד להפקדה — אותו אחד שהפס העליון והכרטיסים קוראים ממנו
+  const deposit = useMyPortfolio(st => st.deposit + st.extra);
+  // **החלק שמגיע לברוקר בלבד** — קרן ההשתלמות קיבלה את התקרה שלה,
+  // ואין טעם לספור אותה פעמיים ברישום הקניות.
+  const grossDep = useMyPortfolio(st => st.deposit);
+  const extraDep = useMyPortfolio(st => st.extra);
+  const fundStatus = useMyPortfolio(st => st.fundStatus);
+  const annualSalary = useMyPortfolio(st => st.annualSalary);
+  const selfIncome = useMyPortfolio(st => st.selfIncome);
+  const toBroker = useMemo(() => {
+    const ceil = fundStatus === 'none'
+      ? 0 : ceilingFor(fundStatus, annualSalary, selfIncome).year / 12;
+    return Math.max(0, grossDep - Math.min(grossDep, ceil)) + extraDep;
+  }, [grossDep, extraDep, fundStatus, annualSalary, selfIncome]);
   const { shiftAtAge, withdrawAtAge } = milestonesFor(age);
 
   // the conservative case on the doors: the landing page should under-promise
-  const track = useMemo(() => projectTrack('pess', 2, age, deposit), [age, deposit]);
-  const kid = useMemo(() => projectKid('pess', 0, 500), []);
+  const track = useMemo(() => projectTrack('real', 2, age, deposit), [age, deposit]);
+  const kid = useMemo(() => projectKid('real', 0, 500), []);
 
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
+      {/* התיק שהמשקיע בחר — ואם לא בחר, הזמנה לבחור. אין ברירת מחדל. */}
+      <div className="term">
+        <MyPlanCard onBuild={() => onNavigate?.('build')} />
+        <MonthBuy onBuild={() => onNavigate?.('build')} />
+        {/* **המעגל נסגר כאן.** למעלה ״כמה לקנות״, כאן ״מה קניתי
+            בפועל״ ומה המחיר הממוצע שיצא — ומתחת התזכורת לחודש הבא. */}
+        <DepositLog toBroker={toBroker} onBuild={() => onNavigate?.('build')} />
+        <DepositReminder toBroker={toBroker} />
+      </div>
+
       <Card glow>
         <h2 className="text-xl font-bold text-gold-gradient">MGS</h2>
         <p className="text-[12px] text-text-muted mt-1.5 leading-relaxed">
@@ -83,23 +108,19 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
         </div>
       </Card>
 
-      <Card>
-        <MarketTiles />
-      </Card>
-
       <div className="grid md:grid-cols-2 gap-4">
         <Door
           icon="chart"
-          title={he ? 'המסלולים' : 'The tracks'}
+          title={he ? 'לבחור תיק' : 'Choose a portfolio'}
           body={he
-            ? 'שני מסלולי התזרים, שנה אחר שנה — מה שמתקבל במזומן בדרך, וכמה יוצא בחודש בסוף.'
-            : 'The two cash-flow tracks, year by year — the cash received along the way and the monthly income at the end.'}
+            ? 'הקומבינציות שנמדדו, לפי מסלול ולפי גיל — ומה כל אחת נתנה בתשואה, בתנודתיות ובנפילה.'
+            : 'The measured combinations by track and age.'}
           stats={[
             [he ? 'משכורת חודשית בסוף' : 'Monthly at the end', `${n0(track.monthly)} ₪`],
             [he ? 'סה״כ נטו' : 'Net total', `${n0(track.total)} ₪`],
           ]}
           cta={he ? 'לפתיחת המסלולים' : 'See the tracks'}
-          onGo={() => onNavigate?.('mgs')}
+          onGo={() => onNavigate?.('build')}
         />
         <Door
           icon="sparkle"
@@ -115,13 +136,6 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
           onGo={() => onNavigate?.('kids')}
         />
       </div>
-
-      <Collapsible
-        title={he ? 'הלוח המלא — גרף נרות ומדריך' : 'The full board — candles and a guide'}
-        subtitle={he ? 'כל הנכסים, גרף יומי לכל אחד, והסבר איך קוראים אותו' : 'Every asset, a daily chart for each, and how to read it'}
-      >
-        <MarketSection />
-      </Collapsible>
 
       <Disclaimer />
     </div>

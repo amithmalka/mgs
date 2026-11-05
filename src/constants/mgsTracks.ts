@@ -7,7 +7,39 @@
  * other method, resolves to a 3x BEAR fund at our provider.
  */
 
-export type MgsAsset = 'I500' | 'EQQS' | 'QQQ3' | 'MWRD';
+/** **נאסד״ק הוסר מ-MGS ב-4.11.2026, ובמקומו טכנולוגיה ושבבים.**
+ *
+ *  עד כאן היו כאן `EQQS` (נאסד״ק 100) ו-`QQQ3` (נאסד״ק 100 ממונף
+ *  פי 3), והם היו **62.5% משני המסלולים הצעירים**.
+ *
+ *  **הנימוק הראשון: נאסד״ק הוא אותו דבר, לא דבר נוסף.** המתאם
+ *  החודשי בין נאסד״ק-100 לתמהיל טכנולוגיה־ושבבים הוא **0.958 עד
+ *  0.965**, ועקבי בשני חלונות נפרדים — חמש שנים ו-25 שנה. להחזיק
+ *  את שניהם זה להחזיק את אותה חשיפה פעמיים תחת שני שמות.
+ *
+ *  **הנימוק השני, והוא הכבד: המדידה על חלון זהה.** I500/נאסד״ק/
+ *  ממונף מול I500/טכנולוגיה/שבבים, אותם 14.8 חודשים בדיוק
+ *  (ינואר 2012 – אוקטובר 2026, החלון שהמוצר הממונף מאפשר):
+ *
+ *  | | תשואה | תנודתיות | יחס | נפילה | התאוששות |
+ *  |---|---|---|---|---|---|
+ *  | נאסד״ק + ממונף | 24.07% | 25.02% | 0.96 | −44.0% | 25 ח׳ |
+ *  | טכנולוגיה + שבבים | 20.02% | **18.07%** | **1.11** | **−31.0%** | **18 ח׳** |
+ *
+ *  ההחלפה מנצחת בכל מדד סיכון. 4 נקודות התשואה שהיא מוותרת עליהן
+ *  נמדדו **בחלון שמחמיא למינוף**: TQQQ נולד בפברואר 2010, אחרי
+ *  המשבר, ולא ראה אף דוב אמיתי.
+ *
+ *  **והנימוק השלישי, על המינוף בפרט.** נאסד״ק-100 ירד **81.1%**
+ *  בהתפוצצות הדוט-קום, ולקח לו **174 חודשים — ארבע־עשרה שנים
+ *  וחצי** לחזור לשיא. מוצר ממונף פי 3 על מדד שעשה את זה פעם אחת
+ *  אינו ירידה עמוקה, הוא מחיקה. טכנולוגיה ושבבים ירדו באותו משבר
+ *  56.6% וחזרו ב-72 חודשים — גם זה רע, וגם זה חצי.
+ *
+ *  **מה שנשאר: שני נכסים רחבים ושני מנועי צמיחה, בלי מינוף ובלי
+ *  כפילות.** אלה גם בדיוק הרכיבים שבקומבינציות — XLKS ו-SMH — כך
+ *  ש-MGS והמסלולים מחזיקים את אותה חשיפה. */
+export type MgsAsset = 'I500' | 'TECH' | 'SEMI' | 'MWRD';
 
 export interface MgsAssetMeta {
   key: MgsAsset;
@@ -20,29 +52,31 @@ export interface MgsAssetMeta {
 }
 
 export const MGS_ASSETS: Record<MgsAsset, MgsAssetMeta> = {
-  I500: { key: 'I500', labelHe: 'S&P 500 סינתטי', labelEn: 'S&P 500 Synthetic', proxy: 'SPY',  color: '#34D399', leveraged: false },
-  EQQS: { key: 'EQQS', labelHe: 'נאסד״ק 100',     labelEn: 'Nasdaq 100',        proxy: 'QQQ',  color: '#A78BFA', leveraged: false },
-  QQQ3: { key: 'QQQ3', labelHe: 'נאסד״ק 100 ממונף פי 3', labelEn: 'Nasdaq 100 3x Leveraged', isin: 'IE00BLRPRL42', proxy: 'TQQQ', color: '#F87171', leveraged: true },
-  MWRD: { key: 'MWRD', labelHe: 'MSCI World סינתטי', labelEn: 'MSCI World Synthetic', proxy: 'URTH', color: '#10B981', leveraged: false },
+  I500: { key: 'I500', labelHe: 'S&P 500 סינתטי', labelEn: 'S&P 500 Synthetic', isin: 'IE00B3YCGJ38', proxy: 'SPY',  color: '#4ADE80', leveraged: false },
+  TECH: { key: 'TECH', labelHe: 'טכנולוגיה',      labelEn: 'Technology',        isin: 'IE00B3VSSL01', proxy: 'XLK',  color: '#5EE6D0', leveraged: false },
+  SEMI: { key: 'SEMI', labelHe: 'מוליכים למחצה',  labelEn: 'Semiconductors',    isin: 'IE00BMC38736', proxy: 'SOXX', color: '#8193FA', leveraged: false },
+  MWRD: { key: 'MWRD', labelHe: 'MSCI World סינתטי', labelEn: 'MSCI World Synthetic', isin: 'IE00B60SX394', proxy: 'URTH', color: '#4ADE80', leveraged: false },
 };
 
-/**
- * Expected annual return per asset, by scenario (%).
+/** **ההנחה השנתית לכל נכס, לפי תרחיש (%).**
  *
- * I500, EQQS and MWRD reuse the app's existing S&P 500, Nasdaq 100 and MSCI
- * World figures. QQQ3 is new: a 3x daily product loses to volatility drag,
- * roughly 3μ − 3σ² for Nasdaq volatility of ~25%, so the moderate case sits
- * near 22% rather than 3 × 14%. Its real proxy, TQQQ, did 38.7%/yr over the
- * last ten years — a bull decade — and lost 79.2% in its worst single year.
- */
+ *  **עודכנה 4.11.2026 עם הסרת נאסד״ק, והיא נמוכה מקודמתה בכוונה.**
+ *  המספרים הקודמים ל-EQQS היו 9 / 14 / 20 ול-QQQ3 5 / 22 / 30 —
+ *  והם היו **הקרנה של מה שנמדד**, לא הנחה קדימה. 30% לשנה אינה
+ *  הנחה, היא התשואה של עשור ממונף אחרי משבר.
+ *
+ *  **כאן טכנולוגיה ושבבים מעוגנים באותו מקור שכל האפליקציה
+ *  משתמשת בו** — `forward.ts`, שבונה מלמטה למעלה לפי דאמודראן
+ *  NYU (ינואר 2026) ו-LTCMA של ג׳יי־פי מורגן: טכנולוגיה 9.64%
+ *  (תוכנה, 309 פירמות) ושבבים 10.72% (66 פירמות, בטא 1.52).
+ *  התרחיש ה״מתון״ יושב עליהם, והשמרני והאגרסיבי סביבם.
+ *
+ *  **זה מוריד את התחזית של MGS, וזה תיקון ולא נזק.** */
 export const MGS_RETURNS: Record<'conservative' | 'moderate' | 'aggressive', Record<MgsAsset, number>> = {
-  conservative: { I500: 7,  EQQS: 9,  QQQ3: 5,  MWRD: 5  },
-  moderate:     { I500: 10, EQQS: 14, QQQ3: 22, MWRD: 8  },
-  aggressive:   { I500: 14, EQQS: 20, QQQ3: 30, MWRD: 11 },
+  conservative: { I500: 7,  TECH: 7,  SEMI: 7,  MWRD: 5  },
+  moderate:     { I500: 10, TECH: 10, SEMI: 11, MWRD: 8  },
+  aggressive:   { I500: 14, TECH: 13, SEMI: 15, MWRD: 11 },
 };
-
-/** Hard ceiling on QQQ3's share of the portfolio. */
-export const QQQ3_CAP = 0.25;
 
 export type MgsTrackId = 'A_YOUTH' | 'B_MID' | 'C50_15' | 'C50_20' | 'C60_10' | 'C60_15';
 
@@ -62,19 +96,22 @@ export interface MgsTrack {
   leveraged: boolean;
 }
 
-const LEVERAGED_MIX = { I500: 0.375, EQQS: 0.375, QQQ3: 0.25 };
+/** **תמהיל הצמיחה — אותם משקלים שנמדדו, בלי מינוף.**
+ *  37.5 / 37.5 / 25 הם בדיוק המשקלים שבהם נמדד היחס 1.11 מול
+ *  0.96 של הגרסה עם נאסד״ק הממונף. */
+const GROWTH_MIX = { I500: 0.375, TECH: 0.375, SEMI: 0.25 };
 
 export const MGS_TRACKS: MgsTrack[] = [
   {
-    id: 'A_YOUTH', nameHe: 'צמיחה וטורבו', nameEn: 'Youth & Turbo Growth', ageLabel: '20–40',
+    id: 'A_YOUTH', nameHe: 'צמיחה', nameEn: 'Growth', ageLabel: '20–40',
     horizonYears: null, horizonRange: [15, 35],
-    weights: LEVERAGED_MIX, deRiskYears: 5, leveraged: true,
+    weights: GROWTH_MIX, deRiskYears: 5, leveraged: false,
   },
   {
     // Section 3 of the spec says years 1–6 leveraged, 7–10 MWRD: 4 years of
     // de-risking. Its QA checklist says 5. Kept as written in Section 3.
     id: 'B_MID', nameHe: 'מסלול ביניים', nameEn: 'Mid-Path', ageLabel: '45',
-    horizonYears: 10, weights: LEVERAGED_MIX, deRiskYears: 4, leveraged: true,
+    horizonYears: 10, weights: GROWTH_MIX, deRiskYears: 4, leveraged: false,
   },
   { id: 'C50_15', nameHe: 'גיל 50 · פרישה ב-65', nameEn: 'Age 50 · retire at 65', ageLabel: '50',
     horizonYears: 15, weights: { I500: 0.60, MWRD: 0.40 }, deRiskYears: 0, leveraged: false },
@@ -155,12 +192,3 @@ export function allocationFor(age: number): Partial<Record<MgsAsset, number>> {
   return getMgsTrack(recommendMgsTrack(age)).weights;
 }
 
-/**
- * The leveraged share this age is allowed to hold.
- *
- * It is the track's own QQQ3 weight, which the leveraged tracks cap at
- * `QQQ3_CAP` and the age-50-and-up tracks drop to zero.
- */
-export function targetLeveraged(age: number): number {
-  return Math.min(QQQ3_CAP, allocationFor(age).QQQ3 ?? 0);
-}

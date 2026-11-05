@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · הקרנות, אחת אחת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="funds-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 9</span></header>
+  <h1>הקרנות, אחת אחת</h1>
+  <p class="lede">מתי הוקמו, מה הן מחזיקות, מי מפקח, ומה הנפילות שהן שרדו</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-catalog">
+  <header><span class="eyebrow">הקטלוג</span><span class="pos" dir="ltr">1 / 9</span></header>
+  <h2>מה יש בקטלוג, והמקבילה האמריקאית של כל אחת</h2>
+  <div class="body"><p class="lede">לכל נייר אמריקאי מוכר יש <b>מקבילה אירית על אותו מדד</b> — ואותה אנחנו קונים.</p><div class="scroll"><table><thead><tr><th class="lead">הקרן</th><th>הטיקר האירי</th><th>המקבילה</th><th>רמה</th><th>תשואה</th><th>תנודתיות</th><th>ד״נ</th><th>ההנחה קדימה</th></tr></thead><tbody><tr><td class="lead">שבבים · VanEck</td><td dir="ltr">SMH</td><td dir="ltr">SMH</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">+32.3%</td><td dir="ltr">34%</td><td dir="ltr">0.35%</td><td dir="ltr">10.72%</td></tr><tr><td class="lead">שבבים גלובלי · iShares</td><td dir="ltr">SEMI</td><td dir="ltr">SOXX</td><td dir="ltr">תוספת תנודתיות</td><td dir="ltr">+23.5%</td><td dir="ltr">42%</td><td dir="ltr">0.35%</td><td dir="ltr">10.72%</td></tr><tr><td class="lead">טכנולוגיה S&amp;P · Invesco swap</td><td dir="ltr">XLKS</td><td dir="ltr">XLK</td><td dir="ltr">בינוני</td><td dir="ltr">+23.1%</td><td dir="ltr">22%</td><td dir="ltr">0.14%</td><td dir="ltr">9.64%</td></tr><tr><td class="lead">טכנולוגיה S&amp;P 500 · iShares</td><td dir="ltr">IUIT</td><td dir="ltr">XLK</td><td dir="ltr">בינוני</td><td dir="ltr">+21.9%</td><td dir="ltr">22%</td><td dir="ltr">0.15%</td><td dir="ltr">9.64%</td></tr><tr><td class="lead">S&amp;P 500 · SPDR</td><td dir="ltr">SPYL</td><td dir="ltr">SPLG</td><td dir="ltr">רגוע</td><td dir="ltr">+20.6%</td><td dir="ltr">12%</td><td dir="ltr">0.03%</td><td dir="ltr">7.50%</td></tr><tr><td class="lead">טכנולוגיה עולמית · SPDR</td><td dir="ltr">WTEC</td><td dir="ltr">IXN</td><td dir="ltr">בינוני</td><td dir="ltr">+18.9%</td><td dir="ltr">22%</td><td dir="ltr">0.30%</td><td dir="ltr">9.64%</td></tr><tr><td class="lead">All-World · Invesco</td><td dir="ltr">FWRA</td><td dir="ltr">VT</td><td dir="ltr">רגוע</td><td dir="ltr">+17.8%</td><td dir="ltr">10%</td><td dir="ltr">0.15%</td><td dir="ltr">7.70%</td></tr><tr><td class="lead">נאסד״ק 100 · Invesco swap</td><td dir="ltr">EQQS</td><td dir="ltr">QQQ</td><td dir="ltr">בינוני</td><td dir="ltr">+15.0%</td><td dir="ltr">19%</td><td dir="ltr">0.20%</td><td dir="ltr">8.90%</td></tr><tr><td class="lead">נאסד״ק 100 · iShares</td><td dir="ltr">CNDX</td><td dir="ltr">QQQ</td><td dir="ltr">בינוני</td><td dir="ltr">+14.8%</td><td dir="ltr">19%</td><td dir="ltr">0.30%</td><td dir="ltr">8.90%</td></tr><tr><td class="lead">S&amp;P 500 · Invesco swap</td><td dir="ltr">SPXS</td><td dir="ltr">SPY</td><td dir="ltr">רגוע</td><td dir="ltr">+13.7%</td><td dir="ltr">14%</td><td dir="ltr">0.05%</td><td dir="ltr">7.50%</td></tr><tr><td class="lead">S&amp;P 500 · Vanguard</td><td dir="ltr">VUAA</td><td dir="ltr">VOO</td><td dir="ltr">רגוע</td><td dir="ltr">+13.5%</td><td dir="ltr">14%</td><td dir="ltr">0.07%</td><td dir="ltr">7.50%</td></tr><tr><td class="lead">S&amp;P 500 · iShares</td><td dir="ltr">CSPX</td><td dir="ltr">SPY</td><td dir="ltr">רגוע</td><td dir="ltr">+13.5%</td><td dir="ltr">14%</td><td dir="ltr">0.07%</td><td dir="ltr">7.50%</td></tr><tr><td class="lead">MSCI World · Invesco swap</td><td dir="ltr">MXWO</td><td dir="ltr">URTH</td><td dir="ltr">רגוע</td><td dir="ltr">+11.9%</td><td dir="ltr">13%</td><td dir="ltr">0.05%</td><td dir="ltr">7.40%</td></tr><tr><td class="lead">MSCI World · iShares</td><td dir="ltr">IWDA</td><td dir="ltr">URTH</td><td dir="ltr">רגוע</td><td dir="ltr">+11.8%</td><td dir="ltr">13%</td><td dir="ltr">0.20%</td><td dir="ltr">7.40%</td></tr><tr><td class="lead">מומנטום עולמי · iShares</td><td dir="ltr">IWMO</td><td dir="ltr">MTUM</td><td dir="ltr">בינוני</td><td dir="ltr">+11.5%</td><td dir="ltr">16%</td><td dir="ltr">0.25%</td><td dir="ltr">7.90%</td></tr><tr><td class="lead">עולמי ACWI · iShares</td><td dir="ltr">ISAC</td><td dir="ltr">ACWI</td><td dir="ltr">רגוע</td><td dir="ltr">+11.3%</td><td dir="ltr">13%</td><td dir="ltr">0.20%</td><td dir="ltr">7.70%</td></tr><tr><td class="lead">ACWI · SPDR</td><td dir="ltr">ACWD</td><td dir="ltr">ACWI</td><td dir="ltr">רגוע</td><td dir="ltr">+11.0%</td><td dir="ltr">13%</td><td dir="ltr">0.12%</td><td dir="ltr">7.70%</td></tr><tr><td class="lead">All-World · Vanguard</td><td dir="ltr">VWRA</td><td dir="ltr">VT</td><td dir="ltr">רגוע</td><td dir="ltr">+10.9%</td><td dir="ltr">13%</td><td dir="ltr">0.14%</td><td dir="ltr">7.70%</td></tr></tbody></table></div><p class="note">נמדד על <b>60 חודשים</b> (11.2021–11.2026) בדולר, על הקרן האירית עצמה. ההנחה קדימה היא הנחה מפורסמת ולא תחזית שלנו.</p></div>
+  <p class="src">תשואה ותנודתיות נמדדו על 60 חודשים (11.2021–11.2026) בדולר, על הקרן האירית עצמה.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-when">
+  <header><span class="eyebrow">הוותק</span><span class="pos" dir="ltr">2 / 9</span></header>
+  <h2>מתי כל אחת הוקמה — וכמה כסף יושב בה</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">הקרן</th><th>הושקה</th><th>נכסים</th><th>ד״נ</th><th>מנפיק</th></tr></thead><tbody><tr><td class="lead">EQQQ · נאסד״ק 100</td><td dir="ltr">2.12.2002</td><td dir="ltr">$21.6 מיליארד</td><td dir="ltr">0.30%</td><td dir="ltr">Invesco</td></tr><tr><td class="lead">XLKS · טכנולוגיה</td><td dir="ltr">16.12.2009</td><td dir="ltr">$2.7 מיליארד</td><td dir="ltr">0.14%</td><td dir="ltr">Invesco</td></tr><tr><td class="lead">IWDA · עולמי מפותח</td><td dir="ltr">25.9.2009</td><td dir="ltr">$150.1 מיליארד</td><td dir="ltr">0.20%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">CNDX · נאסד״ק 100</td><td dir="ltr">26.1.2010</td><td dir="ltr">$31.3 מיליארד</td><td dir="ltr">0.30%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">CSPX · S&amp;P 500</td><td dir="ltr">19.5.2010</td><td dir="ltr">$157.6 מיליארד</td><td dir="ltr">0.07%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">SPXS · S&amp;P 500 swap</td><td dir="ltr">20.5.2010</td><td dir="ltr">$59.0 מיליארד</td><td dir="ltr">0.05%+0.07%</td><td dir="ltr">Invesco</td></tr><tr><td class="lead">ISAC · כל העולם</td><td dir="ltr">21.10.2011</td><td dir="ltr">$36.2 מיליארד</td><td dir="ltr">0.20%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">IWMO · מומנטום</td><td dir="ltr">3.10.2014</td><td dir="ltr">$5.9 מיליארד</td><td dir="ltr">0.25%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">IUIT · טכנולוגיה</td><td dir="ltr">20.11.2015</td><td dir="ltr">$20.6 מיליארד</td><td dir="ltr">0.15%</td><td dir="ltr">iShares</td></tr><tr><td class="lead">VUAA · S&amp;P 500</td><td dir="ltr">14.5.2019</td><td dir="ltr">$36.3 מיליארד</td><td dir="ltr">0.07%</td><td dir="ltr">Vanguard</td></tr><tr><td class="lead">VWRA · כל העולם</td><td dir="ltr">23.7.2019</td><td dir="ltr">$62.2 מיליארד</td><td dir="ltr">0.14%</td><td dir="ltr">Vanguard</td></tr><tr><td class="lead">SMH · שבבים</td><td dir="ltr">1.12.2020</td><td dir="ltr">$8.3 מיליארד</td><td dir="ltr">0.35%</td><td dir="ltr">VanEck</td></tr><tr><td class="lead">EQQS · נאסד״ק swap</td><td dir="ltr">22.3.2021</td><td dir="ltr">$3.2 מיליארד</td><td dir="ltr">0.20%+0.05%</td><td dir="ltr">Invesco</td></tr><tr><td class="lead">SEMI · שבבים גלובלי</td><td dir="ltr">3.8.2021</td><td dir="ltr">$6.6 מיליארד</td><td dir="ltr">0.35%</td><td dir="ltr">iShares</td></tr></tbody></table></div><p class="note">נכסים ל-30.9.2026 או 30.10.2026. <b>הוותק חשוב:</b> קרן שהוקמה ב-2021 לא חוותה 2008, 2020 או 2022 — ומה שנמדד לה הוא חלון קצר ובשוק עולה.</p><p class="box good"><b>EQQQ היא ה-ETF העתיק ביותר על נאסד״ק 100 באירופה</b> — 2002. היא שרדה את 2008 ואת 2022 בתור קרן פעילה.</p></div>
+  <p class="src">פקטשיטים של iShares, Vanguard, Invesco, VanEck ו-KraneShares.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-reg">
+  <header><span class="eyebrow">הפיקוח</span><span class="pos" dir="ltr">3 / 9</span></header>
+  <h2>מי בכלל שומר על הכסף</h2>
+  <div class="body"><p><b>הבנק המרכזי של אירלנד</b> הוא הרגולטור הבלעדי. הוא מאשר את הקרן, מאשר את חברת הניהול, ויש לו סמכות ביקורת ואכיפה — כולל ביטול אישור.</p><p>והמסגרת היא <b>דירקטיבת UCITS</b> — Directive 2009/65/EC מ-13.7.2009, שעודכנה ב-UCITS V (2014) וב-AIFMD II (2024).</p><div class="scroll"><table><thead><tr><th class="lead">ההגנה</th><th>הסעיף</th><th>מה היא אומרת</th></tr></thead><tbody><tr><td class="lead">נאמן עצמאי</td><td dir="ltr">סעיפים 22–25</td><td dir="ltr">חובה למנות נאמן אחד, <b>שחייב להיות באירלנד</b></td></tr><tr><td class="lead">אחריות מוחלטת</td><td dir="ltr">סעיף 24(1)</td><td dir="ltr">הנאמן אחראי לאובדן ו<b>חייב להחזיר נייר זהה ללא דיחוי</b></td></tr><tr><td class="lead">אין פטור בהאצלה</td><td dir="ltr">סעיף 24(2)</td><td dir="ltr"><b>האחריות לא נפגעת</b> גם אם השמירה הואצלה</td></tr><tr><td class="lead">הפרדת נכסים</td><td dir="ltr">סעיף 22(5)(א)</td><td dir="ltr">בחשבונות נפרדים, מזוהים כשייכים לקרן <b>בכל עת</b></td></tr><tr><td class="lead">חסימת נושים</td><td dir="ltr">סעיף 22(8)</td><td dir="ltr">בחדלות פירעון — <b>הנכסים אינם זמינים לנושים</b></td></tr><tr><td class="lead">פיזור 5/10/40</td><td dir="ltr">סעיף 52</td><td dir="ltr">עד 10% לגוף, וכל ההחזקות מעל 5% — עד 40% יחד</td></tr><tr><td class="lead">מינוף</td><td dir="ltr">סעיף 51(3)</td><td dir="ltr"><b>חשיפה בנגזרים לא תעלה על 100% מה-NAV</b></td></tr><tr><td class="lead">פדיון</td><td dir="ltr">סעיף 1(2)(ב)</td><td dir="ltr">יחידות נפדות <b>לבקשת המחזיק</b>, מתוך נכסי הקרן</td></tr></tbody></table></div><p class="box good"><b>והכלל שמאפשר קרן מרוכזת:</b> סעיף 53 מתיר עד <b>20%</b> לנייר בודד בקרן עוקבת מדד, ובתנאי שוק חריגים עד <b>35%</b> — אבל רק למנפיק אחד, ורק באישור פרטני של הבנק המרכזי.</p></div>
+  <p class="src">Directive 2009/65/EC · S.I. 352/2011 (ההחלה האירית) · S.I. 316/2026 (תקנות הבנק המרכזי).</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-notprotect">
+  <header><span class="eyebrow">והאמת</span><span class="pos" dir="ltr">4 / 9</span></header>
+  <h2>מה UCITS לא מגנה עליו — וזה כתוב בחוק עצמו</h2>
+  <div class="body"><blockquote><p>אישור של קרן UCITS על ידי הבנק אינו מהווה אחריות או הבטחה לגבי ביצועי הקרן, ולא הבנק ולא המדינה יישאו באחריות לביצועיה או לכשל שלה.</p><cite>תקנה 122(1)(א), S.I. 352/2011</cite></blockquote><p><b>כל ההגנות של UCITS הן מבניות:</b> נכסים כשירים, פיזור, תקרות מינוף, נאמן עצמאי, הפרדת נכסים, פדיונות וגילוי. <b>אף אחת מהן אינה חוסמת הפסד שוק</b> — אין בדירקטיבה אפילו הוראה אחת שעוסקת בשווי נכסי הבסיס.</p><div class="scroll"><table><thead><tr><th class="lead">התוכנית</th><th>מכסה מה</th><th>עד כמה</th></tr></thead><tbody><tr><td class="lead">Deposit Guarantee Scheme</td><td dir="ltr"><b>פיקדונות בלבד</b></td><td dir="ltr">€100,000 לאדם למוסד</td></tr><tr><td class="lead">Investor Compensation Scheme</td><td dir="ltr">כשל של <b>הברוקר</b></td><td dir="ltr">90% מההפסד, <b>עד €20,000</b></td></tr><tr><td class="lead">UCITS</td><td dir="ltr">כשל <b>הנאמן או המנהל</b></td><td dir="ltr">הפרדה מלאה, בלי תקרה</td></tr><tr><td class="lead"><b>הפסד שוק</b></td><td dir="ltr"><b>שום דבר</b></td><td dir="ltr"><b>—</b></td></tr></tbody></table></div><p class="note">ו-ICS אינו מכסה הפסד ״בגלל תנאי שוק או כוחות כלכליים אחרים״ — זה לשון החוק.</p><p class="box good"><b>השורה שכדאי לזכור:</b> UCITS מסדירה <b>איך הקרן בנויה ומי מחזיק את הנכסים</b> — לא <b>כמה הנכסים שווים</b>. ההפרדה מגנה מכשל של הנאמן; ICS מגן מכשל של הברוקר; <b>שום דבר לא מגן מהשוק.</b></p></div>
+  <p class="src">Investor Compensation Act 1998, סעיף 30(1) · Central Bank of Ireland.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-companies">
+  <header><span class="eyebrow">והחברות עצמן</span><span class="pos" dir="ltr">5 / 9</span></header>
+  <h2>כמה זמן הן קיימות — ותשע מתוך אחת עשרה ירדו מעל 70%</h2>
+  <div class="body"><p class="lede">אלה החברות שחוזרות על עצמן כמעט בכל קרן בקטלוג. <b>והשאלה ״כמה זמן הן יציבות״ מקבלת כאן תשובה לא נוחה.</b></p><div class="scroll"><table><thead><tr><th class="lead">החברה</th><th>נוסדה</th><th>בבורסה</th><th>הירידה העמוקה</th><th>מתי</th></tr></thead><tbody><tr><td class="lead"><b>AMD</b></td><td dir="ltr">1969</td><td dir="ltr">~54 שנים</td><td dir="ltr"><b>−96.6%</b></td><td dir="ltr">2000 → 2015</td></tr><tr><td class="lead">Amazon</td><td dir="ltr">1994</td><td dir="ltr">29 שנים</td><td dir="ltr"><b>−95.1%</b></td><td dir="ltr">1999 → 2001</td></tr><tr><td class="lead">NVIDIA</td><td dir="ltr">1993</td><td dir="ltr">28 שנים</td><td dir="ltr"><b>−90.1%</b></td><td dir="ltr">2002</td></tr><tr><td class="lead">ASML</td><td dir="ltr">1984</td><td dir="ltr">31 שנים</td><td dir="ltr"><b>−90.1%</b></td><td dir="ltr">2000 → 2002</td></tr><tr><td class="lead">TSMC</td><td dir="ltr">1987</td><td dir="ltr">29 שנים</td><td dir="ltr">−84.6%</td><td dir="ltr">2000 → 2002</td></tr><tr><td class="lead">Apple</td><td dir="ltr">1977</td><td dir="ltr">46 שנים</td><td dir="ltr">−81.8%</td><td dir="ltr">2000 → 2003</td></tr><tr><td class="lead">Meta</td><td dir="ltr">2004</td><td dir="ltr">14 שנים</td><td dir="ltr">−77.1%</td><td dir="ltr">2021 → 2022</td></tr><tr><td class="lead">Tesla</td><td dir="ltr">2003</td><td dir="ltr">16 שנים</td><td dir="ltr">−75.4%</td><td dir="ltr">2021 → 2023</td></tr><tr><td class="lead"><b>Microsoft</b></td><td dir="ltr">1975</td><td dir="ltr">40 שנים</td><td dir="ltr"><b>−75.2%</b></td><td dir="ltr">1999 → 2009</td></tr><tr><td class="lead">Alphabet</td><td dir="ltr">1998</td><td dir="ltr">22 שנים</td><td dir="ltr">−65.3%</td><td dir="ltr">2007 → 2008</td></tr></tbody></table></div><p class="note">ירידות מסגירה לסגירה אלא אם צוין אחרת. <b>רק Alphabet ו-Broadcom לא חצו את 70%.</b></p><p class="box warn"><b>והוותק אינו ערובה.</b> AMD היא <b>הוותיקה מכולן — 57 שנים — ובעלת התקליט הגרוע מכולן:</b> מינוס 96.6%, <b>ושש שנות הפסד רצופות</b> בין 2012 ל-2017.</p></div>
+  <p class="src">שנות הקמה ותאריכי הנפקה מדיווחי החברות ל-SEC · ירידות מסדרות מחיר · טבלאות המחירים ב-20-F של TSMC, ASML ו-Broadcom Corp.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-plc">
+  <header><span class="eyebrow">והמבנה המשפטי</span><span class="pos" dir="ltr">6 / 9</span></header>
+  <h2>plc, ICAV ו-LLC — ומה זה אומר על מי שמחזיק</h2>
+  <div class="body"><p class="lede"><b>קודם תיקון לשאלה עצמה: קרן אירית אינה LLC ואינה יכולה להיות.</b> LLC היא צורת התאגדות אמריקאית. לקרנות איריות יש שתי צורות בלבד, ושתיהן בקטלוג:</p><div class="scroll"><table><thead><tr><th class="lead">הצורה</th><th>מה זה</th><th>בקטלוג</th></tr></thead><tbody><tr><td class="lead"><b>plc</b></td><td dir="ltr">חברה ציבורית בערבון מוגבל לפי חוק החברות האירי 2014</td><td dir="ltr"><b>25 מ-26</b></td></tr><tr><td class="lead"><b>ICAV</b></td><td dir="ltr">כלי ניהול נכסים קולקטיבי אירי · חוק 2015</td><td dir="ltr">אין כרגע</td></tr><tr><td class="lead">LLC / Trust</td><td dir="ltr"><b>אמריקאי.</b> כך בנויות SPY, QQQ, VOO</td><td dir="ltr">אין — וזו הנקודה</td></tr></tbody></table></div><p><b>ומה שחשוב באמת הוא לא השם — זו המטרייה.</b> גם plc וגם ICAV הן <b>קרנות מטרייה</b>: גוף משפטי אחד שמחזיק בתוכו עשרות תת-קרנות. ״iShares III plc״ אינה קרן אחת — היא תאגיד שבתוכו גם IWDA וגם עוד עשרות קרנות.</p><p class="box good"><b>ולכן השאלה היחידה שמעניינת: אם תת-קרן אחרת באותה מטרייה נכנסת לחובות, מי משלם?</b> התשובה היא <b>הפרדת חבות</b> — סעיף 1405 לחוק החברות האירי לגבי plc, וסעיף 32 לחוק ה-ICAV. <b>נכסי כל תת-קרן אחראים רק לחובות שלה.</b> אם קרן אחרת באותה מטרייה מתרסקת, הכסף שלכם אינו נגיש לנושים שלה.</p><p class="box warn"><b>ושתי הסתייגויות אמיתיות.</b> ההפרדה <b>חייבת להיות מוכרזת</b> במסמכי ההתאגדות ולא חלה אוטומטית — היא מוצהרת בתשקיפים של כל הקרנות בקטלוג, אבל זה מה שצריך לבדוק בקרן חדשה. <b>והיא אירית</b> — בית משפט במדינה שלישית אינו חייב להכיר בה, ולא נמצא פסק דין שבחן זאת.</p><p><b>ומה ההבדל המעשי בין plc ל-ICAV.</b> ICAV הוא החדש והגמיש: הוא יכול להגיש דוחות נפרדים לכל תת-קרן, אינו כפוף לדיני חברות שנועדו לחברות תעשייתיות, <b>ויכול לבחור להיחשב שקוף לצורכי מס בארצות הברית</b> — יתרון למשקיע אמריקאי. <b>למשקיע ישראלי ההבדל אפסי.</b> שתיהן UCITS, שתיהן אירישיות לצורך מס העיזבון, שתיהן חייבות בניכוי במקור של 25% על דיבידנדים אמריקאיים לפי האמנה.</p><p class="box good"><b>והמסקנה המעשית:</b> בבחירת קרן, <b>plc מול ICAV אינו שיקול.</b> מה שכן שיקול — <b>צוברת או מחלקת, פיזית או סינתטית, וגודל התת-קרן עצמה</b> ולא גודל המטרייה. ומה שחשוב מכולם: <b>שהקרן אירית ולא אמריקאית</b>, וזה מה שמוציא אותה מבסיס מס העיזבון האמריקאי.</p></div>
+  <p class="src">חוק החברות האירי 2014 סעיף 1405 · חוק ה-ICAV האירי 2015 סעיף 32 · דירקטיבת UCITS 2009/65/EC · תשקיפי המנפיקים. הערה: לא נמצא פסק דין שבחן הכרה בהפרדת החבות מחוץ לאירלנד.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-opprofit">
+  <header><span class="eyebrow">והמונח שחוזר בכל המצגות</span><span class="pos" dir="ltr">7 / 9</span></header>
+  <h2>רווח תפעולי — ולמה דווקא בו מסתכלים</h2>
+  <div class="body"><p class="lede"><b>לחברה יש כמה שורות רווח, והן לא אומרות אותו דבר.</b> זה הסדר, מלמעלה למטה:</p><div class="scroll"><table><thead><tr><th class="lead">השורה</th><th>מה היא</th><th>מה היא כוללת</th></tr></thead><tbody><tr><td class="lead"><b>הכנסות</b></td><td dir="ltr">כמה נכנס</td><td dir="ltr">הכל</td></tr><tr><td class="lead">רווח גולמי</td><td dir="ltr">פחות עלות הייצור</td><td dir="ltr">חומרים, ייצור, שרתים</td></tr><tr><td class="lead"><b>רווח תפעולי</b></td><td dir="ltr"><b>פחות כל הוצאות ההפעלה</b></td><td dir="ltr">שיווק, מחקר, שכר, הנהלה</td></tr><tr><td class="lead">רווח לפני מס</td><td dir="ltr">פחות מימון</td><td dir="ltr">ריבית על חוב</td></tr><tr><td class="lead"><b>רווח נקי</b></td><td dir="ltr">פחות מס</td><td dir="ltr">השורה התחתונה</td></tr></tbody></table></div><p><b>הרווח התפעולי הוא השורה שאומרת אם העסק עצמו עובד.</b> מה שמעליו עוד לא סופר את עלות התפעול; מה שמתחתיו מערבב דברים שאינם העסק — <b>מבנה החוב של החברה, שיעור המס במדינה שלה, ורווחי השקעות חד-פעמיים.</b></p><p class="box good"><b>דוגמה מהמצגות האלה עצמן.</b> אליבאבא רשמה ברבעון שהסתיים במרץ 2021 <b>הפסד תפעולי של 7.66 מיליארד ¥</b> — הראשון בהיסטוריה שלה. בלי הקנס היה לה <b>רווח תפעולי של 10.57 מיליארד, עלייה של 48%.</b> הרווח הנקי של אותה שנה דווקא עלה ב-2%, <b>כי הוא כלל רווחי השקעות.</b> השורה הנקייה הראתה שהכל בסדר; <b>השורה התפעולית הראתה שקרה משהו.</b></p><p class="box warn"><b>ולמה זה חשוב בשביל קרן ולא רק בשביל חברה.</b> כשקרן מחזיקה חברה שהרווח התפעולי שלה שלילי, <b>היא מחזיקה עסק שמפסיד על הפעילות עצמה</b> — לא עסק שנפגע ממס או מריבית. אמזון הפסידה תשע שנים רצופות; <b>אינטל הפסידה 18.8 מיליארד דולר ב-2024.</b> זה לא מחיקה חשבונאית, זו פעילות.</p><p><b>ושני מושגים שצמודים לזה:</b> <b>מרווח תפעולי</b> הוא הרווח התפעולי חלקי ההכנסות — כמה אגורות נשארות מכל שקל מכירות. <b>ומחיקה (impairment)</b> היא הורדת שווי של נכס בספרים; היא פוגעת ברווח התפעולי <b>בלי שיצא שקל מהקופה באותה שנה</b> — וזה מה שקרה לכורות הזהב ב-2013: ברריק מחקה 10.4 מיליארד דולר <b>בלי לשלם אותם לאף אחד.</b></p></div>
+  <p class="src">הגדרות לפי תקני הדיווח של רשות ניירות הערך האמריקאית (SEC) · מספרי אליבאבא מדיווח 6-K מ-13.5.2021 · אינטל מדוחות 10-K · ברריק מדוח 40-F לשנת 2015.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-microsoft">
+  <header><span class="eyebrow">והמקרה שמלמד הכל</span><span class="pos" dir="ltr">8 / 9</span></header>
+  <h2>מיקרוסופט — 41 שנה בלי שנת הפסד. וגם 16 שנה מתחת לשיא</h2>
+  <div class="body"><p class="lede"><b>מיקרוסופט היא החברה היציבה ביותר ברשימה.</b> 41 שנים בבורסה, <b>ולא שנת הפסד אחת.</b> וזה מה שקרה למניה שלה בכל זאת:</p><div class="stats"><div class="stat warn"><span class="k">הירידה</span><span class="n" dir="ltr">−75.2%</span><span class="s">מדצמבר 1999</span></div><div class="stat "><span class="k">מתי חזרה לשיא</span><span class="n" dir="ltr">~2016</span><span class="s">על בסיס מחיר</span></div><div class="stat warn"><span class="k">כמה זמן מתחת</span><span class="n" dir="ltr">**כ-16 שנה**</span><span class="s">לא עשור — שישה עשר</span></div></div><p><b>ובכל התקופה הזאת העסק גדל.</b> הרווח הנקי עלה מ-9.4 מיליארד דולר בשנת 2000 ל-14.6 מיליארד ב-2009 — <b>וגם ב-2009 המניה עדיין הייתה 75% מתחת לשיא.</b></p><p class="box good"><b>זו לא הייתה כישלון עסקי — זו הייתה דחיסת מכפיל.</b> המשקיעים פשוט הסכימו לשלם פחות על אותו רווח. <b>וזה הלקח החשוב ביותר בכל המצגת הזאת:</b> חברה יכולה להיות מצוינת, לגדול כל שנה, <b>ועדיין להשאיר את מי שקנה בשיא מתחת למים במשך 16 שנה.</b></p><p class="box warn"><b>והקצה השני:</b> Amazon רווחית <b>שלוש שנים רצופות בלבד</b>. היא הפסידה <b>תשע שנים רצופות</b> מ-1994 עד 2002, ושוב ב-2012, ב-2014 וב-2022.</p><p class="box warn"><b>ו-Intel, שיושבת בשלוש מהקרנות בקטלוג, הפסידה 18.8 מיליארד דולר ב-2024 ועוד ב-2025.</b> ההכנסות שלה ירדו מ-79 מיליארד ב-2021 ל-52.9 מיליארד ב-2025.</p></div>
+  <p class="src">נתוני XBRL מדוחות 10-K של ה-SEC · סדרות מחיר.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="funds-dividends">
+  <header><span class="eyebrow">פרט שמשנה</span><span class="pos" dir="ltr">9 / 9</span></header>
+  <h2>והדיבידנדים קיצרו שנה שלמה</h2>
+  <div class="body"><p>המספרים למעלה הם <b>על בסיס מחיר</b>. הקרנות שלנו <b>צוברות</b> — הדיבידנד נשאר בפנים ועובד.</p><div class="scroll"><table><thead><tr><th class="lead">המשבר</th><th>התאוששות במחיר</th><th>בתשואה כוללת</th><th>ההפרש</th></tr></thead><tbody><tr><td class="lead">דוט-קום</td><td dir="ltr">7.18 שנים</td><td dir="ltr"><b>6.14 שנים</b></td><td dir="ltr"><b>שנה שלמה</b></td></tr><tr><td class="lead">2008</td><td dir="ltr">5.47 שנים</td><td dir="ltr"><b>4.48 שנים</b></td><td dir="ltr"><b>שנה שלמה</b></td></tr><tr><td class="lead">2022</td><td dir="ltr">2.04 שנים</td><td dir="ltr">1.94 שנים</td><td dir="ltr">5 שבועות</td></tr></tbody></table></div><p class="box good"><b>זה למה הקרנות בקטלוג צוברות ולא מחלקות.</b> הדיבידנד שנשאר בפנים לא רק מוסיף תשואה — הוא <b>מקצר את הזמן שלוקח לחזור מנפילה</b>.</p></div>
+  <p class="src">מדד S&amp;P 500 TR הרשמי (^SP500TR) מול מדד המחיר.</p>
+  <footer><a href="./" class="crumb">הקרנות, אחת אחת</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">הקרנות, אחת אחת — פתיחה</option><option value="1">1. מה יש בקטלוג, והמקבילה האמריקאית של כל אחת</option><option value="2">2. מתי כל אחת הוקמה — וכמה כסף יושב בה</option><option value="3">3. מי בכלל שומר על הכסף</option><option value="4">4. מה UCITS לא מגנה עליו — וזה כתוב בחוק עצמו</option><option value="5">5. כמה זמן הן קיימות — ותשע מתוך אחת עשרה ירדו מעל 70%</option><option value="6">6. plc, ICAV ו-LLC — ומה זה אומר על מי שמחזיק</option><option value="7">7. רווח תפעולי — ולמה דווקא בו מסתכלים</option><option value="8">8. מיקרוסופט — 41 שנה בלי שנת הפסד. וגם 16 שנה מתחת לשיא</option><option value="9">9. והדיבידנדים קיצרו שנה שלמה</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

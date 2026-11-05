@@ -36,7 +36,7 @@ export function ActivityPage() {
                   <span className="text-text-dim">{b.score}/{b.max}</span>
                 </div>
                 <div className="w-full bg-surface-4 rounded-full h-1.5">
-                  <div className="h-1.5 rounded-full transition-all" style={{ width: `${(b.score / b.max) * 100}%`, background: 'linear-gradient(90deg, #B8941F, #D4AF37)' }} />
+                  <div className="h-1.5 rounded-full transition-all" style={{ width: `${(b.score / b.max) * 100}%`, background: 'linear-gradient(90deg, #1F9E8C, #5EE6D0)' }} />
                 </div>
               </div>
             ))}

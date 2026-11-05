@@ -25,7 +25,7 @@ export function KidsIntro() {
   const finishKids = useOnboardingStore(s => s.finishKids);
 
   const ready = childAge !== null && amount !== null;
-  const preview = ready ? projectKid('pess', childAge, amount) : null;
+  const preview = ready ? projectKid('real', childAge, amount) : null;
 
   return (
     <QuizShell

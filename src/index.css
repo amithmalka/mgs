@@ -1,48 +1,76 @@
 @import "tailwindcss";
 @import "./styles/terminal.css";
+@import "./styles/futur.css";
 
+/** **הפלטה — הועברה מדף הנחיתה ב-4.11.2026.**
+ *
+ *  המערכת רצה על **זהב חם** (#5EE6D0) על שחור, ודף הנחיתה על
+ *  **אקווה וכחול־סגול קרים** על כחול־שחור. שני מוצרים של אותו
+ *  מותג שנראו כמו שני מותגים.
+ *
+ *  **הטוקנים נשארו בשמם `gold`** אף שהצבע אינו זהב יותר, וזאת
+ *  החלטה: 257 מחלקות בקוד משתמשות ב-`text-gold`, `bg-gold`
+ *  ו-`border-gold`. שינוי שם היה דורש 257 עריכות ידניות בקוד
+ *  שמוצג למשתמשים, **בלי שום רווח ויזואלי**. שינוי הערך כאן
+ *  משנה את כולן בבת אחת, בעריכה אחת, בלי סיכון.
+ *
+ *  **למי שכותב קוד חדש:** יש גם `--color-accent` ו-`--color-accent-2`
+ *  בשמות נכונים, והם מצביעים לאותם ערכים.
+ */
 @theme {
-  --color-gold: #D4AF37;
-  --color-gold-light: #F5E6A3;
-  --color-gold-dark: #B8941F;
-  --color-gold-muted: rgba(212, 175, 55, 0.12);
-  --color-gold-border: rgba(212, 175, 55, 0.2);
+  /* ===== המבטא — אקווה וכחול־סגול, מדף הנחיתה ===== */
+  --color-gold: #5EE6D0;
+  --color-gold-light: #BFE9FF;
+  --color-gold-dark: #1F9E8C;
+  --color-gold-muted: rgba(94, 230, 208, 0.12);
+  --color-gold-border: rgba(94, 230, 208, 0.22);
 
-  --color-surface: #080808;
-  --color-surface-2: #0F0F0F;
-  --color-surface-3: #171717;
-  --color-surface-4: #1F1F1F;
-  --color-surface-5: #282828;
+  /* אותם ערכים, בשמות נכונים — לקוד חדש */
+  --color-accent: #5EE6D0;
+  --color-accent-2: #8193FA;
+  --color-accent-2-dark: #4A5BD4;
 
-  --color-text: #F0F0F0;
-  --color-text-muted: #8A8A8A;
-  --color-text-dim: #4A4A4A;
+  /* ===== המשטחים — כחול־שחור קר במקום שחור ניטרלי ===== */
+  --color-surface: #06080C;
+  --color-surface-2: #0A0E15;
+  --color-surface-3: #0B1018;
+  --color-surface-4: #111826;
+  --color-surface-5: #19212F;
 
-  --color-success: #34D399;
+  /* ===== הטקסט ===== */
+  --color-text: #E8EEF6;
+  --color-text-muted: #8E9CAE;
+  --color-text-dim: #5D6878;
+
+  /* ===== הקווים ===== */
+  --color-line: rgba(150, 180, 212, 0.11);
+  --color-line-2: rgba(150, 180, 212, 0.22);
+
+  /* ===== סמנטי ===== */
+  --color-success: #4ADE80;
   --color-danger: #F87171;
-  --color-warning: #FBBF24;
-  --color-info: #60A5FA;
+  --color-warning: #FBBF4A;
+  --color-info: #8193FA;
 
-  --color-sp500: #D4AF37;
-  --color-nasdaq: #A78BFA;
-  --color-bitcoin: #F59E0B;
-  --color-international: #34D399;
-  --color-gold-asset: #FFD700;
+  /* ===== צבעי נכסים — נבדלים זה מזה, ובאותה טמפרטורה ===== */
+  --color-sp500: #5EE6D0;
+  --color-nasdaq: #8193FA;
+  --color-international: #4ADE80;
   --color-dividend: #F472B6;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #222 #0a0a0a;
+  scrollbar-color: #1E2A3A #06080C;
 }
 
 body {
   font-family: 'Rubik', system-ui, -apple-system, sans-serif;
-  background-color: #050505;
+  background-color: #06080C;
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(212, 175, 55, 0.02) 0%, transparent 50%);
-  color: #F0F0F0;
+    radial-gradient(ellipse at 18% 42%, rgba(94, 230, 208, 0.045) 0%, transparent 52%),
+    radial-gradient(ellipse at 82% 18%, rgba(129, 147, 250, 0.040) 0%, transparent 50%);
+  color: #E8EEF6;
   margin: 0;
   min-height: 100vh;
 }
@@ -54,11 +82,11 @@ h1, h2, h3 {
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #1E2A3A; border-radius: 2px; }
 
 /* === Gold Gradient Text === */
 .text-gold-gradient {
-  background: linear-gradient(135deg, #B8941F 0%, #D4AF37 30%, #F5E6A3 50%, #D4AF37 70%, #B8941F 100%);
+  background: linear-gradient(135deg, #1F9E8C 0%, #5EE6D0 30%, #BFE9FF 50%, #5EE6D0 70%, #1F9E8C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -70,7 +98,7 @@ h1, h2, h3 {
   100% { background-position: 200% center; }
 }
 .gold-shimmer {
-  background: linear-gradient(90deg, #B8941F 0%, #D4AF37 20%, #F5E6A3 40%, #D4AF37 60%, #B8941F 80%, #D4AF37 100%);
+  background: linear-gradient(90deg, #1F9E8C 0%, #5EE6D0 20%, #BFE9FF 40%, #5EE6D0 60%, #1F9E8C 80%, #5EE6D0 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -138,7 +166,7 @@ h1, h2, h3 {
 
 /* === Button Glow Hover === */
 .btn-gold {
-  background: linear-gradient(135deg, #B8941F 0%, #D4AF37 50%, #F5E6A3 100%);
+  background: linear-gradient(135deg, #1F9E8C 0%, #5EE6D0 50%, #BFE9FF 100%);
   color: #0A0A0A;
   font-weight: 600;
   border: none;
@@ -187,7 +215,7 @@ input::placeholder, textarea::placeholder { color: #3a3a3a; }
 textarea { resize: vertical; }
 select { appearance: none; cursor: pointer; }
 select option { background: #171717; color: #F0F0F0; }
-input[type="checkbox"] { accent-color: #D4AF37; }
+input[type="checkbox"] { accent-color: #5EE6D0; }
 input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 
 table { border-collapse: collapse; }
@@ -199,7 +227,7 @@ th { color: #6a6a6a; font-weight: 500; font-family: 'Heebo', 'Inter', sans-serif
   100% { background-position: 200% center; }
 }
 .progress-gold {
-  background: linear-gradient(90deg, #B8941F, #D4AF37, #F5E6A3, #D4AF37, #B8941F);
+  background: linear-gradient(90deg, #1F9E8C, #5EE6D0, #BFE9FF, #5EE6D0, #1F9E8C);
   background-size: 200% auto;
   animation: progress-shine 3s linear infinite;
 }

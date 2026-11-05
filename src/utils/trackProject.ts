@@ -7,7 +7,7 @@
  * the gain sitting unrealised in the portfolio.
  */
 import {
-  SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, horizonFor, btcRate,
+  SCENARIOS, CYCLE_YEARS, TAX, WITHDRAW, horizonFor,
   type ScenarioId, type SleeveId,
 } from '../constants/mgsScenarios';
 
@@ -18,7 +18,7 @@ import {
  * the two figures it needs live here rather than in the shared constants, which
  * now describe only the sleeves the system actually buys. */
 const JEPQ_YIELD = 0.09;
-const JEPQ_TOTAL: Record<ScenarioId, number> = { pess: 0.075, real: 0.080 };
+const JEPQ_TOTAL: Record<ScenarioId, number> = { real: 0.080 };
 import { glideFor, glideHeld, glideInvert, mixForAgeIn, type GlideMode } from './monthPlan';
 
 /** the most of a single deposit model 1 will route to JEPQ, reached at age 45 */
@@ -82,7 +82,11 @@ export interface TrackResult {
   finalJepq: number;
 }
 
-const SLEEVES: SleeveId[] = ['BTC', 'SMH', 'XLK', 'WORLD', 'SYN'];
+/** **יוניברס הרכיבים — שמונה הקרנות האיריות, ולא יותר.**
+ *  ב-4.11.2026 הוסרו מכאן `BTC`, `WORLD` ו-`SYN`: ביטקוין אינו
+ *  ניתן להחזקה בעטיפה אירית ומחזיר חשיפת מס עיזבון, והשניים
+ *  האחרים היו שמות מופשטים ולא קרנות שאפשר לקנות. */
+const SLEEVES: SleeveId[] = ['SPXS', 'CSPX', 'MXWO', 'IWDA', 'VWRA', 'XLKS', 'WTEC', 'SMH'];
 
 interface Sleeve { v: number; c: number }
 
@@ -115,7 +119,7 @@ export function projectTrack(
     const yrs = m / 12;
 
     for (const k of SLEEVES) {
-      const r = k === 'BTC' ? btcRate(scenario, yrs) : S.rate[k];
+      const r = S.rate[k];
       g[k].v *= Math.pow(1 + r, 1 / 12);
     }
     jepq.v *= Math.pow(1 + JEPQ_TOTAL[scenario], 1 / 12);
@@ -129,7 +133,8 @@ export function projectTrack(
     deposited += monthlyDeposit;
     const age = startAge + yrs;
     if (land && m > depositYears * 12) {
-      g.WORLD.v += monthlyDeposit; g.WORLD.c += monthlyDeposit;
+      // הנחיתה היא ל-IWDA, הקרן הפיזית על MSCI World
+      g.IWDA.v += monthlyDeposit; g.IWDA.c += monthlyDeposit;
     } else {
       // Model 1 sends a growing share of every deposit straight to JEPQ — a
       // change of address for new money, never a sale, so it costs no tax. What
@@ -144,15 +149,14 @@ export function projectTrack(
         jepq.v += monthlyDeposit * toJepq; jepq.c += monthlyDeposit * toJepq;
       }
       const left = monthlyDeposit * (1 - toJepq);
-      const vol = 1 - g0, core = 1 - vol;
-      const mix: Array<[SleeveId, number]> = glide === 'held' || glide === 'invert'
-        ? [['BTC', vol / 2], ['SMH', vol / 2], ['XLK', core]]
-        : Object.entries(mixForAgeIn(age, glide)) as Array<[SleeveId, number]>;
+      // **כל מצבי הגלישה מביאים את התמהיל מ-`COMBOS`.** עד כאן
+      // שני מצבים הרכיבו תמהיל משלהם עם ביטקוין בחצי מהתנודתי.
+      const mix = Object.entries(mixForAgeIn(age, glide)) as Array<[SleeveId, number]>;
       for (const [k, w] of mix) { g[k].v += left * w; g[k].c += left * w; }
     }
 
     // the harvest fires once a cycle, not on every new high
-    const keys: SleeveId[] = ['BTC', 'SMH', 'XLK'];
+    const keys: SleeveId[] = ['SMH', 'XLKS'];
     for (const k of keys) {
       const since = m - (lastHarvest[k] ?? 0);
       if (since < CYCLE_YEARS[k] * 12 || g[k].v <= g[k].c) continue;

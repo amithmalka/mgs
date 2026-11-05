@@ -6,34 +6,62 @@
  *  Nothing here is a published forecast: the per-sleeve assumptions are, the
  *  portfolio result is what the mechanism produces from them. */
 
-export type Sleeve = 'BTC' | 'SEM' | 'TEC';
-export type Scenario = 'pess' | 'real';
-export type Market = 'fx' | 'il';
+/** **הרכיבים — שבבים וטכנולוגיה. ביטקוין הוסר ב-4.11.2026.**
+ *
+ *  עד כאן היה כאן `'BTC' | 'SEM' | 'TEC'`, והמנוע הזה מזין את דפי
+ *  המסלולים, הילדים, קרן ההשתלמות והבנייה. כלומר **ביטקוין נכנס
+ *  לשליש מכל הפקדה בכל אחד מהם**, בהנחה של 16.6% לשנה ובתנודתיות
+ *  של 66.3%.
+ *
+ *  **שלוש סיבות להסרה, וכל אחת מספיקה:** אין קרן UCITS אירית על
+ *  קריפטו, ולכן כל דרך להחזיק אותו מחזירה חשיפה למס העיזבון
+ *  האמריקאי — הדבר היחיד שכל המבנה בא למנוע; הוא לא נבדק באף
+ *  קומבינציה; והבורסה הישראלית, שדרכה הוא נקנה, ירדה כמסלול.
+ *
+ *  **ומה שנשאר הוא בדיוק שני מנועי הצמיחה שבקומבינציות** — SMH
+ *  ו-XLKS — כך שהמנוע הזה והמסלולים מחזיקים את אותה חשיפה. */
+export type Sleeve = 'SEM' | 'TEC';
+export type Scenario = 'real';
+/** **מסלול הקנייה — חו״ל בלבד, מאז 4.11.2026.**
+ *
+ *  עד כאן היה גם מסלול `'il'` — קנייה בשקלים בתל אביב. הוא הוסר,
+ *  ומשתי סיבות שכל אחת מהן מספיקה:
+ *
+ *  **האחת, הוא לא היה מעשי.** התמורה היומית של תעודת הטכנולוגיה
+ *  בת״א (IUIT, 1159193) הייתה **46,144₪** — פחות מהפקדה חודשית
+ *  אחת של כמה לקוחות, ומתחת לרף הנזילות של 100,000₪ שאנחנו עצמנו
+ *  קבענו. המחיר שמקבלים בפועל אינו המחיר שרואים.
+ *
+ *  **והשנייה, על שני רכיבים לא הייתה שם קרן אירית בכלל.** ביטקוין
+ *  ושבבים נקנו דרך **קרנות סל ישראליות** — ואלה אינן UCITS, הן
+ *  סינתטיות, והן אינן מחזיקות את הנכס עצמו. אימות של חמש תעודות
+ *  הסייבר הישראליות בת״א הראה את אותו מבנה בדיוק: חוזה חילופין
+ *  ב-88%–99.9% מהקרן, פורוורדים ומק״מ כבטוחה, **ואפס מניות**.
+ *
+ *  הקנייה נעשית דרך אינטראקטיב ישראל בבורסות לונדון ואירופה. */
+export type Market = 'fx';
 export type Track = 'flow' | 'both' | 'growth';
 export type Cohort = '20-30' | '30-40' | '40-50' | '50-60' | '60-70';
 
-export const SLEEVES: Sleeve[] = ['BTC', 'SEM', 'TEC'];
+export const SLEEVES: Sleeve[] = ['SEM', 'TEC'];
 export const SLEEVE_HE: Record<Sleeve, string> = {
-  BTC: 'ביטקוין', SEM: 'שבבים', TEC: 'טכנולוגיה',
+  SEM: 'שבבים', TEC: 'טכנולוגיה',
 };
 /** measured annual volatility, 146 months */
-export const VOL: Record<Sleeve, number> = { BTC: 0.662738, SEM: 0.272745, TEC: 0.198347 };
-/** Cholesky factor of the measured correlation matrix
- *  (BTC·SEM 0.21 · BTC·TEC 0.33 · SEM·TEC 0.88) */
-const CHOL = [[1, 0, 0], [0.212201, 0.977226, 0], [0.327987, 0.827266, 0.456132]];
+export const VOL: Record<Sleeve, number> = { SEM: 0.272745, TEC: 0.198347 };
+/** גורם צ׳ולסקי של מטריצת המתאמים הנמדדת.
+ *  **חושב מחדש ב-4.11.2026 אחרי הסרת הביטקוין** — נשאר צמד אחד,
+ *  SEM·TEC במתאם 0.88, ולכן המטריצה היא 2×2 ולא 3×3. */
+const CHOL = [[1, 0], [0.88, 0.474974]];
 /** the two scenarios differ in bitcoin alone — there is no published source
  *  above Damodaran for the two sectors, so the realistic case repeats them */
 export const ASSUMPTION: Record<Scenario, Record<Sleeve, number>> = {
-  pess: { BTC: 0.100, SEM: 0.1072, TEC: 0.0964 },
-  real: { BTC: 0.166, SEM: 0.1072, TEC: 0.0964 },
+  real: { SEM: 0.1072, TEC: 0.0964 },
 };
 /** Management fees of the instruments actually bought on each route.
- *  Tel Aviv: bitcoin 0.20% (Tachlit 1217835), semiconductors 0.45%
- *  (Kesem 1174119, the same MVIS 25 index these parameters were measured on),
- *  technology 0.15% (IUIT 1159193, Irish and accumulating). */
+ *  The Tel Aviv route was removed on 4.11.2026 — see the Market type. */
 export const TER: Record<Market, Record<Sleeve, number>> = {
-  fx: { BTC: 0.0010, SEM: 0.0035, TEC: 0.0014 },
-  il: { BTC: 0.0020, SEM: 0.0045, TEC: 0.0015 },
+  fx: { SEM: 0.0035, TEC: 0.0014 },
 };
 export const FX_DRAG = 0.004, CPI = 0.02, TAX = 0.25, UP_CAP = 10;
 /** the year the plan would have moved to a global track — and does not */
@@ -47,19 +75,53 @@ export const FX_DRAG = 0.004, CPI = 0.02, TAX = 0.25, UP_CAP = 10;
 export const COHORT_YEAR: Record<Cohort, number> = {
   '20-30': 25, '30-40': 20, '40-50': 15, '50-60': 10, '60-70': 5,
 };
-/** each track withdraws on its own schedule, by plan year */
+/** **לוח המשיכות — ותקרה אחת שחלה על שלושת המסלולים.**
+ *
+ *  **ארבעה אחוזים בשנה הם התקרה, ואין מסלול ואין שלב שעובר אותה.**
+ *  זו החלטת מוצר ולא פרמטר: המשיכה נעצרת ב-4% גם כשהתיק עלה, כי
+ *  שיעור משיכה גבוה יותר הוא מה שהופך נפילה רגילה לנפילה שממנה
+ *  הקרן לא חוזרת. `WITHDRAW_MAX` אוכף את זה בקוד, לא בהערה.
+ *
+ *  ההיגיון של המדרגה שלפניה: **אחוז אחד בשנה הוא תזרים שהתיק כמעט
+ *  לא מרגיש**, ולכן הוא יכול לרוץ מהשנה הראשונה בלי לפגוע בצבירה.
+ *  **ארבעה אחוזים הם התזרים האמיתי**, והוא נדחה עד שהקרן גדולה
+ *  מספיק לשאת אותו.
+ *
+ *  · **תזרים** — 1% משנה 1 עד 5, **ומשנה 6 ארבעה אחוזים.**
+ *  · **תזרים וצמיחה** — 1% עד שנה 9, **ומשנה 10 ארבעה אחוזים.**
+ *  · **צמיחה** — אפס בזמן הצבירה, **ו-4% משנת המעבר של הקבוצה**
+ *    (גיל 50 / 55 / 60 / 65 / 70). המסלול אינו מושך בדרך, אבל
+ *    כשהוא מתחיל למשוך הוא מושך באותה תקרה כמו השניים האחרים.
+ *
+ *  **ולמה תזרים מקדים את תזרים־וצמיחה בארבע שנים.** זה תפקידו: מי
+ *  שבחר אותו צריך את הכסף, ולכן הוא עובר ל-4% ברגע שהתיק יכול —
+ *  ואחרי שש שנות הפקדה הוא יכול. מי שבחר תזרים־וצמיחה מוכן להמתין
+ *  עוד ארבע שנים בשביל שהקרן תהיה גדולה יותר כשהמשיכה מתחילה.
+ *
+ *  **המדרגה היא שנתית ומחולקת ל-12.** 4% בשנה פירושו 0.333% בחודש
+ *  מהשווי העדכני, לא סכום קבוע. */
+/** **התקרה המוחלטת של המשיכה השנתית.** כל שיעור משיכה בכל מסלול
+ *  ובכל שלב עובר דרך `Math.min` מולה. */
+export const WITHDRAW_MAX = 0.04;
+
 const RAMP: Record<'flow' | 'both', number[]> = {
-  flow: [0, .01, .01, .01, .01, .02, .03, .04],
-  both: [0, 0, 0, 0, .01, .01, .01, .01, .01, .01, .04],
+  // שנים 1-5 אחוז אחד, משנה 6 ארבעה
+  flow: [.01, .01, .01, .01, .01, WITHDRAW_MAX],
+  // שנים 1-9 אחוז אחד, משנה 10 ארבעה
+  both: [.01, .01, .01, .01, .01, .01, .01, .01, .01, WITHDRAW_MAX],
 };
 /** the growth track's transition year — the cohort's, unless one is given.
  *  A child's plan sets it directly: deposits until the salary starts. */
 export const transitionYear = (cohort: Cohort, override?: number) =>
   override ?? COHORT_YEAR[cohort];
-export function withdrawRate(track: Track, cohort: Cohort, year: number, startYear?: number): number {
-  if (track === 'growth') return year < transitionYear(cohort, startYear) ? 0 : 0.04;
-  const r = RAMP[track];
-  return r[Math.min(year - 1, r.length - 1)];
+export function withdrawRate(track: Track, cohort: Cohort, year: number, _startYear?: number): number {
+  // **צמיחה אינה מושכת בזמן הצבירה** — זה מה שמבדיל אותה מהשניים
+  // האחרים. משנת המעבר של הקבוצה היא מושכת באותה תקרה, 4%.
+  const raw = track === 'growth'
+    ? (year > COHORT_YEAR[cohort] ? WITHDRAW_MAX : 0)
+    : RAMP[track][Math.min(year - 1, RAMP[track].length - 1)];
+  // התקרה נאכפת כאן, כדי שאף קורא לא יוכל לעבור אותה.
+  return Math.min(raw, WITHDRAW_MAX);
 }
 /** the deposit climbs for five years, then falls by a share of the base */
 /** ההפקדה בשנה נתונה.
@@ -129,7 +191,7 @@ function path(sc: Scenario, mkt: Market, months: number, r: () => number) {
   }
   const px = {} as Record<Sleeve, Float64Array>;
   for (const t of SLEEVES) px[t] = new Float64Array(months);
-  const cur = { BTC: 100, SEM: 100, TEC: 100 } as Record<Sleeve, number>;
+  const cur = { SEM: 100, TEC: 100 } as Record<Sleeve, number>;
   for (let m = 0; m < months; m++) {
     const z = [gauss(r), gauss(r), gauss(r)];
     for (let i = 0; i < 3; i++) {
@@ -165,7 +227,7 @@ export interface SimResult {
 }
 
 function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) {
-  const sh = { BTC: 0, SEM: 0, TEC: 0 } as Record<Sleeve, number>;
+  const sh = { SEM: 0, TEC: 0 } as Record<Sleeve, number>;
   const cost = { ...sh }, costIdx = { ...sh }, peak = { ...sh };
   const floor = o.floor ?? 0, lump = o.lump ?? 0;
   let cash = 0, paid = 0, yearCash = 0, skipped = 0, belowFloor = 0;
@@ -184,7 +246,7 @@ function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) 
       // nothing is below its peak on day one, so the rule has nothing to read:
       // the opening sum splits evenly, which also measured a better 10th percentile
       for (const t of SLEEVES) {
-        const a = lump / 3;
+        const a = lump / SLEEVES.length;
         sh[t] += a / px[t][m]; cost[t] += a; costIdx[t] += a / idx;
       }
       paid += lump;

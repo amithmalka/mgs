@@ -31,7 +31,7 @@ export const hasPublished = (ks: SleeveKey[]) => ks.every(k => ASSUME[k]);
  *  שממנו באה הנחת הביטקוין. השורה AC World Equity: **7.50%** גיאומטרי,
  *  דולר נומינלי, אופק 10–15 שנה.
  *
- *  והתרחיש הפסימי אינו המצאה שלי אלא **בית אחר**: Vanguard VCMM (21.10.2026)
+ *  (התרחיש הפסימי ירד מהמערכת; ההנחה הנמוכה של Vanguard VCMM נשמרה כאן כנתון)
  *  נותן למניות אמריקאיות חציון **5.8%**. זה הפיזור האמיתי בין בתים, ולא
  *  כיווץ שרירותי — בלאקרוק באותו רבעון נותן 8.97%, כלומר **3.2 נקודות**
  *  הפרש על אותו נכס. ו-GMO נותן 7.3%- ריאלי, שזה עולם אחר לגמרי.
@@ -47,10 +47,10 @@ export const EQUITY = { pess: 0.058, real: 0.075,
      + 'פסימי: Vanguard VCMM 21.10.2026, חציון 5.8% למניות אמריקאיות' };
 
 /** תשואה שנתית לרכיב, לפני עלויות */
-export function grossFor(k: SleeveKey, _basis: Basis, sc: Scenario): number {
+export function grossFor(k: SleeveKey, _basis: Basis, _sc: Scenario): number {
   const a = ASSUME[k];
-  if (a) return sc === 'pess' ? a.pess : a.real;
-  return sc === 'pess' ? EQUITY.pess : EQUITY.real;
+  if (a) return a.real;
+  return EQUITY.real;
 }
 
 /** אילו מהרכיבים שנבחרו רצים על הצבה ולא על מקור משלהם */

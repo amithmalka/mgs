@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · המצגות</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}
+.grid{display:grid;gap:11px;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));margin-top:16px}
+.card{display:grid;gap:6px;background:var(--surface);border:1px solid var(--rule);
+ border-radius:9px;padding:15px 16px;text-decoration:none;color:var(--ink)}
+.card:hover{border-color:color-mix(in srgb,#E3BE45 50%,var(--rule))}
+.tag{font-size:9.5px;font-weight:700;letter-spacing:1.6px;color:var(--gold)}
+.card b{font-size:16px}.card small{font-size:12px;color:var(--muted);line-height:1.55}
+.card em{font-style:normal;font-size:11px;color:var(--mid)}
+.hero{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:26px 28px;display:grid;gap:11px}
+</style></head><body><div class="deck">
+<div class="hero">
+  <span class="eyebrow">MGS · Money Growth System</span>
+  <h1>המצגות</h1>
+  <p class="lede">17 מצגות, 152 שקופיות. נפתחות בכל דפדפן, עובדות במובייל, ו-Ctrl+P שומר כ-PDF.</p>
+  <p><a class="card" href="all.html" style="display:inline-grid"><span class="tag">הכל ברצף</span><b>הקורס המלא</b><small>כל המצגות בקובץ אחד, להרצאה רצופה</small></a></p>
+</div>
+<div class="grid"><a class="card" href="buy.html"><span class="tag">המנגנון</span><b>מנגנון הקנייה</b><small>לאן הולך כל שקל של ההפקדה החודשית, ולמה דווקא לשם</small><em>6 שקופיות ←</em></a><a class="card" href="mechvs.html"><span class="tag">המנגנון</span><b>המנגנון מול הפקדה קבועה</b><small>האם קנייה בירידות מנצחת הפקדה אחידה — ומה בדיוק היא כן קונה</small><em>5 שקופיות ←</em></a><a class="card" href="system.html"><span class="tag">המערכת</span><b>מפת המערכת</b><small>כל טאב ב-MGS — מה ההיגיון שלו, למה הוא קיים, ואיך משתמשים בו</small><em>6 שקופיות ←</em></a><a class="card" href="funds.html"><span class="tag">הקטלוג</span><b>הקרנות, אחת אחת</b><small>מתי הוקמו, מה הן מחזיקות, מי מפקח, ומה הנפילות שהן שרדו</small><em>9 שקופיות ←</em></a><a class="card" href="each-fund.html"><span class="tag">הקטלוג</span><b>כל תעודה, אחת אחת</b><small>חמישה מדדים, עשר תעודות — מה כל אחת עושה, בשפה פשוטה</small><em>8 שקופיות ←</em></a><a class="card" href="study.html"><span class="tag">המס</span><b>קרן השתלמות וגמל להשקעה</b><small>למה זה כסף חינם, מה התקרות, ולמי כל אחד מהם מתאים</small><em>9 שקופיות ←</em></a><a class="card" href="tracks.html"><span class="tag">המנגנון</span><b>שלושת המסלולים</b><small>תזרים, תזרים וצמיחה, צמיחה — איך כל אחד בנוי ומה ההיגיון</small><em>11 שקופיות ←</em></a><a class="card" href="combos.html"><span class="tag">התמהיל</span><b>הקומבינציות</b><small>איך נבחרו, מה ההיגיון, וכמה תנודתיות וצמיחה בכל אחת</small><em>7 שקופיות ←</em></a><a class="card" href="combos-flow.html"><span class="tag">תזרים</span><b>תמהילי תזרים</b><small>2 תמהילים — מה בכל אחד, ולמה דווקא הוא</small><em>3 שקופיות ←</em></a><a class="card" href="combos-both.html"><span class="tag">תזרים וצמיחה</span><b>תמהילי תזרים וצמיחה</b><small>3 תמהילים — מה בכל אחד, ולמה דווקא הוא</small><em>4 שקופיות ←</em></a><a class="card" href="combos-growth.html"><span class="tag">צמיחה</span><b>תמהילי צמיחה</b><small>5 תמהילים — מה בכל אחד, ולמה דווקא הוא</small><em>6 שקופיות ←</em></a><a class="card" href="deposits.html"><span class="tag">הזרימה</span><b>ההפקדות והמשיכות</b><small>למה עולה חמש שנים ואז יורדת, מתי מושכים, ואיך רושמים את זה</small><em>8 שקופיות ←</em></a><a class="card" href="estate.html"><span class="tag">המס</span><b>מס העיזבון האמריקאי</b><small>למה כל הקטלוג אירי, ומה בדיוק הסכנה</small><em>7 שקופיות ←</em></a><a class="card" href="swap.html"><span class="tag">המבנה</span><b>פיזי מול חוזה חילופין</b><small>מה זה סינתטי, מה הקרן באמת מחזיקה, ומה זה קונה ועולה</small><em>10 שקופיות ←</em></a><a class="card" href="fourpct.html"><span class="tag">המשיכה</span><b>חוק ה-4%</b><small>מי הקים אותו, מה הוא באמת אומר, ולמה המנגנון שלנו אינו הוא</small><em>8 שקופיות ←</em></a><a class="card" href="chile.html"><span class="tag">הגיל</span><b>מסלולים לפי גיל</b><small>ההיגיון שמאחורי הפילוח — ומה צ׳ילה למדה אחרי 23 שנה</small><em>8 שקופיות ←</em></a><a class="card" href="cycle.html"><span class="tag">התזמון</span><b>מתי משקיעים בכל אחד</b><small>האם אפשר לתזמן את המחזור, ומה מהרוטציה הסקטוריאלית שורד מדידה</small><em>20 שקופיות ←</em></a></div>
+<p class="note" style="margin-top:14px"><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס.</b> כל מצגת נפתחת בשקופית דיסקליימר מלאה. תשואות עבר אינן מנבאות תשואות עתיד.</p>
+</div></body></html>

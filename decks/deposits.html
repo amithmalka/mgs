@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · ההפקדות והמשיכות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="deposits-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 8</span></header>
+  <h1>ההפקדות והמשיכות</h1>
+  <p class="lede">למה עולה חמש שנים ואז יורדת, מתי מושכים, ואיך רושמים את זה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-curve">
+  <header><span class="eyebrow">עקומת ההפקדה</span><span class="pos" dir="ltr">1 / 8</span></header>
+  <h2>עולה חמש שנים, ואז יורדת</h2>
+  <div class="body"><p class="lede">ההפקדה <b>אינה קבועה</b>. היא עולה באחוז שבחרתם במשך <b>חמש שנים</b>, ומשם <b>יורדת לינארית</b> עד שהיא מתאפסת בסוף תקופת ההפקדות.</p><div class="curve"><span class="bar" title="שנה 1: 2,000₪"><i class="up" style="height:82.27024747918819%"></i><small>1</small></span><span class="bar" title="שנה 2: 2,100₪"><i class="up" style="height:86.3837598531476%"></i><small>2</small></span><span class="bar" title="שנה 3: 2,205₪"><i class="up" style="height:90.70294784580499%"></i><small>3</small></span><span class="bar" title="שנה 4: 2,315₪"><i class="up" style="height:95.23809523809524%"></i><small>4</small></span><span class="bar" title="שנה 5: 2,431₪"><i class="up" style="height:100%"></i><small>5</small></span><span class="bar" title="שנה 6: 2,279₪"><i class="dn" style="height:93.75000000000001%"></i><small>6</small></span><span class="bar" title="שנה 7: 2,127₪"><i class="dn" style="height:87.5%"></i><small>7</small></span><span class="bar" title="שנה 8: 1,975₪"><i class="dn" style="height:81.25%"></i><small>8</small></span><span class="bar" title="שנה 9: 1,823₪"><i class="dn" style="height:75%"></i><small>9</small></span><span class="bar" title="שנה 10: 1,671₪"><i class="dn" style="height:68.75%"></i><small>10</small></span><span class="bar" title="שנה 11: 1,519₪"><i class="dn" style="height:62.5%"></i><small>11</small></span><span class="bar" title="שנה 12: 1,367₪"><i class="dn" style="height:56.25%"></i><small>12</small></span><span class="bar" title="שנה 13: 1,216₪"><i class="dn" style="height:50%"></i><small>13</small></span><span class="bar" title="שנה 14: 1,064₪"><i class="dn" style="height:43.75%"></i><small>14</small></span><span class="bar" title="שנה 15: 912₪"><i class="dn" style="height:37.5%"></i><small>15</small></span><span class="bar" title="שנה 16: 760₪"><i class="dn" style="height:31.25%"></i><small>16</small></span><span class="bar" title="שנה 17: 608₪"><i class="dn" style="height:25%"></i><small>17</small></span><span class="bar" title="שנה 18: 456₪"><i class="dn" style="height:18.75%"></i><small>18</small></span><span class="bar" title="שנה 19: 304₪"><i class="dn" style="height:12.5%"></i><small>19</small></span><span class="bar" title="שנה 20: 152₪"><i class="dn" style="height:6.25%"></i><small>20</small></span><span class="bar" title="שנה 21: 0₪"><i class="off" style="height:0%"></i><small>21</small></span><span class="bar" title="שנה 22: 0₪"><i class="off" style="height:0%"></i><small>22</small></span></div><p class="note"><b>בסיס 2,000₪, עליה 5% בשנה, אופק 20 שנה.</b> שנים 1–5 עולות עד <b>2,431₪</b>, ומשם יורדות עד שהן מתאפסות בשנה 21. <b>סך הכל 351,406₪.</b></p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-why">
+  <header><span class="eyebrow">ההיגיון</span><span class="pos" dir="ltr">2 / 8</span></header>
+  <h2>שקל מוקדם שווה הרבה יותר משקל מאוחר</h2>
+  <div class="body"><p>זו כל הסיבה. <b>שקל שנכנס בשנה 2 עובד עשרים שנה. שקל שנכנס בשנה 23 עובד שנה אחת.</b> בתשואה של 9% ההפרש ביניהם הוא פי שישה.</p><div class="scroll"><table><thead><tr><th class="lead">מתי נכנס השקל</th><th>כמה שנים עבד</th><th>שווה בסוף</th></tr></thead><tbody><tr><td class="lead">שנה 1</td><td dir="ltr">24 שנה</td><td dir="ltr">₪8.0</td></tr><tr><td class="lead">שנה 5</td><td dir="ltr">20 שנה</td><td dir="ltr">₪5.6</td></tr><tr><td class="lead">שנה 10</td><td dir="ltr">15 שנה</td><td dir="ltr">₪3.6</td></tr><tr><td class="lead">שנה 20</td><td dir="ltr">5 שנים</td><td dir="ltr">₪1.5</td></tr><tr><td class="lead">שנה 24</td><td dir="ltr">שנה אחת</td><td dir="ltr">₪1.1</td></tr></tbody></table></div><p class="note">על שקל אחד, בתשואה שנתית של 9%, אופק 25 שנה. <b>המספרים האלה הם כל ההסבר לעקומה.</b></p><p class="box good"><b>ולכן הכסף מרוכז קדימה.</b> העליה בחמש השנים הראשונות דוחפת יותר כסף לאזור שבו הוא שווה הכי הרבה, והירידה אחר כך מקלה על התקציב בדיוק כשהתיק כבר גדול מספיק לשאת את עצמו.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-stop">
+  <header><span class="eyebrow">העצירה</span><span class="pos" dir="ltr">3 / 8</span></header>
+  <h2>ואז עוצרים לגמרי</h2>
+  <div class="body"><p>אופק ההפקדות נקבע לפי <b>קבוצת הגיל</b>, ובסופו ההפקדה היא <b>אפס מוחלט</b> — לא ״פחות״, לא ״מדי פעם״.</p><div class="stats"><div class="stat"><span class="k">עצמאי — הפקדה מוטבת</span><span class="n" dir="ltr">20,566₪</span><span class="s">7% מההכנסה, עד 293,397₪</span></div><div class="stat"><span class="k">שכיר — הפקדה מוטבת</span><span class="n" dir="ltr">18,854₪</span><span class="s">10% מהשכר, עד 15,712₪ לחודש</span></div><div class="stat"><span class="k">שניהם יחד</span><span class="n" dir="ltr">39,420₪</span><span class="s">שני חשבונות נפרדים</span></div><div class="stat"><span class="k">לחודש, שניהם</span><span class="n" dir="ltr">3,285₪</span><span class="s">מעל זה — לברוקר</span></div></div><p class="note">שנות ההפקדה לפי קבוצת גיל: 20-30 → 25 · 30-40 → 20 · 40-50 → 15 · 50-60 → 10 · 60-70 → 10.</p><p class="box warn"><b>וגיל העצירה חסום ב-80.</b> בן 70 מפקיד עשר שנים ועוצר ב-80; בן 75 מפקיד חמש. מי שעבר את 80 אינו בשלב צבירה כלל — הוא במשיכות.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-draw">
+  <header><span class="eyebrow">המשיכות</span><span class="pos" dir="ltr">4 / 8</span></header>
+  <h2>מתי מתחילים למשוך — ולמה זה שונה בכל מסלול</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">המסלול</th><th>תנודתיות</th><th>מתי מתחילים למשוך</th><th>הקצב בשלב הצבירה</th><th>אחרי עצירת ההפקדות</th></tr></thead><tbody><tr><td class="lead">תזרים</td><td dir="ltr">עד 14%</td><td dir="ltr">שנה 2</td><td dir="ltr">1% → 4%</td><td dir="ltr">5.0%</td></tr><tr><td class="lead">תזרים וצמיחה</td><td dir="ltr">14%–22%</td><td dir="ltr">שנה 5</td><td dir="ltr">1% → 4%</td><td dir="ltr">4.5%</td></tr><tr><td class="lead">צמיחה</td><td dir="ltr">מעל 22%</td><td dir="ltr">לא מושך כלל</td><td dir="ltr">—</td><td dir="ltr">אין משיכות</td></tr></tbody></table></div><p><b>תזרים מושך כבר משנה 2.</b> לא אחרי העצירה — תוך כדי. כי זה מה שהמסלול הזה הוא: חיים מהכסף בזמן שממשיכים להפקיד.</p><p><b>ותזרים וצמיחה מחכה לשנה 5.</b> נותן לתיק ארבע שנים להיבנות, ואז מתחיל לשלם.</p><p><b>צמיחה אינה מושכת כלום</b> — והמשיכות מתחילות רק בתום כל התקופה.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-forever">
+  <header><span class="eyebrow">התוצאה</span><span class="pos" dir="ltr">5 / 8</span></header>
+  <h2>איך אפשר למשוך מיליונים ושעדיין יישארו מיליונים</h2>
+  <div class="body"><p>כי מושכים <b>אחוז מהיתרה</b>, <b>והתיק מרוויח יותר מהאחוז הזה</b>.</p><div class="stats"><div class="stat "><span class="k">מושכים</span><span class="n" dir="ltr">4%–5%</span><span class="s">בשנה, מהיתרה</span></div><div class="stat up"><span class="k">התיק מרוויח</span><span class="n" dir="ltr">7%–11%</span><span class="s">בשנה, לפי התמהיל</span></div><div class="stat gold"><span class="k">ההפרש</span><span class="n" dir="ltr">+3% עד +6%</span><span class="s">היתרה ממשיכה לגדול</span></div></div><p class="box good"><b>ולכן ההכנסה החודשית עולה עם השנים ולא יורדת.</b> היא תמיד אותו אחוז — מיתרה שגדלה. זה מה שהופך את התיק למשהו שמשלם כל החיים ולא למשהו שנגמר.</p><p class="box warn"><b>מה שמפיל את זה:</b> למשוך יותר ממה שהתיק מרוויח. אז היתרה קטנה, האחוז מייצר פחות, והתיק נכנס לספירלה. זו הסיבה שהשיעורים כאן 4%–5% ולא 8%.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-confirm">
+  <header><span class="eyebrow">במערכת</span><span class="pos" dir="ltr">6 / 8</span></header>
+  <h2>אישורי הפקדה — למה זה לא נוחות</h2>
+  <div class="body"><p class="lede">אחרי כל הפקדה רושמים אותה: <b>כמה שקלים נכנסו לכל רכיב, ובאיזה מחיר</b>. היחידות מחושבות לבד.</p><p>ומכאן המערכת יודעת את הדבר היחיד שאי אפשר לשחזר אחר כך: <b>המחיר הממוצע שלכם.</b></p><p class="box warn"><b>המחיר הממוצע הוא משוקלל ביחידות, לא ממוצע של מחירים.</b> 100 יחידות ב-10$ ועוד 10 יחידות ב-20$ נותנות <b>10.91$</b> — לא 15$. זו טעות נפוצה, והיא מטה בדיוק לכיוון הלא נכון.</p><p class="box good"><b>ובדיוק שם רואים את המנגנון עובד.</b> הוא שולח יותר כסף למה שירד, ולכן הממוצע נדחף מתחת לאמצע הטווח. בטור ״מול הממוצע״ זה מופיע על כסף אמיתי, לא בסימולציה.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-sell">
+  <header><span class="eyebrow">במערכת</span><span class="pos" dir="ltr">7 / 8</span></header>
+  <h2>אישורי משיכה — והמס</h2>
+  <div class="body"><p>משיכה <b>אינה הפקדה עם מינוס</b>. יש לה אירוע מס, מחיר מימוש, ורווח שצריך לדווח — ולכן היא נרשמת בנפרד.</p><div class="scroll"><table><thead><tr><th class="lead">מה נרשם</th><th>למה</th></tr></thead><tbody><tr><td class="lead">יחידות שנמכרו</td><td dir="ltr">כדי לדעת כמה נשאר בתיק</td></tr><tr><td class="lead">מחיר מימוש</td><td dir="ltr">הצד האחד של חישוב הרווח</td></tr><tr><td class="lead">המחיר הממוצע באותו רגע</td><td dir="ltr">הצד השני — <b>ונשמר לנצח</b></td></tr><tr><td class="lead">הסכום שהתקבל</td><td dir="ltr">התמורה בפועל, אחרי המרה</td></tr></tbody></table></div><p class="note"><b>״הממוצע אז״ נשמר ברגע המכירה בכוונה.</b> קנייה נוספת אחרי המשיכה משנה את הממוצע קדימה — אבל <b>לא את הרווח שכבר מומש</b>, וזה המספר שצריך לדיווח.</p><p class="box warn"><b>המס שהמערכת מציגה הוא נומינלי, והוא תקרה עליונה.</b> הרווח החייב בישראל הוא <b>ריאלי</b> — סעיף 88 מורה לראות את שער המטבע כמדד, ולכן עליית הדולר אינה חייבת במס. <b>המס בפועל יהיה נמוך מזה.</b> אין באמור ייעוץ מס.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="deposits-remind">
+  <header><span class="eyebrow">במערכת</span><span class="pos" dir="ltr">8 / 8</span></header>
+  <h2>התזכורת החודשית</h2>
+  <div class="body"><p>בוחרים <b>יום בחודש</b>, והמערכת שולחת התראה למכשיר — גם כשהאתר סגור.</p><ul><li>מוגבל ל-<b>28</b> — ל-29, 30 ו-31 אין קיום בכל חודש, ותזכורת שלא מגיעה בפברואר גרועה מתזכורת ביום אחר.</li><li>נשמרת <b>למכשיר</b>, לא לחשבון. מי שרוצה גם בטלפון וגם במחשב — מפעיל בשניהם.</li><li>באייפון זה עובד רק אחרי <b>הוספה למסך הבית</b> (שיתוף ← הוספה למסך הבית).</li></ul><p class="box good"><b>למה זה בכלל חשוב:</b> ההפקדה החודשית היא כל המנגנון. חודש שנשכח הוא חודש שלא קנה בירידה.</p></div>
+  
+  <footer><a href="./" class="crumb">ההפקדות והמשיכות</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">ההפקדות והמשיכות — פתיחה</option><option value="1">1. עולה חמש שנים, ואז יורדת</option><option value="2">2. שקל מוקדם שווה הרבה יותר משקל מאוחר</option><option value="3">3. ואז עוצרים לגמרי</option><option value="4">4. מתי מתחילים למשוך — ולמה זה שונה בכל מסלול</option><option value="5">5. איך אפשר למשוך מיליונים ושעדיין יישארו מיליונים</option><option value="6">6. אישורי הפקדה — למה זה לא נוחות</option><option value="7">7. אישורי משיכה — והמס</option><option value="8">8. התזכורת החודשית</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

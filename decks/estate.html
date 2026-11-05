@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · מס העיזבון האמריקאי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="estate-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 7</span></header>
+  <h1>מס העיזבון האמריקאי</h1>
+  <p class="lede">למה כל הקטלוג אירי, ומה בדיוק הסכנה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-open">
+  <header><span class="eyebrow">הבעיה</span><span class="pos" dir="ltr">1 / 7</span></header>
+  <h2>הפטור הוא 60,000$. לא 13 מיליון</h2>
+  <div class="body"><p class="lede">לאמריקאי יש פטור ממס עיזבון של <b>15,000,000$</b>. <b>לישראלי שמחזיק נייר אמריקאי — 60,000$.</b> פי 250 הבדל.</p><div class="stats"><div class="stat "><span class="k">פטור לאמריקאי</span><span class="n" dir="ltr">$15,000,000</span><span class="s">2026</span></div><div class="stat warn"><span class="k">פטור לישראלי</span><span class="n" dir="ltr">$60,000</span><span class="s">לא צמוד מאז 1988</span></div><div class="stat warn"><span class="k">שיעור המס</span><span class="n" dir="ltr">עד 40%</span><span class="s">על הכל מעל 60,000$</span></div><div class="stat warn"><span class="k">אמנה עם ישראל</span><span class="n" dir="ltr">אין</span><span class="s">15 מדינות בלבד חתומות</span></div></div><p class="box warn"><b>60,000$ נקבעו ב-TAMRA 1988 ומעולם לא עודכנו.</b> אילו היו צמודים למדד, הם היו היום מעל 160,000$. הם לא.</p></div>
+  <p class="src">IRC §2102(b)(3) · TAMRA 1988, Pub. L. 100-647 · IRS Rev. Proc. 2025-32 לסכום האמריקאי.</p>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-situs">
+  <header><span class="eyebrow">החוק</span><span class="pos" dir="ltr">2 / 7</span></header>
+  <h2>מה הופך נייר ל״אמריקאי״ — וזה לא מה שחושבים</h2>
+  <div class="body"><p><b>סעיף 2104(a) לקוד האמריקאי</b> קובע: מניה היא נכס אמריקאי <b>רק אם הנפיקה אותה חברה אמריקאית.</b> לא לפי מה שהיא מחזיקה. לא לפי איפה היא נסחרת.</p><p>קרן אירית היא <b>plc או ICAV אירי</b> — תאגיד זר. <b>ולכן היא אינה נכס אמריקאי, גם כשהיא מחזיקה 100% מניות אמריקאיות.</b></p><p class="box warn"><b>הייתה פרצה והיא נסגרה לטובתנו.</b> סעיף 2105(d) איפשר פעם ״להסתכל דרך״ קרן נאמנות אל הנכסים שבתוכה — <b>והוא פג ב-31.12.2011 ולא חודש.</b> מאז, התאגיד חוסם את הסיטוס.</p><p class="box good"><b>זה כל הטריק, והוא לגיטימי לחלוטין.</b> אותו מדד, אותן מניות, אותה תשואה — תאגיד אחר, ובסיס מס אחר.</p></div>
+  <p class="src">IRC §2104(a) · §2105(d), פג 31.12.2011.</p>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-cash">
+  <header><span class="eyebrow">מלכודת</span><span class="pos" dir="ltr">3 / 7</span></header>
+  <h2>והמזומן בחשבון? גם הוא</h2>
+  <div class="body"><p><b>סעיף 2105(b) פוטר פיקדון בנקאי — אבל לא מזומן בחשבון ברוקראז׳.</b> זו הבחנה שרוב האנשים לא מכירים.</p><div class="scroll"><table><thead><tr><th class="lead">מה מוחזק</th><th>נכס אמריקאי?</th><th>הערה</th></tr></thead><tbody><tr><td class="lead">מניה אמריקאית ישירה</td><td dir="ltr">כן</td><td dir="ltr">חייב מעל 60,000$</td></tr><tr><td class="lead">ETF אמריקאי (SPY, QQQ)</td><td dir="ltr">כן</td><td dir="ltr">הקרן רשומה בארה״ב</td></tr><tr><td class="lead">קרן אירית (CSPX, SMH)</td><td dir="ltr">לא</td><td dir="ltr"><b>תאגיד זר</b></td></tr><tr><td class="lead">מזומן בחשבון ברוקר</td><td dir="ltr">כן</td><td dir="ltr"><b>לא פיקדון בנקאי</b></td></tr><tr><td class="lead">פיקדון בבנק אמריקאי</td><td dir="ltr">לא</td><td dir="ltr">§2105(b) פוטר</td></tr><tr><td class="lead">נדל״ן בארה״ב</td><td dir="ltr">כן</td><td dir="ltr">תמיד</td></tr></tbody></table></div><p class="box warn"><b>ולכן גם מי שמחזיק רק קרנות איריות צריך לשים לב ליתרת המזומן</b> שיושבת בחשבון בין קנייה לקנייה.</p></div>
+  <p class="src">IRC §2105(b) · §2104(a).</p>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-enforce">
+  <header><span class="eyebrow">האכיפה</span><span class="pos" dir="ltr">4 / 7</span></header>
+  <h2>איך הם בכלל יודעים שמישהו נפטר</h2>
+  <div class="body"><p>זו השאלה שכולם שואלים, והתשובה היא ש<b>לא ה-IRS מגלה — הברוקר מדווח.</b></p><ol class="tl"><li><b dir="ltr">התקנה</b><span><b>26 CFR §20.6325-1</b> מטילה אחריות אישית על מחזיק הנכס אם הוא משחרר אותו בלי אישור.</span></li><li><b dir="ltr">בפועל</b><span>הברוקר <b>מקפיא את החשבון</b> ברגע שהוא יודע על פטירה — ולא משנה מה הסיבה.</span></li><li><b dir="ltr">השחרור</b><span>היורשים חייבים להציג <b>Form 5173 Transfer Certificate</b> מה-IRS.</span></li><li><b dir="ltr">הזמן</b><span>ה-IRS עצמו נוקב <b>12 עד 18 חודשים</b> לעיבוד.</span></li></ol><p class="box warn"><b>TOD וחשבון משותף אינם פותרים את זה.</b> צ׳ארלס שוואב כותבת את זה במפורש במסמך שלה REG30213-06 — ההקפאה חלה גם עליהם.</p><p>והברוקר לא לוקח סיכון: <b>האחריות האישית היא שלו</b>, ולכן הוא מקפיא ראשון ושואל אחר כך.</p></div>
+  <p class="src">26 CFR §20.6325-1 · Charles Schwab REG30213-06 (06/2026) · IRS Form 5173.</p>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-who">
+  <header><span class="eyebrow">כמה באמת</span><span class="pos" dir="ltr">5 / 7</span></header>
+  <h2>מישהו באמת משלם את זה?</h2>
+  <div class="body"><p>כן. ה-IRS מפרסם את המספרים, והם קטנים — <b>אבל זה בדיוק מה שמטעה.</b></p><div class="stats"><div class="stat "><span class="k">טפסי 706-NA בעולם</span><span class="n" dir="ltr">849</span><span class="s">שנת 2014, האחרונה שפורסמה</span></div><div class="stat "><span class="k">נגבה</span><span class="n" dir="ltr">$60.8M</span><span class="s">באותה שנה</span></div><div class="stat warn"><span class="k">במסלול בלי אמנה</span><span class="n" dir="ltr">214</span><span class="s">מתוכם 182 חייבים במס</span></div><div class="stat warn"><span class="k">מס ממוצע</span><span class="n" dir="ltr">~$157,000</span><span class="s">לעיזבון חייב</span></div></div><p class="box warn"><b>והנתון שהכי חשוב: 159 מתוך 214 היו עיזבונות מתחת ל-500,000$, ו-29 עיזבונות מתחת ל-100,000$ שילמו מס.</b> זה לא מס של עשירים. זה מס של מי שלא ידע.</p><p><b>למה המספר נמוך כל כך?</b> כי רוב הזרים מחזיקים דרך קרנות זרות ולא נכנסים לבסיס מלכתחילה — בדיוק מה שאנחנו עושים. מי שכן נכנס, משלם.</p></div>
+  <p class="src">IRS Statistics of Income, Nonresident Alien Estate Tax Returns, 2014 — הסדרה נפסקה שם.</p>
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-israelis">
+  <header><span class="eyebrow">וישראלים?</span><span class="pos" dir="ltr">6 / 7</span></header>
+  <h2>מה שאני לא יכול להגיד לכם</h2>
+  <div class="body"><p class="box warn"><b>כמה ישראלים שילמו מס עיזבון אמריקאי — אין נתון פומבי.</b> ה-IRS מפרסם לפי ״מדינות בלי אמנה״ כקבוצה אחת, בלי פילוח למדינה. <b>כל מספר ישראלי ספציפי שתשמעו הוא ניחוש.</b></p><p>מה שכן ידוע בוודאות:</p><ul><li>ישראל <b>אינה</b> בין 15 המדינות שיש להן אמנת מס עיזבון עם ארה״ב.</li><li>ולכן ישראלי נופל ל<b>מסלול חסר האמנה</b> — אותו מסלול שבו 182 מתוך 214 שילמו.</li><li>הפטור שלו הוא <b>60,000$</b>, ולא דולר יותר.</li></ul><p class="box good"><b>וזו בדיוק הסיבה שלא מהמרים על זה.</b> העלות של להחזיק אירי במקום אמריקאי היא <b>אפס</b> — אותו מדד, אותה תשואה. אין שום סיבה לשלם פרמיה של 40% על אי־ידיעה.</p></div>
+  
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="estate-how">
+  <header><span class="eyebrow">מה עושים</span><span class="pos" dir="ltr">7 / 7</span></header>
+  <h2>איך יוצאים מהבסיס — בפועל</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">במקום</th><th>קונים</th><th>מה זה משנה</th></tr></thead><tbody><tr><td class="lead">SPY / VOO</td><td dir="ltr">CSPX או VUAA</td><td dir="ltr">אותו S&amp;P 500</td></tr><tr><td class="lead">QQQ</td><td dir="ltr">CNDX או EQQS</td><td dir="ltr">אותו נאסד״ק 100</td></tr><tr><td class="lead">SMH אמריקאי</td><td dir="ltr">SMH אירי</td><td dir="ltr">אותו מדד שבבים</td></tr><tr><td class="lead">VT / VTI</td><td dir="ltr">VWRA או SSAC</td><td dir="ltr">אותו עולמי</td></tr></tbody></table></div><p class="note">הכל נקנה דרך <b>ברוקר זר</b> — בלונדון, אמסטרדם או פרנקפורט. ה-ISIN מתחיל ב-<b>IE</b>.</p><p class="box good"><b>הסימן המזהה: ISIN שמתחיל ב-IE.</b> זה כל מה שצריך לבדוק לפני קנייה.</p><p class="box warn"><b>ושימו לב לטיקרים שמתחזים.</b> SPXS בארה״ב הוא Direxion ממונף פי 3 הפוך, ו-SMH בארה״ב הוא קרן אמריקאית עם אותו טיקר בדיוק. <b>תמיד לפי ה-ISIN, לא לפי הטיקר.</b></p><p><b>ואין באמור ייעוץ מס.</b> זה תיאור של חוק, לא המלצה — ומי שיש לו עיזבון משמעותי צריך רואה חשבון.</p></div>
+  
+  <footer><a href="./" class="crumb">מס העיזבון האמריקאי</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">מס העיזבון האמריקאי — פתיחה</option><option value="1">1. הפטור הוא 60,000$. לא 13 מיליון</option><option value="2">2. מה הופך נייר ל״אמריקאי״ — וזה לא מה שחושבים</option><option value="3">3. והמזומן בחשבון? גם הוא</option><option value="4">4. איך הם בכלל יודעים שמישהו נפטר</option><option value="5">5. מישהו באמת משלם את זה?</option><option value="6">6. מה שאני לא יכול להגיד לכם</option><option value="7">7. איך יוצאים מהבסיס — בפועל</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

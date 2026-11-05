@@ -11,33 +11,51 @@ import { ASSET_META, WITHDRAW_RATE } from './defaults';
  * The standard MGS timing is 25 years red then 5 years yellow, so green opens
  * in year 31. 'security' is the deliberate exception — it is the 60-65 track,
  * where 25 years of deposits would push income out to age 90.
+ *
+ * **תוקן 4.11.2026 — המינוף ירד מחמשת המסלולים.**
+ *
+ * כל מסלול כאן נשא כותרת מינוף — 20%, 15%, 10%, 5% — והמינוף היה אמיתי:
+ * המפתח `dbxb` הצביע על קרן S&P 500 **ממונפת פי שתיים**. אין מינוף
+ * במערכת, ולכן `dbxb` מצביע עכשיו על שרוול השבבים (SMH) ו-`eqqs` על
+ * טכנולוגיה (XLKS) במקום נאסד״ק, שהוצא מכל המסלולים.
+ *
+ * **השדה `leverage` הוא אפס בכל מסלול,** ובמקומו הכותרת נוקבת במה
+ * שהיא באמת: **איזה חלק מהתמהיל הוא שבבים וטכנולוגיה.** זה הגליד
+ * שהיה שם מלכתחילה — 50% בבני 20 ויורד ל-10% בבני 60 — רק בלי
+ * ההלוואה שהייתה חבויה בו.
+ *
+ * אין בזה המלצה ואין בזה ייעוץ פיננסי.
  */
 export const TRACKS: Track[] = [
   {
     id: 'aggressive', nameHe: 'טורבו אלפא', nameEn: 'Turbo Alpha',
-    ageMin: 20, ageMax: 30, dot: 'green', leverage: 20,
-    taglineHe: 'חשיפה מקסימלית, מינוף 20%', taglineEn: 'Max exposure, 20% leverage',
+    ageMin: 20, ageMax: 30, dot: 'green', leverage: 0,
+    taglineHe: 'חשיפה מקסימלית · 50% שבבים וטכנולוגיה',
+    taglineEn: 'Max exposure · 50% semis and technology',
     allocations: { p500: 50, eqqs: 30, dbxb: 20 },
     phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'stable', nameHe: 'טורבו מבוקר', nameEn: 'Controlled Turbo',
-    ageMin: 30, ageMax: 40, dot: 'yellow', leverage: 15,
-    taglineHe: 'צמיחה עם מינוף 15%', taglineEn: 'Growth with 15% leverage',
+    ageMin: 30, ageMax: 40, dot: 'yellow', leverage: 0,
+    taglineHe: 'צמיחה · 40% שבבים וטכנולוגיה',
+    taglineEn: 'Growth · 40% semis and technology',
     allocations: { p500: 60, eqqs: 25, dbxb: 15 },
     phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'mature', nameHe: 'שמרנות אקטיבית', nameEn: 'Active Conservatism',
-    ageMin: 40, ageMax: 50, dot: 'orange', leverage: 10,
-    taglineHe: 'איזון עם מינוף 10%', taglineEn: 'Balance with 10% leverage',
+    ageMin: 40, ageMax: 50, dot: 'orange', leverage: 0,
+    taglineHe: 'איזון · 30% שבבים וטכנולוגיה',
+    taglineEn: 'Balance · 30% semis and technology',
     allocations: { p500: 70, eqqs: 20, dbxb: 10 },
     phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },
   {
     id: 'defensive', nameHe: 'ביצור דינמי', nameEn: 'Dynamic Fortification',
-    ageMin: 50, ageMax: 60, dot: 'red', leverage: 5,
-    taglineHe: 'הגנתי עם נגיעת מינוף 5%', taglineEn: 'Defensive, 5% leverage',
+    ageMin: 50, ageMax: 60, dot: 'red', leverage: 0,
+    taglineHe: 'הגנתי · 20% שבבים וטכנולוגיה',
+    taglineEn: 'Defensive · 20% semis and technology',
     allocations: { p500: 80, eqqs: 15, dbxb: 5 },
     phaseADuration: 25, phaseBDuration: 5, phaseBTarget: 'xmwo',
   },

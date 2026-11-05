@@ -1,4 +1,4 @@
-import { MGS_ASSETS, targetLeveraged, milestonesFor } from '../constants/mgsTracks';
+import { MGS_ASSETS, allocationFor, milestonesFor } from '../constants/mgsTracks';
 import type { MgsAsset } from '../constants/mgsTracks';
 
 /**
@@ -31,10 +31,18 @@ export const emptyBook = (): Book =>
 const total = (b: Book) => ASSETS.reduce((s, a) => s + b[a].value, 0);
 const totalBasis = (b: Book) => ASSETS.reduce((s, a) => s + b[a].basis, 0);
 
-/** The leveraged asset's share of the portfolio right now, 0..1. */
-export function leveragedWeight(book: Book): number {
+/** **הסטייה הגדולה ביותר ממשקל היעד, בנקודות אחוז.**
+ *  החליפה את `leveragedWeight` כשהמינוף הוסר. אפס = התיק על היעד. */
+export function driftFromTarget(book: Book, age: number): number {
   const t = total(book);
-  return t > 0 ? book.QQQ3.value / t : 0;
+  if (t <= 0) return 0;
+  const tgt = allocationFor(age);
+  let worst = 0;
+  for (const a of ASSETS) {
+    const gap = Math.abs(book[a].value / t - (tgt[a] ?? 0));
+    if (gap > worst) worst = gap;
+  }
+  return worst;
 }
 
 /** Age at a given plan month (1-based), given the age at the start. */
@@ -53,43 +61,69 @@ export function phaseOf(startAge: number, month: number): Phase {
 
 export interface DepositRouting {
   split: Partial<Record<MgsAsset, number>>;
-  /** true when the leveraged asset was at or above target, so none was bought */
-  leverageHalted: boolean;
-  /** the leveraged weight measured BEFORE this deposit */
-  weightBefore: number;
-  /** the target it was measured against */
-  target: number;
+  /** true when every asset was already at or above its target, so the deposit
+   *  was split by the target weights themselves */
+  onTarget: boolean;
+  /** the largest deviation from target measured BEFORE this deposit, 0..1 */
+  driftBefore: number;
+  /** the target mix it was measured against */
+  target: Partial<Record<MgsAsset, number>>;
 }
 
-/**
- * Route one monthly deposit.
+/** **ניתוב ההפקדה החודשית — קנייה לעבר משקל היעד.**
  *
- * The asymmetry is the point. Leverage above its target means the market has
- * run up, and buying more there is buying high — so the whole deposit goes to
- * the unleveraged pair instead. Below target means a drawdown has cheapened
- * it, and the deposit buys it back, but only as far as the target: never past
- * it, so a deposit can't itself create an overweight.
- */
+ *  **הוחלף 4.11.2026, עם הסרת המינוף.** המנגנון הקודם היה בינארי:
+ *  מעל היעד — כל ההפקדה מתחלקת שווה בשווה בין שני הנכסים הלא
+ *  ממונפים; מתחת ליעד — **כל ההפקדה** קונה את המוצר הממונף.
+ *  זה היה מנגנון שלישי, שונה גם ממנגנון הקנייה של המסלולים
+ *  (`monthPlan.ts`) וגם מזה של התמהיל האישי.
+ *
+ *  **מעתה: אותו מנגנון שבכל שאר המערכת.** ההפקדה מתחלקת לפי
+ *  **הפער בין המשקל הנוכחי למשקל היעד** — מי שנפל מתחת ליעד מקבל
+ *  יותר, מי שמעליו לא מקבל כלום, ואף רכיב אינו נדחף מעבר ליעד
+ *  שלו על ידי הפקדה בודדת. כשכולם על היעד או מעליו, ההפקדה
+ *  מתחלקת לפי משקלי היעד עצמם.
+ *
+ *  **ולמה זה עדיף על הבינארי.** נפילה *יוצרת* תת־משקל — ולכן
+ *  קנייה לעבר היעד קונה יותר ממה שירד, בלי צורך בכלל נפרד.
+ *  אבל היא עושה את זה **ברציפות ובחסם**: הגרסה הבינארית הפנתה
+ *  100% מההפקדה לרכיב אחד, וזה בדיוק הכשל שתוקן ב-`monthPlan`. */
 export function routeDeposit(
   amount: number, book: Book, startAge: number, month: number,
 ): DepositRouting {
-  const w = leveragedWeight(book);
   const age = ageAtMonth(startAge, month);
-  const target = targetLeveraged(age);
+  const target = allocationFor(age);
   const phase = phaseOf(startAge, month);
-  const base = { split: {} as Partial<Record<MgsAsset, number>>, weightBefore: w, target };
+  const base = { split: {} as Partial<Record<MgsAsset, number>>,
+                 driftBefore: driftFromTarget(book, age), target };
 
-  if (amount <= 0 || phase === 'withdraw') return { ...base, leverageHalted: false };
-  if (phase === 'derisk') return { ...base, split: { MWRD: amount }, leverageHalted: false };
+  if (amount <= 0 || phase === 'withdraw') return { ...base, onTarget: false };
+  if (phase === 'derisk') return { ...base, split: { MWRD: amount }, onTarget: false };
 
-  if (w >= target) {
-    // Scenario B — above target: block leverage entirely, split the rest evenly.
-    return { ...base, leverageHalted: true, split: { I500: amount / 2, EQQS: amount / 2 } };
+  // הפער של כל נכס מתחת ליעד, אחרי ההפקדה
+  const after = total(book) + amount;
+  const gaps = ASSETS.map(a => {
+    const cur = after > 0 ? book[a].value / after : 0;
+    return Math.max(0, (target[a] ?? 0) - cur);
+  });
+  const sum = gaps.reduce((x, y) => x + y, 0);
+
+  // כולם על היעד או מעליו — מתחלק לפי משקלי היעד
+  if (sum <= 0) {
+    const tw = ASSETS.reduce((x, a) => x + (target[a] ?? 0), 0);
+    const split: Partial<Record<MgsAsset, number>> = {};
+    if (tw > 0) ASSETS.forEach(a => {
+      const w = (target[a] ?? 0) / tw;
+      if (w > 0) split[a] = amount * w;
+    });
+    return { ...base, split, onTarget: true };
   }
 
-  // Scenario A — below target: the whole contribution buys the leveraged asset,
-  // which a drawdown has just made cheaper.
-  return { ...base, leverageHalted: false, split: { QQQ3: amount } };
+  const split: Partial<Record<MgsAsset, number>> = {};
+  ASSETS.forEach((a, i) => {
+    if (gaps[i] > 0) split[a] = amount * gaps[i] / sum;
+  });
+  return { ...base, split, onTarget: false };
 }
 
 // ── Withdrawal ───────────────────────────────────────────────────────────────
@@ -174,9 +208,10 @@ export interface ProjectionRow {
   value: number;
   basis: number;
   byAsset: Record<MgsAsset, number>;
-  leveragedWeight: number;
-  leveragedTarget: number;
-  leverageHalted: boolean;
+  /** הסטייה הגדולה ביותר ממשקל היעד באותו חודש, 0..1 */
+  drift: number;
+  /** האם ההפקדה התחלקה לפי משקלי היעד, כי כולם היו על היעד */
+  onTarget: boolean;
   gross: number;
   tax: number;
   net: number;
@@ -257,9 +292,8 @@ export function projectMgs(p: ProjectionParams): ProjectionRow[] {
       month: m, year: m / 12, age: ageAtMonth(startAge, m), phase,
       deposit, deposited, value: total(book), basis: totalBasis(book),
       byAsset: Object.fromEntries(ASSETS.map(a => [a, book[a].value])) as Record<MgsAsset, number>,
-      leveragedWeight: leveragedWeight(book),
-      leveragedTarget: routing.target,
-      leverageHalted: routing.leverageHalted,
+      drift: driftFromTarget(book, ageAtMonth(startAge, m)),
+      onTarget: routing.onTarget,
       gross, tax, net, drawnFrom, shiftGain, shiftTax,
     });
   }

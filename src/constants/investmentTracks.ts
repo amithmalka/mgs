@@ -43,17 +43,17 @@ export const MGS_UNIFIED_TRACK = {
     {
       key: 'SPX_SYNTH', ticker: 'SPXS', proxy: 'SPY',
       labelHe: 'S&P 500 סינתטי', labelEn: 'S&P 500 Synthetic',
-      color: '#34D399', weight: 0.40,
+      color: '#4ADE80', weight: 0.40,
     },
     {
       key: 'NASDAQ', ticker: 'CNX1', proxy: 'QQQ',
       labelHe: 'נאסד״ק 100', labelEn: 'NASDAQ 100',
-      color: '#A78BFA', weight: 0.30,
+      color: '#8193FA', weight: 0.30,
     },
     {
       key: 'BTC', ticker: 'BTC', proxy: 'BTC/USD',
       labelHe: 'ביטקוין', labelEn: 'Bitcoin',
-      color: '#F59E0B', weight: 0.20,
+      color: '#8193FA', weight: 0.20,
     },
     {
       // The method names IWMO / EOWO (MSCI World Momentum, UCITS). Our provider
@@ -61,7 +61,7 @@ export const MGS_UNIFIED_TRACK = {
       // factor fund, but international developed rather than whole-world.
       key: 'MOMENTUM', ticker: 'IWMO', proxy: 'IMTM', proxyIsApproximate: true,
       labelHe: 'מומנטום עולמי', labelEn: 'Global Momentum',
-      color: '#60A5FA', weight: 0.10,
+      color: '#8193FA', weight: 0.10,
     },
   ] as EngineAsset[],
 };

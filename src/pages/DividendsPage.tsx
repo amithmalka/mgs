@@ -126,14 +126,14 @@ export function DividendsPage() {
         <div className="grid grid-cols-3 gap-3">
           {([
             { key: 'conservative', label: he ? 'שמרני' : 'Conservative', color: '#888', hi: false },
-            { key: 'moderate', label: he ? 'מתון' : 'Moderate', color: '#D4AF37', hi: true },
-            { key: 'aggressive', label: he ? 'אופטימי' : 'Optimistic', color: '#34D399', hi: false },
+            { key: 'moderate', label: he ? 'מתון' : 'Moderate', color: '#5EE6D0', hi: true },
+            { key: 'aggressive', label: he ? 'אופטימי' : 'Optimistic', color: '#4ADE80', hi: false },
           ] as const).map(s => {
             const f = forecast[s.key];
             return (
               <div key={s.key} className={`rounded-2xl p-4 text-center border ${s.hi ? 'bg-gold-muted border-gold-border gold-glow' : 'bg-surface-3 border-surface-4'}`}>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: s.color }}>{s.label}</p>
-                <p className="text-xl font-bold mt-1" style={{ color: s.hi ? '#F5E6A3' : '#ECE7DC' }}>{formatCurrency(f.monthly)}</p>
+                <p className="text-xl font-bold mt-1" style={{ color: s.hi ? '#BFE9FF' : '#ECE7DC' }}>{formatCurrency(f.monthly)}</p>
                 <p className="text-[10px] text-text-dim">{he ? 'לחודש' : '/mo'}</p>
                 <p className="text-[10px] text-text-muted mt-1.5">{he ? 'שווי תיק' : 'value'}: {formatCurrency(f.value)}</p>
               </div>

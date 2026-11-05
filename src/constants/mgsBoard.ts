@@ -20,15 +20,17 @@ export const BOARD: BoardAsset[] = [
   // security actually bought in shekels on the Tel Aviv exchange, with its
   // security number; both numbers verified against the exchange's own
   // security feed, October 2026.
-  { symbol: 'BTC/USD', he: 'ביטקוין',      en: 'Bitcoin',        sub: 'תכלית סל · 1217835',  color: '#F59E0B', roleHe: 'הרכיב התנודתי' },
-  { symbol: 'SMH',     he: 'שבבים',        en: 'Semiconductors', sub: 'קסם ETF · 1174119',   color: '#F87171', roleHe: 'הרכיב התנודתי' },
-  { symbol: 'XLK',     he: 'טכנולוגיה',    en: 'Technology',     sub: 'IUIT · 1159193',      color: '#7DD3FC', roleHe: 'ליבה' },
-  { symbol: 'SPY',     he: 'S&P 500',      en: 'S&P 500',        sub: 'ייחוס',               color: '#34D399', roleHe: 'ייחוס' },
-  { symbol: 'QQQ',     he: 'נאסד״ק 100',   en: 'Nasdaq 100',     sub: 'ייחוס',               color: '#C4B5FD', roleHe: 'ייחוס' },
-  { symbol: 'URTH',    he: 'מדד עולמי',    en: 'MSCI World',     sub: 'MSCI ACWI · 1159235', color: '#10B981', roleHe: 'הנחיתה' },
+  // ביטקוין הוסר: רגולציית UCITS אוסרת קריפטו בקרן אירית, ולכן כל
+  // חשיפה אליו יוצאת מהמבנה האירי ונכנסת לבסיס מס העיזבון האמריקאי.
+  { symbol: 'SMH',     he: 'שבבים',        en: 'Semiconductors', sub: 'SMH · אירית',         color: '#F87171', roleHe: 'תוספת תנודתיות' },
+  { symbol: 'GDX',     he: 'כורות זהב',    en: 'Gold Miners',    sub: 'GDX · אירית',         color: '#E3BE45', roleHe: 'המפזר · מתאם 0.06' },
+  { symbol: 'XLK',     he: 'טכנולוגיה',    en: 'Technology',     sub: 'IUIT · אירית',        color: '#5EE6D0', roleHe: 'מנוע הצמיחה' },
+  { symbol: 'SPY',     he: 'S&P 500',      en: 'S&P 500',        sub: 'CSPX · אירית',        color: '#4ADE80', roleHe: 'הגרעין' },
+  { symbol: 'QQQ',     he: 'נאסד״ק 100',   en: 'Nasdaq 100',     sub: 'CNDX · אירית',        color: '#8193FA', roleHe: 'מנוע הצמיחה' },
+  { symbol: 'URTH',    he: 'מדד עולמי',    en: 'MSCI World',     sub: 'IWDA · אירית',        color: '#4ADE80', roleHe: 'הגרעין' },
 ];
 
 /** Not a holding — the rate every shekel figure here is quoted against. */
-export const FX = { symbol: 'USD/ILS', he: 'דולר / שקל', en: 'USD / ILS', sub: 'FX', color: '#D4AF37' };
+export const FX = { symbol: 'USD/ILS', he: 'דולר / שקל', en: 'USD / ILS', sub: 'FX', color: '#5EE6D0' };
 
 export const BOARD_SYMBOLS = [FX.symbol, ...BOARD.map(a => a.symbol)];

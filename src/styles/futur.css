@@ -1,0 +1,94 @@
+/** **שכבת העיצוב העתידני — הועברה מדף הנחיתה ב-4.11.2026.**
+ *
+ *  **מה הועבר ומה לא.** מדף הנחיתה הועברו שלושה דברים שעובדים
+ *  בלי לצעוק: **הזוהר שעוקב אחרי הסמן** על כרטיסים, **גרדיאנט
+ *  הטקסט הקר**, ו**נקודת החיים הפועמת**. מה שלא הועבר: גלילת
+ *  הסיפור והקשתות — הם נכונים לדף מכירה ומטרידים בכלי עבודה.
+ *
+ *  **והעיקרון שמנחה את הכל כאן: כלי עבודה נמדד בקריאוּת, לא
+ *  ברושם.** מספרים מיושרים בעמודה, הקווים דקים, האנימציה קצרה,
+ *  וכל אפקט מכובד ל-`prefers-reduced-motion`.
+ */
+
+/* ===== מספרים: ספרות ברוחב זהה, כך שעמודות מתיישרות ===== */
+.num, table td, table th, [data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ===== גרדיאנט הטקסט הקר — לכותרות ולמספרים גדולים ===== */
+.cool-text {
+  background: linear-gradient(100deg, var(--color-accent) 0%, #BFE9FF 42%, var(--color-accent-2) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* ===== נקודת "חי" פועמת ===== */
+.live { display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; color: var(--color-accent); }
+.live i { width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); animation: fut-pulse 1.8s ease-in-out infinite; }
+@keyframes fut-pulse { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+
+/* ===== הכרטיס הזוהר: שלוש שכבות שנדלקות לפי מקום הסמן =====
+   --mx ו--my נקבעים ב-JS. בלי סמן הכרטיס נראה רגיל לחלוטין. */
+.gcard { position: relative; border-radius: 14px; isolation: isolate; }
+.gcard > .edge { position: absolute; inset: 0; border-radius: 14px; background: var(--color-line); }
+.gcard > .edge-lit {
+  position: absolute; inset: 0; border-radius: 14px; opacity: 0; transition: opacity .45s;
+  background: radial-gradient(260px circle at var(--mx) var(--my),
+    rgba(94,230,208,.55), rgba(129,147,250,.22) 45%, transparent 70%);
+}
+.gcard > .face {
+  position: absolute; inset: 1px; border-radius: 13px;
+  background: var(--color-surface-3); overflow: hidden;
+}
+.gcard > .face > .spot, .gcard > .face > .grid { position: absolute; inset: 0; opacity: 0; transition: opacity .45s; }
+.gcard > .face > .spot {
+  background: radial-gradient(220px circle at var(--mx) var(--my), rgba(94,230,208,.10), transparent 68%);
+}
+.gcard > .face > .grid {
+  background-image:
+    linear-gradient(rgba(190,215,240,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190,215,240,.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(190px circle at var(--mx) var(--my), #000 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(190px circle at var(--mx) var(--my), #000 20%, transparent 72%);
+}
+.gcard.on > .edge-lit, .gcard.on > .face > .spot, .gcard.on > .face > .grid { opacity: 1; }
+.gcard > .body { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
+
+/* ===== קו מפריד שדועך לקצוות ===== */
+.hr-fade { height: 1px; border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-line-2) 18%, var(--color-line-2) 82%, transparent); }
+
+/* ===== לוח הפקודות ===== */
+.cmdk-back { position: fixed; inset: 0; z-index: 90; background: rgba(4,6,10,.72);
+  backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+  display: flex; align-items: flex-start; justify-content: center; padding: 14vh 1rem 1rem; }
+.cmdk {
+  width: 100%; max-width: 520px; background: var(--color-surface-2);
+  border: 1px solid var(--color-line-2); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(94,230,208,.07);
+  animation: cmdk-in .16s ease-out;
+}
+@keyframes cmdk-in { from { opacity: 0; transform: translateY(-6px) scale(.985) } to { opacity: 1 } }
+.cmdk input {
+  width: 100%; background: transparent; border: 0; outline: 0; color: var(--color-text);
+  font: inherit; font-size: .95rem; padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--color-line);
+}
+.cmdk input::placeholder { color: var(--color-text-dim); }
+.cmdk ul { list-style: none; margin: 0; padding: .4rem; max-height: 48vh; overflow-y: auto; }
+.cmdk li { display: flex; align-items: center; gap: .7rem; padding: .62rem .75rem;
+  border-radius: 9px; cursor: pointer; font-size: .88rem; color: var(--color-text-muted); }
+.cmdk li[aria-selected="true"] { background: var(--color-gold-muted); color: var(--color-text); }
+.cmdk li .k { margin-inline-start: auto; font-size: .68rem; color: var(--color-text-dim);
+  border: 1px solid var(--color-line); border-radius: 4px; padding: .1rem .35rem; }
+.cmdk .none { padding: 1.1rem 1.15rem; font-size: .85rem; color: var(--color-text-dim); }
+.cmdk .foot { display: flex; gap: .9rem; padding: .55rem 1.15rem; font-size: .68rem;
+  color: var(--color-text-dim); border-top: 1px solid var(--color-line); }
+
+@media (prefers-reduced-motion: reduce) {
+  .live i { animation: none }
+  .gcard > .edge-lit, .gcard > .face > .spot, .gcard > .face > .grid { transition: none }
+  .cmdk { animation: none }
+}

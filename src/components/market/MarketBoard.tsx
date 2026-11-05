@@ -10,7 +10,7 @@ export interface BoardRow {
   color: string;
 }
 
-const UP = '#34D399';
+const UP = '#4ADE80';
 const DOWN = '#F87171';
 
 const fmtPrice = (n: number, currency?: string | null) => {

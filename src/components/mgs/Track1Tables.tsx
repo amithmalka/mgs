@@ -7,8 +7,8 @@ import { projectTrack1, JEPQ_YIELD } from '../../utils/mgsTrack1Engine';
 import { formatCurrency } from '../../utils/format';
 
 const COLOR: Record<T1Asset, string> = {
-  BTC: '#FBBF24', SMH: '#F87171', SPMO: '#A78BFA',
-  XLK: '#7DD3FC', JEPQ: '#D4AF37', WORLD: '#10B981',
+  BTC: '#FBBF4A', SMH: '#F87171', SPMO: '#8193FA',
+  XLK: '#5EE6D0', JEPQ: '#5EE6D0', WORLD: '#4ADE80',
 };
 const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
 

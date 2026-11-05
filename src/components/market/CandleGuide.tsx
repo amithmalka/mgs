@@ -3,7 +3,7 @@ import { useLangStore } from '../../store/langStore';
 import { Card } from '../layout/Card';
 import { Icon } from '../shared/Icon';
 
-const UP = '#34D399';
+const UP = '#4ADE80';
 const DOWN = '#F87171';
 
 /**
@@ -53,7 +53,7 @@ export function CandleGuide() {
               <text x={133} y={239} fill="#8A8A8A" fontSize={13}>{he ? 'הנמוך ביותר' : 'Low'}</text>
 
               {/* Body bracket */}
-              <text x={8} y={135} fill="#D4AF37" fontSize={12}>{he ? 'גוף' : 'Body'}</text>
+              <text x={8} y={135} fill="#5EE6D0" fontSize={12}>{he ? 'גוף' : 'Body'}</text>
               <text x={8} y={45} fill="#6a6a6a" fontSize={11}>{he ? 'פתיל' : 'Wick'}</text>
             </svg>
 

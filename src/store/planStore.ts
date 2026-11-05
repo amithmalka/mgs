@@ -76,7 +76,8 @@ interface PlanState {
 }
 
 const emptyLots = (): Record<SleeveId, Lot> => ({
-  BTC: empty(), SMH: empty(), XLK: empty(), WORLD: empty(), SYN: empty(),
+  SPXS: empty(), CSPX: empty(), MXWO: empty(), IWDA: empty(),
+  VWRA: empty(), XLKS: empty(), WTEC: empty(), SMH: empty(),
 });
 
 export const thisMonth = () => new Date().toISOString().slice(0, 7);

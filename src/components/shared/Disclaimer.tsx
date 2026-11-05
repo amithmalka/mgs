@@ -22,7 +22,7 @@ export function Disclaimer({ variant = 'compact' }: { variant?: 'compact' | 'ful
         'התחזיות והסימולציות מבוססות על הנחות שאתם מזינים. הן אינן חיזוי ואינן הבטחה לתשואה. תשואות בפועל יהיו שונות.',
         'ביצועי עבר אינם מעידים על ביצועי עתיד.',
         'ההצעה "לאן להפקיד החודש" נגזרת מנוסחה אוטומטית לפי המשקלים והמחירים בלבד. ירידה במחיר אינה ערובה לעלייה — נכס יכול להמשיך לרדת.',
-        'השקעה בניירות ערך כרוכה בסיכון, לרבות אובדן מלוא כספי ההשקעה. מכשירים ממונפים מגדילים את הסיכון באופן מהותי.',
+        'השקעה בניירות ערך כרוכה בסיכון, לרבות אובדן מלוא כספי ההשקעה. אין במערכת מכשירים ממונפים ואין בה קריפטו, וגם בלעדיהם הסיכון קיים במלואו.',
         'נתוני השוק מסופקים על ידי צד שלישי, הם מחירי סוף יום ולא מסחר חי, ועשויים להיות שגויים, חלקיים או מעוכבים.',
         'האחריות על כל החלטה ופעולה היא שלכם בלבד.',
       ]
@@ -33,7 +33,7 @@ export function Disclaimer({ variant = 'compact' }: { variant?: 'compact' | 'ful
         'Projections and simulations are built from assumptions you enter. They are not forecasts and not a promise of return. Actual results will differ.',
         'Past performance does not indicate future performance.',
         'The "where to deposit this month" suggestion comes from an automatic formula using only your weights and prices. A lower price is no guarantee of a rise — an asset can keep falling.',
-        'Investing carries risk, including the loss of your entire investment. Leveraged instruments materially increase that risk.',
+        'Investing carries risk, including the loss of your entire investment. The system holds no leveraged instruments and no crypto; the risk is fully present without them.',
         'Market data comes from a third party, is end-of-day rather than live, and may be inaccurate, incomplete or delayed.',
         'Every decision and action is solely your responsibility.',
       ];

@@ -207,7 +207,7 @@ export function GoalsPage() {
                             style={{
                               width: `${Math.max(2, progress)}%`,
                               background: isNext
-                                ? 'linear-gradient(90deg,#B8941F,#D4AF37)'
+                                ? 'linear-gradient(90deg,#1F9E8C,#5EE6D0)'
                                 : 'rgba(212,175,55,0.2)',
                             }}
                           />

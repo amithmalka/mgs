@@ -1,4 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { IrishVsUS } from '../components/build/IrishVsUS';
+import { LegacyBuild } from './BuildPage';
+import { StudyLab } from './StudyPage';
+import { Decks } from '../components/learn/Decks';
+import { DECKS } from '../constants/decks';
+import { AllFunds } from '../components/build/AllFunds';
+import { IrishLab } from '../components/build/IrishLab';
+import { BrokerPage } from './BrokerPage';
 import { useLangStore } from '../store/langStore';
 import { useAcademyStore } from '../store/academyStore';
 import { t } from '../i18n/translations';
@@ -34,6 +42,10 @@ export function AcademyPage() {
   const [course, setCourse] = useState<CourseData>(emptyCourse);
   const [loading, setLoading] = useState(true);
   const [openModuleId, setOpenModuleId] = useState<string | null>(null);
+  /** **שלושה חלקים, אחד מוצג.** קודם הכל היה זה מתחת לזה: 8 מודולים,
+   *  51 שיעורים, ואז המצגות, ואז חומר העזר — וצריך היה לגלול הרבה
+   *  כדי להגיע למצגות בכלל. */
+  const [part, setPart] = useState<'course' | 'decks' | 'ref'>('course');
   const [playing, setPlaying] = useState<Lesson | null>(null);
   const [moduleForm, setModuleForm] = useState<Partial<Module> | null>(null);
   const [lessonForm, setLessonForm] = useState<Partial<Lesson> | null>(null);
@@ -133,8 +145,25 @@ export function AcademyPage() {
         )}
       </Card>
 
+      {/* ── הבורר ───────────────────────────────────────────────────────── */}
+      <div className="term ac-tabs">
+        <div className="chips">
+          {([
+            ['course', 'הקורס', `${modules.length} מודולים · ${totalLessons} שיעורים`],
+            ['decks',  'המצגות', `${DECKS.length} מצגות · ${DECKS.reduce((n, d) => n + d.slides.length, 0)} שקופיות`],
+            ['ref',    'חומר עזר', 'הקטלוג, הנתונים והמקורות'],
+          ] as const).map(([k, he, sub]) => (
+            <button key={k} className="opt bh-mode" type="button"
+              aria-pressed={part === k} onClick={() => setPart(k)}>
+              {he}
+              <small>{sub}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Loading ─────────────────────────────────────────────────────── */}
-      {loading ? (
+      {part !== 'course' ? null : loading ? (
         <Card><p className="text-sm text-text-muted text-center py-6">{t('loading', lang)}</p></Card>
       ) : openModule ? (
         /* ── Single module page ────────────────────────────────────────── */
@@ -248,6 +277,32 @@ export function AcademyPage() {
           onClose={() => setLessonForm(null)}
           onSaved={() => { setLessonForm(null); load(); }}
         />
+      )}
+    
+      {part === 'decks' && (
+        <div className="term ac-decks">
+          <Decks />
+        </div>
+      )}
+
+      {part === 'ref' && (
+      <div className="term ac-ref">
+        <section>
+          <span className="eyebrow">חומר עזר</span>
+          <h2>הקטלוג המלא, הנתונים והמקורות</h2>
+          <p className="lede">
+            כל מה שהמערכת נשענת עליו, פתוח לבדיקה: הקרנות ומה שנמדד
+            להן, איפה קונים כל אחת ובאיזה מטבע, מס העיזבון, הממונפות,
+            וכלי ההרכבה המלא.
+          </p>
+        </section>
+        <IrishVsUS />
+        <AllFunds toBroker={0} />
+        <BrokerPage embedded />
+        <IrishLab />
+        <LegacyBuild />
+        <StudyLab />
+      </div>
       )}
     </div>
   );

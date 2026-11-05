@@ -58,7 +58,7 @@ export function DividendSimulation() {
         label: h.name || h.ticker,
         weight: withWeight.length ? h.targetPercent : even,
         totalReturn: h.expectedReturn,
-        color: ['#D4AF37', '#A78BFA', '#34D399', '#F59E0B', '#60A5FA', '#F472B6'][i % 6],
+        color: ['#5EE6D0', '#8193FA', '#4ADE80', '#8193FA', '#8193FA', '#F472B6'][i % 6],
       }));
     }
     return allocations
@@ -298,7 +298,7 @@ export function DividendSimulation() {
             formatter={v => `₪${Number(v).toLocaleString()}`} />
           <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
           <Area yAxisId="l" type="monotone" dataKey={L.income} stroke="#F472B6" fill="url(#divGrad)" strokeWidth={2} />
-          <Line yAxisId="r" type="monotone" dataKey={L.value} stroke="#D4AF37" dot={false} strokeWidth={1.5} />
+          <Line yAxisId="r" type="monotone" dataKey={L.value} stroke="#5EE6D0" dot={false} strokeWidth={1.5} />
         </ComposedChart>
       </ResponsiveContainer>
 

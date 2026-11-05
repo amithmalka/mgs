@@ -1,11 +1,16 @@
 // ── MJS asset universe (each bucket = synthetic Primary + physical Fallback) ─
-//   dbxb S&P 500 x2 leveraged · eqqs NASDAQ 100      -> red (turbo/leverage)
-//   p500 S&P 500 · xmwo MSCI World (Phase-B target)  -> green (vanilla)
+//   dbxb semiconductors (SMH) · eqqs technology (XLKS)  -> red (growth sleeve)
+//   p500 S&P 500 · xmwo MSCI World (Phase-B target)     -> green (vanilla)
+//
+// The four keys are slots, not tickers. `dbxb` held an S&P 500 2x LEVERAGED
+// fund and `eqqs` a Nasdaq 100 one until 4.11.2026; both are gone — there is
+// no leverage in the system and the Nasdaq was dropped from every track. The
+// key names stayed so existing saved state keeps resolving. See ASSET_META.
 import type { DotColor } from '../components/shared/Icon';
 
 export type AssetClass = 'dbxb' | 'eqqs' | 'p500' | 'xmwo';
 
-/** Role: green = vanilla anchor (Phase-B target); red = turbo/leveraged. */
+/** Role: green = vanilla anchor (Phase-B target); red = the growth sleeve. */
 export type ColorRole = 'green' | 'red';
 
 export type InvestmentPhase = 'growth' | 'transition' | 'income';
@@ -38,7 +43,9 @@ export interface Track {
   phaseBDuration: number;
   /** the single asset Phase B migrates + routes deposits into (MSCI World) */
   phaseBTarget: AssetClass;
-  /** leverage % headline shown on the track card */
+  /** Zero on every track since 4.11.2026 — kept so saved state keeps
+   *  resolving. The card's headline now names the growth-sleeve share
+   *  instead, which is what the glide actually was. */
   leverage: number;
 }
 

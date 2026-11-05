@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · פיזי מול חוזה חילופין</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="swap-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 10</span></header>
+  <h1>פיזי מול חוזה חילופין</h1>
+  <p class="lede">מה זה סינתטי, מה הקרן באמת מחזיקה, ומה זה קונה ועולה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-plain">
+  <header><span class="eyebrow">קודם כל בפשטות</span><span class="pos" dir="ltr">1 / 10</span></header>
+  <h2>שתי דרכים לקרן לעקוב אחרי מדד — ורק באחת היא מחזיקה אותו</h2>
+  <div class="body"><p class="lede"><b>קרן שעוקבת אחרי מדד צריכה להחזיר לכם את התשואה שלו.</b> יש שתי דרכים לעשות את זה, והן שונות לגמרי במה שיושב בפנים.</p><div class="scroll"><table><thead><tr><th class="lead"></th><th>פיזית</th><th>סינתטית</th></tr></thead><tbody><tr><td class="lead"><b>מה הקרן מחזיקה</b></td><td dir="ltr">את המניות עצמן</td><td dir="ltr"><b>חוזה עם בנק</b></td></tr><tr><td class="lead">איך אתם מקבלים את התשואה</td><td dir="ltr">המניות עולות, הקרן עולה</td><td dir="ltr">הבנק מתחייב לשלם לקרן את תשואת המדד</td></tr><tr><td class="lead">אם המדד עלה 10%</td><td dir="ltr">המניות שלכם שוות 10% יותר</td><td dir="ltr">הבנק חייב לקרן 10%</td></tr><tr><td class="lead">ומי החזיק את המניות</td><td dir="ltr"><b>אתם, דרך הקרן</b></td><td dir="ltr">אף אחד — או מישהו אחר לגמרי</td></tr></tbody></table></div><p><b>ובעברית פשוטה:</b> קרן פיזית <b>קונה</b> את מה שכתוב בשם שלה. קרן סינתטית <b>מתחייבת לשלם לכם</b> את מה שכתוב בשם שלה, <b>ומחזיקה משהו אחר כבטחון.</b></p><p class="box good"><b>ושתיהן חוקיות, מפוקחות ונפוצות.</b> זו לא תרמית ולא פרצה — זה מבנה מוכר שמותר תחת UCITS, והוא קיים כי <b>יש לו יתרון מס אמיתי.</b> אבל צריך לדעת מה קונים.</p></div>
+  <p class="src">דירקטיבת UCITS 2009/65/EC · תשקיפי המנפיקים.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-inside">
+  <header><span class="eyebrow">ומה באמת יושב בפנים</span><span class="pos" dir="ltr">2 / 10</span></header>
+  <h2>קרן S&amp;P 500 שמחזיקה את Rheinmetall הגרמנית</h2>
+  <div class="body"><p class="lede"><b>זה לא תרגיל מחשבתי.</b> אלה האחזקות האמיתיות של SPXS, קרן ה-S&amp;P 500 הסינתטית של Invesco, לפי הדיווח שלה עצמה ל-31.5.2026:</p><div class="scroll"><table><thead><tr><th class="lead">מה שהקרן מתחייבת לשלם</th><th>לפי דף המוצר</th><th><b>ומה שהיא מחזיקה בפועל</b></th></tr></thead><tbody><tr><td class="lead">חשיפה לארצות הברית</td><td dir="ltr">99.8%</td><td dir="ltr"><b>69.6%</b></td></tr><tr><td class="lead">NVIDIA</td><td dir="ltr">8.40%</td><td dir="ltr"><b>1.77%</b></td></tr><tr><td class="lead">Apple</td><td dir="ltr">7.40%</td><td dir="ltr"><b>2.29%</b></td></tr><tr><td class="lead">Microsoft</td><td dir="ltr">5.80%</td><td dir="ltr"><b>2.12%</b></td></tr></tbody></table></div><p class="note">והסל מחזיק גם דברים שאינם ב-S&amp;P 500 בכלל: <b>Rheinmetall</b> הגרמנית, <b>Novo Nordisk</b> הדנית, <b>BMW</b>, <b>Roche</b> השווייצרית ו-<b>NetEase</b> הסינית.</p><p class="box warn"><b>ו-XLKS גרועה מזה.</b> היא נקראת ״טכנולוגיה״, ו-Apple, Microsoft ו-NVIDIA <b>כלל אינן בין האחזקות הגדולות שלה.</b> מה שכן: <b>Nestlé</b> מזון 2.20%, <b>ConocoPhillips</b> נפט 1.04%, <b>Cleveland-Cliffs</b> פלדה 1.20%, <b>Teva</b> 1.07% ו-<b>Mondelez</b> 1.03%.</p><p class="box good"><b>וזה בסדר, אם מבינים למה.</b> הסל הזה אינו ההשקעה שלכם — <b>הוא הבטחון שהבנק הפקיד.</b> ההשקעה שלכם היא החוזה, והחוזה אומר ״תשואת ה-S&amp;P 500״. אם המדד יעלה 10%, תקבלו 10% <b>גם אם Rheinmetall תיפול.</b></p><p><b>הבנקים שמעבר לחוזה של SPXS:</b> Barclays, Citigroup, Goldman Sachs, J.P. Morgan, Morgan Stanley ו-Société Générale. <b>שישה, ולא אחד</b> — וזה בכוונה, כדי שנפילה של בנק אחד לא תפיל את הקרן.</p></div>
+  <p class="src">דיווחי האחזקות של Invesco Markets plc ל-31.5.2026 · דפי המוצר של SPXS ו-XLKS.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-tradeoff">
+  <header><span class="eyebrow">והשורה התחתונה</span><span class="pos" dir="ltr">3 / 10</span></header>
+  <h2>מה הסינתטית קונה, ומה היא עולה</h2>
+  <div class="body"><p class="lede"><b>שלושה צמדים, שלושה מדדים שונים, אותה קרן פעמיים — פעם סינתטית ופעם פיזית.</b> זה מה שנמדד:</p><div class="scroll"><table><thead><tr><th class="lead">אותו מדד</th><th>הסינתטית</th><th>הפיזית</th><th>ההפרש לשנה</th></tr></thead><tbody><tr><td class="lead">S&amp;P 500</td><td dir="ltr">SPXS 16.71%</td><td dir="ltr">VUAA 16.49%</td><td dir="ltr"><b>+0.22 נק׳</b></td></tr><tr><td class="lead">MSCI World</td><td dir="ltr">MXWO 12.00%</td><td dir="ltr">IWDA 11.67%</td><td dir="ltr"><b>+0.34 נק׳</b></td></tr><tr><td class="lead">טכנולוגיה S&amp;P</td><td dir="ltr">XLKS 26.10%</td><td dir="ltr">IUIT 25.96%</td><td dir="ltr"><b>+0.15 נק׳</b></td></tr></tbody></table></div><p class="note">שלושתם באותו כיוון, ובדיוק בסדר הגודל שתיאוריית המס חוזה. <b>קרן אירית פיזית משלמת ניכוי במקור של 15% על דיבידנדים אמריקאיים; הסינתטית אינה משלמת.</b></p><p class="box good"><b>וכמה זה שווה בכסף.</b> על 3,000 ₪ בחודש לאורך שלושים שנה, יתרון של 0.25 נקודות מוסיף <b>501,649 ₪</b> — כלומר <b>5.1% מההון</b>, רק מבחירת גרסת הקרן.</p><p class="box warn"><b>ומה שזה עולה, בשורה אחת: אתם לא מחזיקים את המניות.</b> אתם מחזיקים <b>תביעה חוזית על בנק.</b> UCITS מגבילה את החשיפה לצד נגדי אחד ל-10% מהקרן, והחוזה מכוסה בבטחונות — <b>אבל זו לא בעלות על נייר, וזו הסיבה שהמסך מציין לכל קרן אם היא סינתטית.</b></p><p><b>ומה שחייב להיאמר ביושר: לא נמצא מקרה שבו משקיעי קרן UCITS סינתטית הפסידו כסף מקריסת צד נגדי.</b> לא שזה בלתי אפשרי — <b>זה שזה לא קרה</b>, והמבנה עמד ב-2008 וב-2020. זו עדות, לא הבטחה.</p></div>
+  <p class="src">מדידה על סדרות המחיר, 4.11.2026 · דירקטיבת UCITS 2009/65/EC סעיף 52(1) · הפירוט הטכני בשקופיות הבאות.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-open">
+  <header><span class="eyebrow">שתי דרכים</span><span class="pos" dir="ltr">4 / 10</span></header>
+  <h2>שתי קרנות על אותו מדד — ושתיהן לא מחזיקות אותו דבר</h2>
+  <div class="body"><p class="lede">שתי קרנות איריות יכולות לעקוב אחרי אותו S&amp;P 500 בדיוק — <b>ולהחזיק דברים שונים לגמרי</b>.</p><div class="vs"><div class="col"><h4>פיזית (CSPX, VUAA)</h4><ul><li>קונה את <b>500 המניות עצמן</b></li><li>מקבלת את הדיבידנדים</li><li><b>ומשלמת עליהם 15% ניכוי במקור</b></li><li>מה שכתוב בתיק — זה מה שיש</li></ul></div><div class="col"><h4>סינתטית (SPXS, XLKS)</h4><ul><li>מחזיקה <b>סל תחליף</b> — מניות אחרות לגמרי</li><li>ו<b>חוזה עם בנק</b> שמשלם את תשואת המדד</li><li><b>אין דיבידנד, ולכן אין ניכוי</b></li><li>העקיבה היא התחייבות חוזית</li></ul></div></div><p class="box warn"><b>זה לא פרט טכני.</b> ב-SPXS יושבות 748 שורות שמהן 30% אינן אמריקאיות. ב-XLKS יושבות AstraZeneca, נסטלה וגז טבעי — בקרן שאמורה לעקוב אחרי טכנולוגיה אמריקאית.</p></div>
+  
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-treaty">
+  <header><span class="eyebrow">ה-15%</span><span class="pos" dir="ltr">5 / 10</span></header>
+  <h2>למה אירלנד, ולמה לא לוקסמבורג</h2>
+  <div class="body"><p><b>שיעור ברירת המחדל בארה״ב הוא 30%</b> (סעיפים 871(a) ו-881). אמנת המס ארה״ב–אירלנד מ-1997, <b>Article 10(2)(b)</b>, מורידה אותו ל-<b>15%</b> על דיבידנדי פורטפוליו.</p><p>אבל יש בעיה: קרן UCITS אירית <b>פטורה ממס אירי</b>, ולכאורה אינה ״חייבת במס״ ולכן אינה תושבת לצורכי אמנה. האמנה האירית פותרת את זה במפורש — <b>Article 4(1)(d)</b> כולל Collective Investment Undertaking בהגדרת תושב.</p><p class="box warn"><b>וכאן הטעות הנפוצה:</b> אנשים אומרים ״האמנה הלוקסמבורגית קובעת 30%״. <b>זה לא נכון</b> — גם היא קובעת 15%. הבעיה היא ש<b>ל-SICAV הלוקסמבורגי אין את אותה הוראת תושבות</b>, ולכן הוא בפועל לא זוכה להטבה ונשאר ב-30%.</p><p class="box good"><b>השורה התחתונה זהה:</b> אירי משלם 15%, לוקסמבורגי 30% — אבל מהסיבה הנכונה. זה מה שהפך את אירלנד לבירת ה-ETF של אירופה.</p></div>
+  <p class="src">אמנת מס ארה״ב–אירלנד 1997, Articles 10(2)(b), 4(1)(d), 23 · IRC §871(a), §881.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-why871">
+  <header><span class="eyebrow">המכניקה</span><span class="pos" dir="ltr">6 / 10</span></header>
+  <h2>איך סוויפ נמלט מהניכוי לגמרי</h2>
+  <div class="body"><p>לפני 2010 זה היה פשוט: תשלום על חוזה החלפה מוקם לפי מקום מושב המקבל, ולכן לא היה הכנסה אמריקאית בכלל.</p><ol class="tl"><li><b dir="ltr">2010</b><span><b>HIRE Act</b> חוקק את <b>§871(m)</b> — ״דיבידנד שקול״ בחוזה נחשב דיבידנד אמריקאי וחייב בניכוי.</span></li><li><b dir="ltr">2015</b><span>תקנות סופיות (§1.871-15). מבחן <b>delta</b>: חוזה עם delta ≥ 0.80 נכנס לתחולה.</span></li><li><b dir="ltr">היום</b><span>חוזה על מדד אמריקאי הוא <b>delta = 1.0</b> — כלומר <b>כן</b> בתחולה.</span></li></ol><p class="box warn"><b>ולכן הסבר שאומר ״היתרון קיים כי ה-IRS דוחה את 871(m)״ הוא שגוי מהיסוד.</b> הדחיות חלות על חוזים שאינם delta-one. חוזה של ETF סינתטי <b>הוא</b> delta-one, והוא בתחולה מאז 2017.</p><p class="box good"><b>מה באמת מגן עליו: חריג ה-qualified index בסעיף §1.871-15(l).</b> אם החוזה מתייחס למדד כשיר, המדד אינו ״נייר בסיס״ — ובלי נייר בסיס אין דיבידנד שקול, ואין על מה לנכות. זו <b>תקנה קבועה</b>, לא דחייה.</p></div>
+  <p class="src">IRC §871(m) · Treas. Reg. §1.871-15(l) · T.D. 9734 (2015) · Notice 2024-44.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-qualified">
+  <header><span class="eyebrow">התנאים</span><span class="pos" dir="ltr">7 / 10</span></header>
+  <h2>מה הופך מדד ל״כשיר״ — ולמה זה לא לנצח</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">התנאי</th><th>הדרישה</th><th>S&amp;P 500 בפועל</th></tr></thead><tbody><tr><td class="lead">מספר רכיבים</td><td dir="ltr">25 ומעלה</td><td dir="ltr">500 ✓</td></tr><tr><td class="lead">כיווניות</td><td dir="ltr">לונג בלבד</td><td dir="ltr">לונג ✓</td></tr><tr><td class="lead">נייר בודד</td><td dir="ltr">עד 15% מהמשקל</td><td dir="ltr">NVDA ~7.5% ✓</td></tr><tr><td class="lead">חמשת הגדולים</td><td dir="ltr">עד 40% יחד</td><td dir="ltr">~26.8% ✓</td></tr><tr><td class="lead">שיטת איזון</td><td dir="ltr">קריטריונים מפורסמים מראש</td><td dir="ltr">מתודולוגיה פומבית ✓</td></tr><tr><td class="lead">נזילות נגזרים</td><td dir="ltr">חוזים עתידיים נסחרים בבורסה מוכרת</td><td dir="ltr">CME E-mini ✓</td></tr></tbody></table></div><p class="box warn"><b>והכשירות נבחנת מחדש ביום העסקים הראשון של כל שנה.</b> אם הריכוזיות תמשיך לעלות וחמשת הגדולים יעברו 40% — <b>המדד מפסיק להיות כשיר והיתרון נעלם מיידית</b>. יש מרווח, והוא מצטמק.</p><p>ואיפה נעלמת החבות אצל הבנק? הוא מגדר את עצמו <b>דרך ישות אמריקאית</b> (שאינה כפופה לניכוי) או <b>בחוזים עתידיים</b> (שלא משלמים דיבידנד כלל).</p></div>
+  <p class="src">Treas. Reg. §1.871-15(l)(1)–(4). התקנה אינה נוקבת בשמות מדדים — זו מסקנה מיישום התנאים.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-size">
+  <header><span class="eyebrow">כמה זה שווה</span><span class="pos" dir="ltr">8 / 10</span></header>
+  <h2>היתרון בנקודות בסיס — ולמה הוא קטן מכפי שנדמה</h2>
+  <div class="body"><p>האריתמטיקה פשוטה: <b>היתרון = 15% × תשואת הדיבידנד של המדד.</b></p><div class="stats"><div class="stat "><span class="k">תשואת דיבידנד S&amp;P 500</span><span class="n" dir="ltr">~1.07%</span><span class="s">נובמבר 2026</span></div><div class="stat gold"><span class="k">היתרון התיאורטי</span><span class="n" dir="ltr">~16 נק׳ בסיס</span><span class="s">לשנה</span></div><div class="stat up"><span class="k">נמדד בפועל</span><span class="n" dir="ltr">20–30 נק׳</span><span class="s">תלוי זוג הקרנות</span></div></div><p class="box warn"><b>והבנק גובה מרווח על החוזה</b>, שתופס חלק מהחיסכון ואינו מופיע בדמי הניהול. המשקיע לא מקבל את כל ה-15%.</p><p><b>ועל מדד עולמי היתרון כמעט נעלם</b> — רק החלק האמריקאי נהנה, ודמי ניהול גבוהים יותר מוחקים אותו. היתרון הוא <b>ספציפי לחשיפה אמריקאית טהורה</b>.</p><p class="box good"><b>מה שמדדנו במערכת:</b> SPXS היכה את CSPX ב-<b>0.20 נקודות</b> אחרי נטרול דמי ניהול. אבל MXWO מול IWDA יצא <b>−0.09</b> — כלומר <b>זה לא אוטומטי.</b></p></div>
+  <p class="src">מדידה שלנו על 60 חודשים · BlackRock, justETF, ETF Stream לנתוני השוק.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-risk">
+  <header><span class="eyebrow">הסיכון</span><span class="pos" dir="ltr">9 / 10</span></header>
+  <h2>ומה אם הבנק קורס</h2>
+  <div class="body"><p>זו השאלה הנכונה, ויש לה תשובה מבנית ולא רק הרגעה.</p><ul><li><b>Article 52(1) ל-UCITS</b> מגביל חשיפה לצד נגדי: <b>10%</b> מהנכסים אם הוא מוסד אשראי, <b>5%</b> אחרת.</li><li><b>החוזה מתאפס יומית</b> — אחרי כל איפוס החשיפה קרובה לאפס. החשיפה החיה היא רק הפער שנפתח מאז.</li><li><b>בטוחות בשווי 105%–110%</b> מה-NAV, עם מגבלת 20% למנפיק בודד (הנחיות ESMA 2014/937).</li><li>ובמבנה הנפוץ באירופה (<b>unfunded</b>) <b>הקרן מחזיקה בבעלות את סל התחליף</b> — בכשל היא מוכרת אותו ובונה חשיפה מחדש.</li></ul><p class="box warn"><b>ומה שאני לא יכול להגיד לכם:</b> לא מצאתי מקור ראשוני שמאשר ״אף משקיע ב-UCITS סינתטי מעולם לא הפסיד מכשל צד נגדי״. הניסוח הזהיר הוא <b>״לא ידוע על מקרה כזה״</b> — ולא ״מעולם לא קרה״.</p><p class="box good"><b>מה שכן מתועד, והוא ההבחנה החשובה:</b> ליהמן הנפיקה <b>ETN</b> בפלטפורמת Opta — <b>חוב לא מגובה של הבנק</b>, לא קרן. בקריסה הנושים קיבלו <b>44.5%</b> מתביעתם, לאורך שש שנים. <b>ETN הוא חוב; ETF סינתטי הוא קרן בבעלות המשקיעים.</b> מי שמערבב ביניהם מגיע למסקנה שגויה.</p></div>
+  <p class="src">Directive 2009/65/EC Art. 52(1) · ESMA Guidelines 2014/937 · ECB Financial Stability Review 2018.</p>
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="swap-physical">
+  <header><span class="eyebrow">והצד השני</span><span class="pos" dir="ltr">10 / 10</span></header>
+  <h2>גם לפיזי יש סיכון צד נגדי — רק שקוראים לו אחרת</h2>
+  <div class="body"><p>קרן פיזית <b>משאילה חלק מהמניות שלה</b> ללווים מוסדיים — בעיקר למכירה בחסר. הלווה משלם עמלה ומפקיד בטוחה, והעמלה חוזרת לקרן ומשפרת את העקיבה.</p><div class="scroll"><table><thead><tr><th class="lead">הקרן</th><th>כמה היא משאילה</th></tr></thead><tbody><tr><td class="lead">VUAA · S&amp;P 500</td><td dir="ltr">0.03%</td></tr><tr><td class="lead">VanEck</td><td dir="ltr">0%</td></tr></tbody></table></div><p class="note">נתונים מדוחות הקרנות עצמן.</p><p class="box warn"><b>ושני סיכונים נפרדים, שרק אחד מהם מכוסה:</b> כשל הלווה מכוסה בדרך כלל בשיפוי של המנהל. אבל <b>סיכון ההשקעה מחדש של הבטוחה</b> — אם הבטוחה במזומן הושקעה וירדה בערכה — <b>נופל כולו על הקרן, והשיפוי אינו מכסה אותו.</b></p><p class="box good"><b>השורה התחתונה ההוגנת:</b> אין כאן ״בטוח מול מסוכן״. יש <b>שני סוגי סיכון שונים</b>, ושניהם מנוהלים תחת אותה רגולציה. ההבדל הוא מה אתם מעדיפים לא לדעת עליו.</p></div>
+  
+  <footer><a href="./" class="crumb">פיזי מול חוזה חילופין</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">פיזי מול חוזה חילופין — פתיחה</option><option value="1">1. שתי דרכים לקרן לעקוב אחרי מדד — ורק באחת היא מחזיקה אותו</option><option value="2">2. קרן S&amp;P 500 שמחזיקה את Rheinmetall הגרמנית</option><option value="3">3. מה הסינתטית קונה, ומה היא עולה</option><option value="4">4. שתי קרנות על אותו מדד — ושתיהן לא מחזיקות אותו דבר</option><option value="5">5. למה אירלנד, ולמה לא לוקסמבורג</option><option value="6">6. איך סוויפ נמלט מהניכוי לגמרי</option><option value="7">7. מה הופך מדד ל״כשיר״ — ולמה זה לא לנצח</option><option value="8">8. היתרון בנקודות בסיס — ולמה הוא קטן מכפי שנדמה</option><option value="9">9. ומה אם הבנק קורס</option><option value="10">10. גם לפיזי יש סיכון צד נגדי — רק שקוראים לו אחרת</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

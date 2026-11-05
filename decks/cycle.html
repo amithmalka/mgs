@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS · מתי משקיעים בכל אחד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#07090A;--surface:#0E1114;--sunk:#151A1E;--ink:#ECF2EF;
+ --mid:#AFBCB7;--muted:#76837F;--rule:#1F272B;--grid:#161C20;
+ --gold:#E3BE45;--goldsoft:#8A7220;--up:#2FD898;--down:#FF6A5C;--bar:#2B3338;
+ --sans:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+ --mono:'IBM Plex Mono',SFMono-Regular,Consolas,monospace}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+ font-weight:300;line-height:1.55;direction:rtl}
+body{padding:18px}
+.deck{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.slide{display:none;background:var(--surface);border:1px solid var(--rule);
+ border-radius:12px;padding:30px 32px 22px;min-height:560px;
+ flex-direction:column;gap:15px}
+.slide.on{display:flex}
+.slide header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:2.4px;color:var(--gold)}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.6px;text-wrap:balance}
+h2{font-size:clamp(21px,3.6vw,33px);font-weight:800;line-height:1.14;letter-spacing:-.4px;text-wrap:balance}
+h4{font-size:14px;font-weight:700;margin-bottom:7px}
+.body{display:flex;flex-direction:column;gap:13px;flex:1}
+p{font-size:15px;color:var(--mid);max-width:74ch}
+.lede{font-size:17px;color:var(--mid);max-width:68ch}
+b{color:var(--ink);font-weight:600}
+ul,ol{padding-inline-start:21px;display:flex;flex-direction:column;gap:8px;
+ font-size:14.5px;color:var(--mid);max-width:74ch}
+li::marker{color:var(--goldsoft)}
+.box{border:1px solid var(--rule);border-radius:7px;padding:12px 14px;font-size:14px;max-width:none}
+.box.warn{border-color:color-mix(in srgb,#FF6A5C 42%,var(--rule));background:rgba(255,106,92,.05)}
+.box.warn b{color:var(--down)}
+.box.good{border-color:color-mix(in srgb,#2FD898 40%,var(--rule));background:rgba(47,216,152,.04)}
+.box.good b{color:var(--up)}
+blockquote{border-inline-start:3px solid var(--gold);padding-inline-start:15px;
+ display:flex;flex-direction:column;gap:6px}
+blockquote p{font-size:16.5px;color:var(--ink);font-style:italic}
+cite{font-style:normal;font-size:12px;color:var(--muted)}
+.stats{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.stat{background:var(--sunk);border:1px solid var(--rule);border-radius:7px;
+ padding:11px 13px;display:grid;gap:2px}
+.stat .k{font-size:10px;letter-spacing:1.2px;color:var(--muted)}
+.stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:700}
+.stat .s{font-size:10.5px;color:var(--muted);line-height:1.45}
+.stat.gold .n{color:var(--gold)}.stat.up .n{color:var(--up)}.stat.warn .n{color:var(--down)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:7px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+th{background:var(--sunk);font-size:9.5px;font-weight:600;letter-spacing:.9px;
+ color:var(--muted);text-align:start;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td.lead,th.lead{color:var(--ink);font-weight:500;white-space:normal;min-width:130px}
+td[dir=ltr]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.vs{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.col{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:14px 15px}
+.col ul{font-size:13px;color:var(--muted);gap:7px}
+.tl{list-style:none;padding:0;gap:10px}
+.tl li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;
+ padding-inline-start:13px;border-inline-start:2px solid var(--rule)}
+.tl b{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
+.tl span{font-size:13.5px;color:var(--mid)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.6}
+.src{font-size:10.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.slide footer{display:flex;justify-content:space-between;align-items:center;
+ font-size:10px;letter-spacing:1.4px;color:var(--muted);padding-top:9px;border-top:1px solid var(--rule)}
+.brand{color:var(--gold);font-weight:700;letter-spacing:3px}
+.crumb{color:var(--muted);text-decoration:none;letter-spacing:1.4px}
+.crumb:hover{color:var(--gold);text-decoration:underline}
+.curve{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:10px;
+ border-bottom:1px solid var(--rule)}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--gold)}
+.bar i.dn{background:var(--goldsoft)}.bar i.off{background:var(--bar);min-height:2px}
+.bar small{font-size:8.5px;color:var(--muted);font-family:var(--mono)}
+.disc{border:1px solid var(--down);border-radius:9px;padding:16px 18px;
+ background:rgba(255,106,92,.045);display:flex;flex-direction:column;gap:9px}
+.disc>b{color:var(--down);font-size:15px}
+.disc ul{font-size:13px;gap:7px;color:var(--muted)}
+.disc small{font-size:11px;color:var(--muted);padding-top:7px;border-top:1px solid var(--rule)}
+nav{position:sticky;bottom:0;background:var(--ground);padding:11px 0 2px;
+ display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--rule);z-index:5}
+button,select{appearance:none;background:var(--sunk);border:1px solid var(--rule);
+ border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;
+ padding:8px 15px;cursor:pointer;min-height:38px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:default}
+button.go{background:var(--gold);border-color:var(--gold);color:#0B0F11;font-weight:700}
+select{min-width:190px;padding-inline-end:10px}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:8px 15px;
+ border:1px solid var(--rule);border-radius:6px;background:var(--sunk);
+ color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+.back:hover{border-color:var(--gold)}
+.rail{flex:1;height:3px;background:var(--grid);border-radius:2px;overflow:hidden;min-width:90px}
+.rail i{display:block;height:100%;background:var(--gold);transition:width .25s}
+.hint{font-size:10.5px;color:var(--muted);text-align:center;padding:7px 0 2px}
+@media (max-width:620px){
+ body{padding:11px}
+ .slide{padding:19px 16px;min-height:0}
+ .bar small{display:none}.curve{height:120px}
+ td.lead,th.lead{min-width:112px}
+ select{min-width:100%;order:-1}
+}
+@media print{
+ body{background:#fff;padding:0}
+ nav,.hint{display:none}
+ .slide{display:flex!important;page-break-after:always;border:0;min-height:0;
+  background:#fff;color:#111}
+ h1,h2,b{color:#000}p,li,.note,.src{color:#333}
+}</style></head>
+<body><div class="deck">
+<section class="slide cover" id="cycle-cover">
+  <header><span class="eyebrow">MGS · Money Growth System</span><span class="pos" dir="ltr">0 / 20</span></header>
+  <h1>מתי משקיעים בכל אחד</h1>
+  <p class="lede">האם אפשר לתזמן את המחזור, ומה מהרוטציה הסקטוריאלית שורד מדידה</p>
+  <div class="disc">
+    <b>לפני הכול — מה המצגת הזאת אינה.</b>
+    <ul>
+      <li><b>אין באמור ייעוץ השקעות, ייעוץ פנסיוני, שיווק השקעות או ייעוץ מס</b>, ואין בו תחליף לייעוץ אישי המתחשב בנתוניו ובצרכיו של כל אדם.</li>
+      <li><b>תשואות עבר אינן מנבאות תשואות עתיד.</b> התשואות והתנודתיות שמוצגות כאן נמדדו על חלון של 60 חודשים, והוא חלון מסוים ולא מייצג.</li>
+      <li><b>ההנחות קדימה הן הנחות של בתי השקעות, לא תחזיות שלנו</b>, והן נכונות למועד פרסומן בלבד. הפיזור ביניהן גדול.</li>
+      <li><b>השקעה בניירות ערך כרוכה בסיכון</b>, לרבות אובדן מלא או חלקי של הקרן.</li>
+      <li><b>הנתונים המשפטיים והמיסויים הם תיאור של דין נכון למועד הכתיבה</b>, לא חוות דעת. חלקם מסומנים במצגת במפורש כ״לא אומת מול מקור רשמי״.</li>
+    </ul>
+    <small>נכון לנובמבר 2026. המספרים נבנים מהקטלוג והמנוע של MGS בעת יצירת הקובץ.</small>
+  </div>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-q">
+  <header><span class="eyebrow">השאלה</span><span class="pos" dir="ltr">1 / 20</span></header>
+  <h2>הכלכלה צומחת — קונים שבבים. יש ירידות — יוצאים</h2>
+  <div class="body"><p class="lede"><b>זו המסגרת שכולם מכירים, והיא נשמעת הגיונית לחלוטין.</b> היא גם אחת הנבדקות ביותר בהיסטוריה של המימון.</p><p>בדקנו אותה — ומצאנו ששני דברים חייבים להתקיים כדי שהיא תעבוד:</p><ul><li><b>צריך לדעת באיזה שלב של המחזור אנחנו נמצאים</b> — בזמן אמת, לא בדיעבד.</li><li><b>צריך שלכל שלב תהיה תשובה סקטוריאלית יציבה</b> — שחוזרת על עצמה מחזור אחרי מחזור.</li></ul><p class="box warn"><b>שניהם נבדקו. שניהם נכשלים.</b> וזו בדיוק הסיבה שהמערכת הזאת בנויה על כלל מכני ולא על קריאת מחזור.</p></div>
+  
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-nber">
+  <header><span class="eyebrow">תנאי 1</span><span class="pos" dir="ltr">2 / 20</span></header>
+  <h2>עד שמכריזים על מיתון — הוא כבר נגמר</h2>
+  <div class="body"><p>ה-<b>NBER</b> הוא הגוף שקובע רשמית מתי התחיל מיתון בארה״ב. זה כמה זמן לוקח לו:</p><div class="scroll"><table><thead><tr><th class="lead">נקודת המפנה</th><th>מתי קרתה</th><th>מתי הכריזו</th><th>פיגור</th></tr></thead><tbody><tr><td class="lead">שיא 1990</td><td dir="ltr">יולי 1990</td><td dir="ltr">25.4.1991</td><td dir="ltr">9 חודשים</td></tr><tr><td class="lead">שיא 2001</td><td dir="ltr">מרץ 2001</td><td dir="ltr">26.11.2001</td><td dir="ltr">8 חודשים</td></tr><tr><td class="lead"><b>שיא 2007</b></td><td dir="ltr">דצמבר 2007</td><td dir="ltr"><b>1.12.2008</b></td><td dir="ltr"><b>12 חודשים</b></td></tr><tr><td class="lead">שיא 2020</td><td dir="ltr">פברואר 2020</td><td dir="ltr">8.6.2020</td><td dir="ltr">4 חודשים</td></tr><tr><td class="lead">שפל 2009</td><td dir="ltr">יוני 2009</td><td dir="ltr">20.9.2010</td><td dir="ltr">15 חודשים</td></tr><tr><td class="lead">שפל 2020</td><td dir="ltr">אפריל 2020</td><td dir="ltr">19.7.2021</td><td dir="ltr">15 חודשים</td></tr></tbody></table></div><p class="note">ממוצע על 12 נקודות מפנה: <b>11.25 חודשים</b>. שיאים 7.3, שפלים 15.2.</p><p class="box warn">**וב-3 מתוך 4 המיתונים האחרונים, ההודעה שמיתון *התחיל* הגיעה בחודש שבו הוא כבר *נגמר* — או אחריו.** ב-1990–91 וב-2020 הוא כבר היה מאחורינו; ב-2001 הוא נגמר באותו חודש בדיוק.</p></div>
+  <p class="src">ארכיון ההודעות של National Bureau of Economic Research.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-late">
+  <header><span class="eyebrow">וכמה זה עולה</span><span class="pos" dir="ltr">3 / 20</span></header>
+  <h2>ומה השוק עשה עד שהכריזו</h2>
+  <div class="body"><div class="stats"><div class="stat warn"><span class="k">עד ההכרזה של 1.12.2008</span><span class="n" dir="ltr">−47.9%</span><span class="s">כבר קרה מהשיא</span></div><div class="stat "><span class="k">מה שנשאר משם לשפל</span><span class="n" dir="ltr">−17.1%</span><span class="s">בלבד</span></div><div class="stat up"><span class="k">עד ההכרזה על השפל</span><span class="n" dir="ltr">+68.9%</span><span class="s">כבר קרה מהתחתית</span></div></div><p><b>ובקורונה זה היה עוד יותר קיצוני.</b> ביום שבו הכריזו על תחילת המיתון — 8.6.2020 — השוק היה <b>4.5% בלבד מתחת לשיא</b>, אחרי שכבר עלה <b>44.5%</b> מהתחתית.</p><p class="box warn"><b>וב-2001 גם הכיוון היה הפוך.</b> ההכרזה על שיא מרץ 2001 הגיעה בנובמבר, כשהמדד עמד <b>מעל</b> רמת חודש השיא — ואז הוא ירד עוד <b>32.9%</b> עד אוקטובר 2002.</p></div>
+  <p class="src">חישוב מסגירות ^GSPC מול תאריכי ההודעה של NBER.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-forecast">
+  <header><span class="eyebrow">ואולי לחזות מראש</span><span class="pos" dir="ltr">4 / 20</span></header>
+  <h2>148 מתוך 153 מיתונים הוחמצו</h2>
+  <div class="body"><p>קרן המטבע בדקה <b>63 מדינות, 1992–2014, 153 מיתונים</b> — וספרה כמה מהם נחזו.</p><div class="scroll"><table><thead><tr><th class="lead">מתי נשאלו</th><th>Consensus</th><th>קרן המטבע</th></tr></thead><tbody><tr><td class="lead">אפריל, <b>השנה שלפני</b> המיתון</td><td dir="ltr">148 הוחמצו</td><td dir="ltr">147 הוחמצו</td></tr><tr><td class="lead">אוקטובר, השנה שלפני</td><td dir="ltr">139 הוחמצו</td><td dir="ltr">136 הוחמצו</td></tr><tr><td class="lead">אפריל, <b>בתוך שנת המיתון</b></td><td dir="ltr">69 הוחמצו</td><td dir="ltr">72 הוחמצו</td></tr><tr><td class="lead">אוקטובר, בתוך שנת המיתון</td><td dir="ltr"><b>35 הוחמצו</b></td><td dir="ltr">40 הוחמצו</td></tr></tbody></table></div><p class="note">מהתקציר: <b>״שניהם טובים באותה מידה בלהחמיץ מיתונים.״</b> והתרעות שווא היו מעטות — 8 מתוך 1,153. התחזיות אינן קופצניות, הן פשוט עיוורות.</p><p><b>ואפילו המודל האקדמי הטוב ביותר לא הצליח.</b> המודל של James Hamilton, שפורסם פומבית מאז 2005, זיהה נכון את השיא של 2007 — <b>אבל הכריז עליו בינואר 2009, חודש אחרי ה-NBER עצמו.</b> באוקטובר 2008, עשרה חודשים לתוך המשבר, ההסתברות שהמודל נתן למיתון הייתה <b>46.9%</b>.</p></div>
+  <p class="src">An, Jalles &amp; Loungani, IMF Working Paper 18/39 · Hamilton, &quot;Calling Recessions in Real Time&quot;, International Journal of Forecasting 27(4), 2011.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-fidelity">
+  <header><span class="eyebrow">והמסגרת המסחרית</span><span class="pos" dir="ltr">5 / 20</span></header>
+  <h2>גם מי שמוכר את השיטה לא הצליח להפעיל אותה</h2>
+  <div class="body"><p><b>Fidelity</b> מפרסמת את מסגרת ארבעת השלבים המוכרת ביותר. אלה הפרסומים שלה עצמה, בזמן אמת:</p><ol class="tl"><li><b dir="ltr">פברואר 2020</b><span>״ארה״ב נמצאת <b>בבירור בשלב המאוחר</b> של המחזור״</span></li><li><b dir="ltr">**11.3.2020**</b><span>״עדיין late cycle — <b>סיכוני מיתון נראים נמוכים יחסית</b>״</span></li><li><b dir="ltr">14.5.2020</b><span>״<b>בבירור בשלב המיתון</b>״</span></li></ol><p class="box warn"><b>שיא המחזור לפי ה-NBER היה פברואר 2020.</b> ב-11 במרץ, בחודש השני של המיתון, הם כתבו שסיכוני המיתון נמוכים. <b>וקריאת המיתון הופיעה במאי — החודש שאחרי שהמיתון כבר נגמר.</b></p><p><b>והקריאה גם נסוגה אחורה:</b> במאי 2023 הם כתבו late cycle עם אזהרת מיתון למחצית 2023; ביוני 2024 עדיין late cycle; <b>ומינואר 2026 — mid cycle.</b> מעבר מ-late ל-mid אינו אפשרי במסגרת סדרתית — כלומר הקריאה המקורית תוקנה בדיעבד.</p></div>
+  <p class="src">Fidelity Business Cycle Update, מהדורות פברואר ומרץ 2020, מאי 2020, מאי 2023, יוני 2024, ינואר 2026.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-sectors">
+  <header><span class="eyebrow">תנאי 2</span><span class="pos" dir="ltr">6 / 20</span></header>
+  <h2>ורוב ההמלצות הסקטוריאליות אינן נבדלות מהטלת מטבע</h2>
+  <div class="body"><p>Fidelity מפרסמת <b>hit rate</b> לכל סקטור בכל שלב — באיזה אחוז מהמחזורים הוא הכה את השוק. בדקנו אילו מהם <b>נבדלים סטטיסטית</b> ממטבע הוגן.</p><div class="stats"><div class="stat "><span class="k">תאים במטריצה</span><span class="n" dir="ltr">44</span><span class="s">11 סקטורים × 4 שלבים</span></div><div class="stat warn"><span class="k">נבדלים ממטבע</span><span class="n" dir="ltr">14</span><span class="s">ברווח סמך 95%</span></div><div class="stat warn"><span class="k">בשלב ה-mid</span><span class="n" dir="ltr">1 מתוך 11</span><span class="s">**והוא הארוך ביותר — כ-4 שנים**</span></div></div><p><b>ועם 44 מבחנים, כ-2 תאים היו עוברים את הסף במקרה בלבד.</b> התבנית הכוללת אמיתית — אבל רוב ההמלצות הפרטניות הן רעש.</p><p class="box good"><b>ו-Fidelity עצמם כותבים את זה:</b> בשלב ה-mid, ״משקיעים עשויים לרצות <b>לשמור את ההשקעות הסקטוריאליות למינימום</b>״. זה השלב שתופס כמחצית מהזמן.</p><p class="box warn"><b>ועוד ממצא:</b> המהדורה של 2025 <b>שינתה חמישה תאים במטריצה — על אותם נתונים בדיוק</b> (1962–2020), בלי הסבר. המטריצה זזה גם כשלא מוסיפים נתונים.</p></div>
+  <p class="src">Fidelity, &quot;The Business Cycle Approach to Equity Sector Investing&quot;, מהדורות 2021 ו-2025 · ניתוח רווחי סמך Wilson על ה-hit rates המפורסמים.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-backtest">
+  <header><span class="eyebrow">המבחן המכריע</span><span class="pos" dir="ltr">7 / 20</span></header>
+  <h2>ואפילו עם מכונת זמן — זה בקושי שווה משהו</h2>
+  <div class="body"><p>הרצנו את האסטרטגיה הקלאסית: <b>מוצרי צריכה בסיסיים בחודשי מיתון, שוק רחב בשאר הזמן.</b> 1998–2026.</p><div class="scroll"><table><thead><tr><th class="lead">הגרסה</th><th>תשואה שנתית</th><th>שווי סופי</th><th>הנפילה</th></tr></thead><tbody><tr><td class="lead">פשוט להחזיק את השוק</td><td dir="ltr"><b>8.66%</b></td><td dir="ltr">×10.08</td><td dir="ltr">−55.2%</td></tr><tr><td class="lead"><b>עם ידיעה מושלמת</b> של תאריכי המיתון</td><td dir="ltr"><b>9.99%</b></td><td dir="ltr">×14.13</td><td dir="ltr">−43.5%</td></tr><tr><td class="lead"><b>לפי תאריכי ההכרזה</b> — הדבר היחיד שאפשר בפועל</td><td dir="ltr"><b>7.54%</b></td><td dir="ltr"><b>×7.54</b></td><td dir="ltr">−52.2%</td></tr></tbody></table></div><p class="box warn"><b>שתי שורות תחתונות.</b> מכונת זמן שווה <b>1.33 נקודות אחוז בשנה</b> — לא אפס, אבל צנוע. <b>ופעולה לפי המידע כשהוא מגיע באמת הורסת 25% מההון</b> ועולה 1.13 נקודות בשנה — בתמורה להקטנת נפילה של 3 נקודות בלבד.</p><p><b>ועלויות המסחר אינן הבעיה</b> — ב-0.2% לכל מעבר, הגרסה המושלמת מאבדת 0.05 נקודות בלבד. <b>הבעיה היא התזמון.</b></p></div>
+  <p class="src">הרצה על 7,008 ימי מסחר, 1998–2026, SPY מול XLP, תאריכי NBER. ללא מיסים — שהיו מחמירים את הגרסה הריאלית בלבד.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-realtime">
+  <header><span class="eyebrow">ומה כן</span><span class="pos" dir="ltr">8 / 20</span></header>
+  <h2>שלוש הערכות עצמאיות מתכנסות למספר קטן</h2>
+  <div class="body"><p>שלוש עבודות בדקו רוטציה סקטוריאלית <b>בזמן אמת</b>, כל אחת בשיטה אחרת:</p><div class="scroll"><table><thead><tr><th class="lead">המחקר</th><th>השיטה</th><th>התוצאה</th></tr></thead><tbody><tr><td class="lead">Invesco, 2022</td><td dir="ltr">ארבעה משטרים ממדדים מובילים, 1994–2022</td><td dir="ltr"><b>+1.32% בשנה</b></td></tr><tr><td class="lead">FPA, 2021</td><td dir="ltr">חצייה של מדדי LEI/CEI, 1990–2020</td><td dir="ltr"><b>+0.61% בשנה</b></td></tr><tr><td class="lead">Molchanov &amp; Stangl, 2024</td><td dir="ltr">ידיעה מושלמת, 1948–2022</td><td dir="ltr">0.09% לחודש נטו</td></tr><tr><td class="lead"><b>Fakhouri</b> (דוקטורט, Paris-Dauphine)</td><td dir="ltr"><b>נתונים לא מתוקנים, כפי שפורסמו בזמן</b></td><td dir="ltr"><b>פיגר אחרי השוק ב-3 מתוך 4 שלבים</b></td></tr></tbody></table></div><p class="box warn"><b>המחקר האחרון הוא החשוב ביותר</b> — הוא היחיד שהשתמש בנתונים <b>כפי שהם פורסמו באותו רגע</b>, ולא בגרסה המתוקנת שלהם. אבחנת המחבר: ״התת-ביצוע נובע חלקית מ<b>מספר גבוה של זיהויי שלב שגויים</b> כתוצאה משימוש בנתוני זמן אמת״.</p><p class="box good"><b>ו-State Street, שמפרסמת מסגרת מתחרה עם כל המספרים גלויים, סותרת את ההמלצה החזקה ביותר של Fidelity:</b> אנרגיה, שאצל Fidelity היא הקריאה החזקה ביותר ל-late cycle, <b>״לא נכנסה לשלושת הסקטורים המובילים או הנחשלים באף שלב״</b> אצלם.</p></div>
+  <p class="src">de Longis, Zanin &amp; Ellis, Journal of Beta Investment Strategies, חורף 2022 · Noble et al., FPA 2021 · Molchanov &amp; Stangl 2024 · Fakhouri, EDBA, Université Paris-Dauphine · State Street, &quot;Sector business cycle analysis&quot;, אוקטובר 2026.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-semis">
+  <header><span class="eyebrow">והשבבים</span><span class="pos" dir="ltr">9 / 20</span></header>
+  <h2>שבבים אינם סחר מחזורי — הם מכפיל על השוק</h2>
+  <div class="body"><p>מדדנו את מדד השבבים מול השוק הרחב על <b>304 חודשים</b>, מיולי 2001.</p><div class="scroll"><table><thead><tr><th class="lead">החלון</th><th>ביתא</th><th>תפיסת עליות</th><th>תפיסת ירידות</th></tr></thead><tbody><tr><td class="lead">מאז 2001</td><td dir="ltr"><b>1.37</b></td><td dir="ltr">153%</td><td dir="ltr">151%</td></tr><tr><td class="lead">עשר שנים</td><td dir="ltr"><b>1.55</b></td><td dir="ltr">175%</td><td dir="ltr">168%</td></tr><tr><td class="lead">שלוש שנים</td><td dir="ltr"><b>2.02</b></td><td dir="ltr">218%</td><td dir="ltr">213%</td></tr></tbody></table></div><p class="note"><b>תפיסת העליות ותפיסת הירידות צמודות בכל חלון — בתוך 5–7 נקודות.</b> זה הפרופיל של <b>מכפיל ממונף על השוק</b>, לא של סחר שעובד בשלב מסוים.</p><p class="box warn"><b>והביתא עולה.</b> 1.37 → 1.55 → 2.02. הסיבה: השבבים גדלו לכ-<b>18% משווי ה-S&amp;P 500</b>, מכ-5% לפני חמש שנים. <b>הסקטור כבר מזיז את המדד כמו שהמדד מזיז אותו.</b></p><div class="scroll"><table><thead><tr><th class="lead">האפיזודה</th><th>שבבים</th><th>S&amp;P 500</th><th>היחס</th></tr></thead><tbody><tr><td class="lead">דוט-קום · 2000–2002</td><td dir="ltr"><b>−83.9%</b></td><td dir="ltr">−49.1%</td><td dir="ltr">×1.7</td></tr><tr><td class="lead">המשבר הפיננסי · 2008–09</td><td dir="ltr">−37.9%</td><td dir="ltr">−34.7%</td><td dir="ltr">×1.1</td></tr><tr><td class="lead"><b>מיתון הקורונה</b></td><td dir="ltr"><b>+5.5%</b></td><td dir="ltr">−0.5%</td><td dir="ltr"><b>הגנו!</b></td></tr><tr><td class="lead">ירידת המכסים · 2025</td><td dir="ltr">−31.6%</td><td dir="ltr">−18.6%</td><td dir="ltr">×1.7</td></tr><tr><td class="lead"><b>שנת 2024 — שנת ה-AI</b></td><td dir="ltr"><b>+12.9%</b></td><td dir="ltr">+23.3%</td><td dir="ltr"><b>פיגרו ב-10 נק׳</b></td></tr></tbody></table></div><p class="box warn"><b>וההתנהגות אינה עקבית לפי שלב מקרו.</b> היא נשלטת על ידי <b>מחזורי מוצר</b> — מחשבים, מובייל, כריית קריפטו, בינה מלאכותית. <b>ב-2018–19 מכירות ה-GPU של NVIDIA לכרייה קרסו והמניה ירדה כ-30% בשני ימי מסחר — בזמן שהכלכלה האמריקאית צמחה.</b></p><p><b>ושימו לב למה שקרה ל-״early cycle״:</b> המסגרת של Fidelity, שממנה הביטוי הזה מגיע, <b>אינה ממקמת טכנולוגיה בשלב המוקדם בכלל</b>. היא ממקמת אותה <b>באמצע המחזור</b> — ונוקבת במפורש בשבבים כסיבה: הם מתעוררים ״<b>ברגע שחברות צוברות ביטחון ביציבות ההתאוששות ומוכנות להשקיע בציוד</b>״. זה סיפור של ביטחון בהשקעות הון, לא של התאוששות מוקדמת. <b>וה-hit rate שם הוא 50%.</b></p></div>
+  <p class="src">ביתא ויחסי תפיסה: תשואות יומיות מול SPY, שלושה חלונות עד 30.9.2026 · Fidelity, &quot;The Business Cycle Approach to Equity Sector Investing&quot;, תרשים 3 · NVIDIA, דוח רבעון 4 לשנת הכספים 2019.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-memory">
+  <header><span class="eyebrow">והראיה החותכת</span><span class="pos" dir="ltr">10 / 20</span></header>
+  <h2>ומי שהכריז שהמחזור נגמר — פרסם את זה בשיא</h2>
+  <div class="body"><p><b>ביוני 2022 פרסמה PIMCO מאמר בשם ״מוליכים למחצה: עתיד פחות מחזורי״</b> — שלפיו התעשייה התבגרה, התפזרה על פני כל הכלכלה, ו״מבנה ההיצע אמור לתמוך במחזורי רווח יציבים יותר״.</p><div class="scroll"><table><thead><tr><th class="lead">מה קרה אחר כך</th><th>התוצאה</th></tr></thead><tbody><tr><td class="lead">מדד השבבים ב-2022</td><td dir="ltr"><b>−35.8%</b></td></tr><tr><td class="lead">הכנסות התעשייה ב-2023</td><td dir="ltr">−8.2%</td></tr><tr><td class="lead"><b>שוק הזיכרון ב-2023</b></td><td dir="ltr"><b>−31%</b></td></tr><tr><td class="lead"><b>Micron, שנת הכספים 2023</b></td><td dir="ltr"><b>הכנסות −49%</b></td></tr><tr><td class="lead">הרווחיות הגולמית שלה</td><td dir="ltr"><b>מינוס 9%</b></td></tr><tr><td class="lead">ההפסד</td><td dir="ltr"><b>5.8 מיליארד דולר</b></td></tr></tbody></table></div><p class="note">המאמר פורסם, למעשה, <b>בשיא המחזור</b>.</p><p class="box warn"><b>ושוק הזיכרון הוא הליבה האלימה של המחזור, והיא לא התמתנה.</b> 2019: <b>−32.6%</b>. 2023: <b>−31%</b>. 2024: <b>+79.3%</b>. ו-2026 — לפי החישוב הרשמי — <b>+302%</b>, בשוק שכולו עלה 108%.</p><p class="box good"><b>והמשפט הטוב ביותר על זה נמצא בדוח של Micron עצמה:</b> ״בחמש שנות הכספים האחרונות, השינוי השנתי במחירי ה-DRAM וה-NAND <b>נע בין עליה של כ-200% לירידה של כ-50%</b>״. <b>זה טווח שהתרחב, לא הצטמצם.</b></p><blockquote><p>כשכולם בתעשייה מתחילים לומר שהפעם לא יהיה מחזור — זה הרגע לאחוז חזק בארנק, כי זה בדיוק כשהמחזור עומד להתהפך.</p><cite>Jim Handy, Objective Analysis, 2018</cite></blockquote><p class="box warn"><b>ובספטמבר 2026, מנכ״ל ארגון התעשייה SEMI אמר בדיוק את זה:</b> ״ראיתי כל סוגי המחזורים בארבעה עשורים… <b>עכשיו אנחנו בסופר-מחזור שפשוט עולה ועולה בלבד.</b>״</p></div>
+  <p class="src">PIMCO, &quot;Semiconductors: A Less Cyclical Future&quot;, יוני 2022 · WSTS, טבלת תחזית סתיו 2025 ודיווח רבעון 2 2026 · SIA · Micron Technology, דוחות 10-K לשנות הכספים 2023 ו-2026 (מוגשים ל-SEC) · Jim Handy ב-EE Times, 20.9.2018 · Ajit Manocha, מנכ״ל SEMI, 3.9.2026.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-china">
+  <header><span class="eyebrow">ומקרה מבחן</span><span class="pos" dir="ltr">11 / 20</span></header>
+  <h2>והאינטרנט הסיני — חמש שנים, ועוד לא התאוששו</h2>
+  <div class="body"><p class="lede"><b>שלושה מדדים סיניים בלתי־תלויים הגיעו לשיא ב-16–17 בפברואר 2021, ושלושתם נגעו בשפל באותו יום בדיוק — 24 באוקטובר 2022.</b> זה לא היה גל מכירות הדרגתי; זה היה יום קפיטולציה אחד.</p><div class="scroll"><table><thead><tr><th class="lead">המדד</th><th>השיא</th><th>השפל</th><th>הירידה</th></tr></thead><tbody><tr><td class="lead">CSI Overseas China Internet</td><td dir="ltr">14,697</td><td dir="ltr">2,842</td><td dir="ltr"><b>−80.7%</b></td></tr><tr><td class="lead">Nasdaq Golden Dragon</td><td dir="ltr">20,688</td><td dir="ltr">4,469</td><td dir="ltr"><b>−78.4%</b></td></tr><tr><td class="lead"><b>קרן המדד עצמה</b></td><td dir="ltr"><b>103.56$</b></td><td dir="ltr"><b>18.41$</b></td><td dir="ltr"><b>−82.2%</b></td></tr></tbody></table></div><p class="note">ערכי המדדים מספקי המדד עצמם · מחירי הקרן מטבלאות מחיר שהוגשו ל-SEC.</p><p class="box warn"><b>וחמש שנים אחרי — היא עומדת על 23.35$, כלומר 77.5% מתחת לשיא.</b> היא התאוששה ל-42.94$ באוקטובר 2025 — <b>והחזירה את כל העלייה.</b> ב-2026 לבדה היא ירדה עוד 33.7%.</p><div class="stats"><div class="stat warn"><span class="k">תשואה ל-10 שנים</span><span class="n" dir="ltr">**+1.23%**</span><span class="s">מצטבר. לא לשנה — בסך הכל</span></div><div class="stat warn"><span class="k">ל-5 שנים</span><span class="n" dir="ltr">−10.8%</span><span class="s">לשנה, בממוצע</span></div><div class="stat warn"><span class="k">מההקמה ב-2013</span><span class="n" dir="ltr">+16.5%</span><span class="s">13 שנים · 1.16% לשנה</span></div></div></div>
+  <p class="src">תשקיף KraneShares מ-25.8.2026 ודף הקרן ל-31.10.2026 · נתוני המדדים מ-China Securities Index ומ-Nasdaq · טבלאות מחיר מתוך 424B2 של Citigroup ו-JPMorgan.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-china-flows">
+  <header><span class="eyebrow">והעובדה שצריך לעצור עליה</span><span class="pos" dir="ltr">12 / 20</span></header>
+  <h2>הקרן ירדה 82% — והכסף שבתוכה גדל ב-42%</h2>
+  <div class="body"><p class="lede"><b>זו אולי העובדה החשובה ביותר בכל המצגות האלה,</b> והיא לא דעה — היא מתוך הדוחות שהקרן הגישה ל-SEC:</p><div class="scroll"><table><thead><tr><th class="lead"></th><th>בשיא · 31.3.2021</th><th>בשפל · 30.9.2022</th><th>השינוי</th></tr></thead><tbody><tr><td class="lead">שווי ליחידה</td><td dir="ltr">75.59$</td><td dir="ltr">24.64$</td><td dir="ltr"><b>−67%</b></td></tr><tr><td class="lead"><b>סך הנכסים בקרן</b></td><td dir="ltr"><b>3.66 מיליארד $</b></td><td dir="ltr"><b>5.18 מיליארד $</b></td><td dir="ltr"><b>+42%</b></td></tr><tr><td class="lead">יחידות במחזור</td><td dir="ltr">48.45 מיליון</td><td dir="ltr"><b>210.4 מיליון</b></td><td dir="ltr"><b>×4.3</b></td></tr></tbody></table></div><p><b>תוך כדי שהקרן איבדה שני שלישים מערכה, מספר היחידות בה הוכפל פי 4.3.</b> אנשים לא מכרו — <b>הם קנו כל הדרך למטה.</b> והם קנו יותר, ככל שזה ירד יותר.</p><p class="box warn"><b>ומי שקנה בכל הדרך הזאת עדיין מתחת למים היום,</b> ארבע שנים אחרי השפל — כי הקרן חזרה ל-23$ אחרי שנגעה ב-43$.</p><p class="box good"><b>וכאן בדיוק ההבדל בין מה שהם עשו לבין מה שהמערכת הזאת עושה.</b> מי שקנה אותה בירידה <b>הגדיל בכל קנייה את משקל סין בתיק שלו</b> — כל ירידה הפכה אותו חשוף יותר לאותו סיכון עצמו, בלי גבול. <b>זה לא מה שקורה כאן.</b></p><p>המנגנון קונה את הרכיב שנפל <b>רק עד משקל היעד שלו, ואז נעצר.</b> רכיב ביעד 20% שנפל 80% מקבל יותר מההפקדה — <b>אבל הוא נוחת על 20% ולא מעבר.</b> זה <b>איזון מחדש</b>, לא מיצוע כלפי מטה: הראשון מוגדר על ידי היעד שבחרתם, השני על ידי גודל הנפילה.</p><p class="box good"><b>מה שהרג את מי שקנה בירידה לא היה הקנייה — זה שלא היה לה גבול.</b> ולכן התבלינים כאן מוגבלים במינון מראש, <b>והכסף הגדול יושב במדד רחב.</b></p></div>
+  <p class="src">דוחות N-CSR ל-31.3.2021 ו-N-CSRS ל-30.9.2022 של KraneShares Trust, מתוך EDGAR · דף הקרן ל-2.11.2026.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-fines">
+  <header><span class="eyebrow">והעובדה שהופכת את הכל</span><span class="pos" dir="ltr">13 / 20</span></header>
+  <h2>שתי החברות נקנסו במיליארדים — ושתיהן עלו למחרת</h2>
+  <div class="body"><p class="lede"><b>זה נשמע כמו טעות הקלדה, וזה לא.</b> שני הקנסות הגדולים ביותר בהיסטוריה של רגולציית ההגבלים בסין, ומה שהמניות עשו ביום המסחר הראשון שאחריהם:</p><div class="scroll"><table><thead><tr><th class="lead"></th><th>הקנס</th><th>מה הוא היה</th><th>המניה למחרת</th></tr></thead><tbody><tr><td class="lead"><b>Alibaba</b> · 10.4.2021</td><td dir="ltr"><b>18.23 מיליארד ¥</b></td><td dir="ltr">4% מהמכירות בסין ב-2019</td><td dir="ltr"><b>+9.3%</b></td></tr><tr><td class="lead"><b>Meituan</b> · 8.10.2021</td><td dir="ltr"><b>3.44 מיליארד ¥</b></td><td dir="ltr">3% מהמכירות ב-2020</td><td dir="ltr"><b>+8.4%</b></td></tr></tbody></table></div><p class="note">שני הקנסות פורסמו אחרי סגירת המסחר — Alibaba בשבת, Meituan בשישי ב-16:30 — ולכן התגובה נמדדת ביום המסחר שאחריהם.</p><p><b>והקנס לא היה קוסמטי.</b> אליבאבא רשמה ברבעון שהסתיים במרץ 2021 <b>הפסד תפעולי של 7.66 מיליארד ¥ — הראשון בהיסטוריה שלה כחברה ציבורית.</b> בלי הקנס היה לה רווח תפעולי של 10.57 מיליארד, עלייה של 48%. והקנס של Meituan היה <b>כ-79% מכל הרווח התפעולי שלה באותה שנה.</b></p><p class="box good"><b>אז למה המניות עלו?</b> כי <b>קנס הוא מספר.</b> ברגע שהוא נודע, החברה יודעת כמה היא משלמת, השוק יודע שזה נגמר, <b>והאי־ודאות — שהיא הדבר שהשוק שונא יותר מהפסד — נעלמה.</b> המניות לא עלו כי הקנס היה טוב. הן עלו <b>כי הוא היה סופי.</b></p></div>
+  <p class="src">הודעות SAMR מ-10.4.2021 ומ-8.10.2021 · דיווחי Alibaba ל-SEC (6-K, 12.4.2021 ו-13.5.2021) · דיווח Meituan ל-HKEX מ-8.10.2021 · סדרות מחיר.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-unpriceable">
+  <header><span class="eyebrow">ומה שאי אפשר לתמחר</span><span class="pos" dir="ltr">14 / 20</span></header>
+  <h2>ובאותה שנה, מסמך אחד מחק מגזר שלם</h2>
+  <div class="body"><p class="lede"><b>ב-24 ביולי 2021 פורסמה בסין ה״הפחתה הכפולה״</b> — מסמך משותף של הלשכות המרכזיות של המפלגה והממשלה. הוא לא קנס אף אחד. <b>הוא קבע שחברות השיעורים הפרטיים חייבות להירשם כמלכ״רים.</b></p><p>ובמסמך עצמו, במילים האלה: <b>״מוסדות הדרכה במקצועות הלימוד לא יונפקו ולא יגויס עבורם הון — אסור בהחלט על פעולה הונית.״</b> והוא אוסר במפורש על שליטה זרה <b>דרך ישות בעלת אינטרס משתנה (VIE)</b> — בדיוק המבנה שדרכו כל המשקיעים הזרים החזיקו את החברות האלה.</p><div class="scroll"><table><thead><tr><th class="lead"></th><th>יומיים · 22→26.7.2021</th><th>שיא לשפל ב-2021</th></tr></thead><tbody><tr><td class="lead"><b>TAL Education</b></td><td dir="ltr"><b>−78.6%</b></td><td dir="ltr"><b>−96.2%</b></td></tr><tr><td class="lead"><b>Gaotu</b></td><td dir="ltr">−73.9%</td><td dir="ltr"><b>−98.9%</b></td></tr><tr><td class="lead">New Oriental · NYSE</td><td dir="ltr">−69.7%</td><td dir="ltr">−90.8%</td></tr><tr><td class="lead">New Oriental · הונג קונג</td><td dir="ltr">−68.5%</td><td dir="ltr"></td></tr></tbody></table></div><p class="note">TAL ו-Gaotu הגיעו לשיא בפברואר–מרץ 2021, כך שחלק מהירידה השנתית קדם למסמך. <b>שתי העמודות מופרדות בכוונה:</b> היומיים הם ההלם שניתן לייחס למסמך.</p><div class="stats"><div class="stat warn"><span class="k">הכנסות TAL</span><span class="n" dir="ltr">**−77%**</span><span class="s">4.39 מיליארד $ → 1.02</span></div><div class="stat warn"><span class="k">עובדי New Oriental</span><span class="n" dir="ltr">105,212 → 53,071</span><span class="s">בשנה אחת</span></div><div class="stat warn"><span class="k">שווי Ant Group</span><span class="n" dir="ltr">**−75%**</span><span class="s">~313 מיליארד $ → 78.5</span></div></div><p class="box warn"><b>וההנפקה של Ant נעצרה יומיים לפני המועד.</b> היא הייתה אמורה להיסחר ב-5 בנובמבר 2020 ולגייס כ-34 מיליארד דולר — <b>ההנפקה הגדולה בהיסטוריה.</b> ב-3 בנובמבר הבורסה בשנגחאי ביטלה אותה, והרגל בהונג קונג בוטלה באותו יום.</p><p class="box good"><b>וזאת ההבחנה שכל המצגת הזאת קיימת בשבילה.</b> אליבאבא נקנסה ב-18 מיליארד ¥ <b>ועלתה 9%.</b> חברות השיעורים <b>לא נקנסו בכלל</b> — והן ירדו 90 עד 99 אחוז. <b>ההבדל אינו בגודל הפגיעה — הוא בשאלה אם אפשר לשים עליה מספר.</b> קנס הוא עלות; <b>ביטול מודל העסקים הוא לא עלות, הוא סוף.</b> ואין דרך לתמחר אותו מראש, כי הוא לא נובע מהעסק.</p></div>
+  <p class="src">נוסח ה״הפחתה הכפולה״ מאתר ממשלת סין וממשרד החינוך, 24.7.2021 · דוחות 20-F של New Oriental (FY2022) ושל TAL (FY2022, FY2023) · הודעת הבורסה בשנגחאי מ-3.11.2020 ותשקיף Ant מ-27.10.2020 · דיווח Alibaba ל-SEC מ-10.7.2023 לשווי הרכישה העצמית. המרות לדולר לפי שערי אוקטובר 2020 ו-30.6.2023.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-minors">
+  <header><span class="eyebrow">והמידה</span><span class="pos" dir="ltr">15 / 20</span></header>
+  <h2>התקנה שהפילה את המגזר נגעה ב-1.5% מההכנסות</h2>
+  <div class="body"><p class="lede"><b>ב-30 באוגוסט 2021 קבעה הרשות הסינית למשחקים</b> שחברות המשחקים רשאיות לשרת מי שמתחת לגיל 18 <b>שעה אחת ביום, בימי שישי–ראשון וחגים בלבד, בין 20:00 ל-21:00.</b> שלוש שעות בשבוע.</p><p>וזה מה שטנסנט דיווחה <b>בדוח שלה עצמה</b>, על אותו רבעון:</p><div class="stats"><div class="stat "><span class="k">חלק הקטינים</span><span class="n" dir="ltr">**1.5%**</span><span class="s">מהכנסות המשחקים בסין, Q4 2021</span></div><div class="stat "><span class="k">מהזמן שבמשחקים</span><span class="n" dir="ltr">0.9%</span><span class="s">מתוך כל שעות השחקנים</span></div><div class="stat "><span class="k">לפני התקנה</span><span class="n" dir="ltr">2.6%</span><span class="s">מתחת לגיל 16, Q2 2021</span></div></div><p class="box warn"><b>והנה מה שכן פגע באמת, ולא היה בכותרות:</b> הרשות <b>הפסיקה לאשר משחקים חדשים לחלוטין.</b> האישור האחרון פורסם ב-22.7.2021, והבא אחריו ב-11.4.2022 — <b>כמעט תשעה חודשים שבהם לא אושר אף משחק חדש בסין.</b></p><div class="scroll"><table><thead><tr><th class="lead"></th><th>מגרשי אישור</th><th>משחקים שאושרו</th></tr></thead><tbody><tr><td class="lead">2020</td><td dir="ltr">12 חודשים</td><td dir="ltr">כל חודש</td></tr><tr><td class="lead">2021</td><td dir="ltr">7 בלבד</td><td dir="ltr">679 · ואז אפס מאוגוסט</td></tr><tr><td class="lead">2022</td><td dir="ltr">7 בלבד</td><td dir="ltr">468</td></tr></tbody></table></div><p class="note">נספר על ידי מתוך רשימות האישור החודשיות של הרשות עצמה. משחקים מתוצרת סין בלבד — משחקים מיובאים הם רשימה נפרדת.</p><p class="box good"><b>וההכנסות מספרות את אותו סיפור.</b> הכנסות המשחקים של טנסנט בסין: <b>128.8 מיליארד ¥ ב-2021 (+6%), 123.9 ב-2022 (−4%), 126.7 ב-2023 (+2%).</b> לא קריסה — <b>קיפאון.</b> המגזר לא נהרס; הוא פשוט חדל לגדול, ובדיוק בשנים שבהן התמחור הניח שהוא יגדל.</p></div>
+  <p class="src">הודעת הרשות הלאומית לעיתונות ופרסום, 国新出发〔2021〕14号 מ-30.8.2021 · דוחות שנתיים של Tencent ל-2021, 2022 ו-2023 · רשימות האישור החודשיות של הרשות.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-didi">
+  <header><span class="eyebrow">והמקרה הקצר ביותר</span><span class="pos" dir="ltr">16 / 20</span></header>
+  <h2>דידי הונפקה ב-30 ביוני 2021. יומיים אחר כך זה נגמר</h2>
+  <div class="body"><div class="scroll"><table><thead><tr><th class="lead">מתי</th><th>מה קרה</th></tr></thead><tbody><tr><td class="lead"><b>30.6.2021</b></td><td dir="ltr">הנפקה ב-NYSE לפי 14$ ליחידה · <b>גיוס של 4.44 מיליארד דולר</b></td></tr><tr><td class="lead"><b>2.7.2021</b></td><td dir="ltr">הרשות לאבטחת רשת פותחת בדיקה · <b>רישום משתמשים חדשים נעצר</b></td></tr><tr><td class="lead">4 ו-9.7.2021</td><td dir="ltr"><b>26 אפליקציות של החברה מוסרות מהחנויות</b></td></tr><tr><td class="lead">3.12.2021</td><td dir="ltr">הדירקטוריון מאשר מחיקה מהבורסה בניו יורק</td></tr><tr><td class="lead"><b>21.7.2022</b></td><td dir="ltr">קנס של <b>8.03 מיליארד ¥</b> · ועוד מיליון ¥ על היו״ר ועל הנשיאה, כל אחד</td></tr><tr><td class="lead"><b>13.6.2022</b></td><td dir="ltr"><b>היחידות נמחקות מ-NYSE.</b> מאז נסחרות בשוק המחוץ־לבורסה</td></tr><tr><td class="lead">16.1.2023</td><td dir="ltr">רישום משתמשים חדשים חוזר — <b>אחרי 18 חודשים</b></td></tr></tbody></table></div><p><b>ומה הרשות מצאה.</b> הודעת הקנס מפרטת 16 הפרות: <b>64.7 מיליארד רשומות מידע אישי</b> שעובדו בניגוד לחוק — ובהן 107 מיליון רשומות זיהוי פנים של נוסעים, 153 מיליון כתובות ״בית״ ו״עבודה״, <b>ו-57.8 מיליון מספרי זהות של נהגים שנשמרו בטקסט גלוי.</b> ההפרות החלו ביוני 2015 ונמשכו שבע שנים.</p><p class="box warn"><b>וחמש שנים אחרי, דידי עוד לא חזרה לבורסה.</b> בדוח שהגישה לרשות ניירות הערך האמריקאית <b>באפריל 2026</b> היא עדיין כותבת שהיא ״בוחנת הנפקה אפשרית״. <b>ההנפקה הגדולה של 2021 בארצות הברית נמחקה בתוך פחות משנה, ולא הוחלפה.</b></p><p class="box good"><b>והלקח המעשי:</b> ההנפקה הזאת עברה ביקורת נאותות של בנקי השקעות, רשות ניירות ערך אמריקאית ותשקיף של מאות עמודים. <b>שום אחד מהם לא תפס את מה שקרה יומיים אחרי.</b> וזה בדיוק מה שמינון קטן בתבלינים נועד להגן מפניו.</p></div>
+  <p class="src">תשקיף דידי (424B4) מ-30.6.2021 ודוחות 20-F ל-2021 ול-2025 · הודעות הרשות הסינית לאבטחת רשת מ-2.7, 4.7 ו-9.7.2021 ומ-21.7.2022 · טופס 25 מ-2.6.2022.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-hfcaa">
+  <header><span class="eyebrow">והצד השני של אותו מטבע</span><span class="pos" dir="ltr">17 / 20</span></header>
+  <h2>והאיום הגדול מכולם — פשוט לא התממש</h2>
+  <div class="body"><p class="lede"><b>ב-18 בדצמבר 2020 נחתם בארצות הברית חוק</b> שקבע: חברה שהמבקר שלה אינו ניתן לבדיקה על ידי הרגולטור האמריקאי במשך שלוש שנים רצופות — <b>המסחר בניירות שלה נאסר.</b> לא רק בבורסה — <b>גם מחוצה לה.</b></p><p>ובדצמבר 2021 הרגולטור האמריקאי אכן קבע שהוא <b>אינו מצליח לבדוק</b> את משרדי הביקורת בסין ובהונג קונג. <b>מאותו רגע כל מניה סינית בוול סטריט הייתה על שעון עצר.</b> למעלה מ-195 חברות סומנו בין מרץ 2022 לפברואר 2023 — Alibaba, Baidu, NetEase, JD.com ביניהן.</p><div class="scroll"><table><thead><tr><th class="lead">מתי</th><th>מה קרה</th></tr></thead><tbody><tr><td class="lead">26.8.2022</td><td dir="ltr">רשות ניירות הערך הסינית ומשרד האוצר הסיני <b>חותמים הסכם</b> עם הרגולטור האמריקאי</td></tr><tr><td class="lead"><b>15.12.2022</b></td><td dir="ltr"><b>הרגולטור מבטל את הקביעה שלו</b> ומוציא את סין והונג קונג מהרשימה</td></tr><tr><td class="lead">29.12.2022</td><td dir="ltr">ובמקביל — הקונגרס <b>מקצר את הפסק מ-3 שנים ל-2</b></td></tr><tr><td class="lead"><b>אפריל 2026</b></td><td dir="ltr"><b>אין אף חברה ברשימה הזמנית.</b> דידי לא סומנה ב-2022, 2023 ו-2024</td></tr></tbody></table></div><p class="box good"><b>וזה חשוב להגיד, כי זה מחייב אותי להיות עקבי.</b> האיום הזה היה אמיתי, הוא היה מתועד בחוק, <b>והוא נפתר.</b> מי שמכר ב-2022 בגלל חוק המחיקה <b>מכר סיכון שנעלם תוך שנה.</b></p><p class="box warn"><b>ועם זאת — הסיכון חי.</b> הקביעה הזאת <b>נעשית מחדש כל שנה</b>, וזה כתוב בדוחות החברות עצמן. ואם היא תתהפך, <b>הפסק עומד עכשיו על שתי שנים ולא שלוש</b> — כלומר המחיקה תגיע מהר יותר ממה שהחוק המקורי קבע.</p></div>
+  <p class="src">חוק ציבורי 116-222 מ-18.12.2020 · חוק ציבורי 117-328, חלק AA, פרק III, סעיף 301 מ-29.12.2022 · עמוד ה-HFCAA של רשות ניירות הערך האמריקאית · הודעת הרשות הסינית מ-26.8.2022 · דוחות 20-F של NetEase ושל דידי שהוגשו באפריל 2026.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-managers">
+  <header><span class="eyebrow">ומי שעושה את זה למחייה</span><span class="pos" dir="ltr">18 / 20</span></header>
+  <h2>ומה קורה למקצוענים שמנסים</h2>
+  <div class="body"><p>מנהלי קרנות אקטיביות הם בדיוק מי שמבצע רוטציה. S&amp;P בודקת אותם כל שנה.</p><div class="scroll"><table><thead><tr><th class="lead">הקטגוריה</th><th>5 שנים</th><th>10 שנים</th><th><b>20 שנה</b></th></tr></thead><tbody><tr><td class="lead">קרנות מניות אמריקאיות</td><td dir="ltr">91.5%</td><td dir="ltr">90.4%</td><td dir="ltr"><b>95.0%</b></td></tr><tr><td class="lead">קרנות מניות גדולות</td><td dir="ltr">89.0%</td><td dir="ltr">85.6%</td><td dir="ltr"><b>92.9%</b></td></tr><tr><td class="lead"><b>בתשואה מתואמת סיכון, 20 שנה</b></td><td dir="ltr">—</td><td dir="ltr">—</td><td dir="ltr"><b>97.8%</b></td></tr></tbody></table></div><p class="note"><b>אחוז הקרנות שפיגרו אחרי המדד.</b> ובקטגוריית Large-Cap Growth, בתשואה מתואמת סיכון ל-20 שנה — <b>100.00%.</b></p><p class="box warn"><b>ומתוך 760 קרנות גדולות שהיו בתחילת התקופה, רק 34.6% בכלל שרדו</b> עשרים שנה. השאר נסגרו או מוזגו.</p><p><b>ועל עקביות:</b> לפי S&amp;P, <b>אפס אחוז</b> מהקרנות נשארו ברביעון העליון חמש שנים ברצף.</p></div>
+  <p class="src">S&amp;P SPIVA U.S. Scorecard, Year-End 2025, דוחות 1a, 1b ו-2 · S&amp;P Persistence Scorecard.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-so">
+  <header><span class="eyebrow">אז מה כן</span><span class="pos" dir="ltr">19 / 20</span></header>
+  <h2>מה כן שורד — וזה מה שהמערכת עושה</h2>
+  <div class="body"><p><b>לא הכל נפל.</b> אלה הדברים שכן החזיקו במדידה:</p><ul><li><b>מוצרי צריכה בסיסיים במיתון</b> — הטענה החזקה ביותר. אצל Fidelity 100%, אצל State Street 88%, <b>ובמבחן שעשינו על שלושת המיתונים עם נתוני ETF — 3 מתוך 3.</b></li><li><b>פיזור בין נכסים שלא נופלים יחד</b> — זה לא תזמון, זה מבנה. והוא עובד בלי לדעת באיזה שלב אנחנו.</li><li><b>והפקדה חודשית קבועה</b> — שקונה יותר יחידות כשזול, בלי להחליט מתי.</li></ul><p class="box good"><b>וזו בדיוק הסיבה שמנגנון הקנייה כאן מכני.</b> הוא לא שואל באיזה שלב מחזור אנחנו — שאלה שהתברר שאי אפשר לענות עליה בזמן אמת. <b>הוא שואל רק מה ירד הכי הרבה מהשיא שלו</b>, ושולח לשם את הכסף.</p><p><b>ההבדל אינו סמנטי.</b> קריאת מחזור דורשת לדעת משהו שה-NBER לוקח 11 חודשים לקבוע, שקרן המטבע מצאה שמחמיצים ב-148 מתוך 153 מקרים, ושגם Fidelity עצמה החמיצה במרץ 2020. <b>מדידת ירידה מהשיא דורשת רק מחיר.</b></p></div>
+  <p class="src">מוצרי צריכה בסיסיים: Fidelity (hit rate 100%) · State Street, &quot;Sector business cycle analysis&quot;, אוקטובר 2026 (88%, 1960–2025) · ובדיקה שלנו על שלושת המיתונים עם נתוני ETF (2001, 2008–09, 2020) — XLP היכה את SPY בשלושתם.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<section class="slide" id="cycle-honest">
+  <header><span class="eyebrow">והכנות</span><span class="pos" dir="ltr">20 / 20</span></header>
+  <h2>ומה שלא אימתנו — ולכן לא נמצא כאן</h2>
+  <div class="body"><p class="box warn"><b>ניסינו למדוד מה כל קרן בקטלוג עשתה בכל נפילה</b>, מסדרות חודשיות. שלוש ריצות נתנו שלוש תשובות שונות — והבדיקה גילתה למה: הנקודות הן <b>סגירות סוף חודש</b> שטופלו כתחילת חודש, <b>ובסדרות של CSPX ו-SMH חסר אוקטובר בכל שנה.</b> שום מספר שנגזר מהן לא נכנס למצגות.</p><ul><li><b>מחזורי ההכנסות של תעשיית השבבים לפי שנה</b> — לא אומתו מול המקור הראשוני.</li><li><b>״המשקיע הממוצע מפסיד 4–7 נקודות מהתנהגות״</b> — לא נכנס. כ-⅔ מהפער הזה הוא <b>ארטיפקט מתודולוגי</b>, ומחקר שפיט מ-2026 מעמיד אותו על <b>0.10 נקודות</b>.</li><li><b>״לפספס את 10 הימים הטובים״</b> — לא נכנס, כי הוא חד-צדדי. להיות בחוץ ב-12 החודשים ה<b>גרועים</b> שווה <b>+580 נקודות בסיס</b>, ו-60%–80% מהימים הטובים והגרועים מתרחשים באותם שווקים יורדים.</li></ul><p><b>אין באמור ייעוץ השקעות ואין בו המלצה.</b> כל מספר כאן ניתן לשחזור מהמקור שמצוין בתחתית השקופית.</p></div>
+  <p class="src">פער המשקיע: Fulkerson, Jordan, Riley &amp; Yan, &quot;Bad Timing Does Not Cost Investors 15% of Their Funds’ Returns&quot;, Financial Analysts Journal 82(3), 2026 — 0.10% לשנה · Morningstar &quot;Mind the Gap&quot; 2025 — 1.2% · ניתוח הארטיפקט המתודולוגי ב-Dalbar: Michael James 2018, Harry Sit ב-Kitces 2012 · הימים הטובים: Asness/AQR, &quot;(So) What If You Miss the Market’s N Best Days?&quot; · Estrada 2007 · Faber 2011.</p>
+  <footer><a href="./" class="crumb">מתי משקיעים בכל אחד</a><span class="brand">MGS</span></footer>
+</section>
+<nav>
+  <a class="back" href="./">← כל המצגות</a>
+  <button id="prev">הקודם</button>
+  <span class="rail"><i id="rail"></i></span>
+  <select id="jump" aria-label="מעבר לשקופית"><option value="0">מתי משקיעים בכל אחד — פתיחה</option><option value="1">1. הכלכלה צומחת — קונים שבבים. יש ירידות — יוצאים</option><option value="2">2. עד שמכריזים על מיתון — הוא כבר נגמר</option><option value="3">3. ומה השוק עשה עד שהכריזו</option><option value="4">4. 148 מתוך 153 מיתונים הוחמצו</option><option value="5">5. גם מי שמוכר את השיטה לא הצליח להפעיל אותה</option><option value="6">6. ורוב ההמלצות הסקטוריאליות אינן נבדלות מהטלת מטבע</option><option value="7">7. ואפילו עם מכונת זמן — זה בקושי שווה משהו</option><option value="8">8. שלוש הערכות עצמאיות מתכנסות למספר קטן</option><option value="9">9. שבבים אינם סחר מחזורי — הם מכפיל על השוק</option><option value="10">10. ומי שהכריז שהמחזור נגמר — פרסם את זה בשיא</option><option value="11">11. והאינטרנט הסיני — חמש שנים, ועוד לא התאוששו</option><option value="12">12. הקרן ירדה 82% — והכסף שבתוכה גדל ב-42%</option><option value="13">13. שתי החברות נקנסו במיליארדים — ושתיהן עלו למחרת</option><option value="14">14. ובאותה שנה, מסמך אחד מחק מגזר שלם</option><option value="15">15. התקנה שהפילה את המגזר נגעה ב-1.5% מההכנסות</option><option value="16">16. דידי הונפקה ב-30 ביוני 2021. יומיים אחר כך זה נגמר</option><option value="17">17. והאיום הגדול מכולם — פשוט לא התממש</option><option value="18">18. ומה קורה למקצוענים שמנסים</option><option value="19">19. מה כן שורד — וזה מה שהמערכת עושה</option><option value="20">20. ומה שלא אימתנו — ולכן לא נמצא כאן</option></select>
+  <button id="next" class="go">הבא</button>
+</nav>
+<p class="hint">מקשי החיצים או רווח מדפדפים · Ctrl+P להדפסה או שמירה כ-PDF</p>
+</div><script>
+const S=[...document.querySelectorAll('.slide')];
+const sel=document.getElementById('jump'),rail=document.getElementById('rail');
+const prev=document.getElementById('prev'),next=document.getElementById('next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(S.length-1,n));
+  S.forEach((s,j)=>s.classList.toggle('on',j===i));
+  sel.value=String(i);
+  rail.style.width=((i+1)/S.length*100)+'%';
+  prev.disabled=i===0; next.disabled=i===S.length-1;
+  window.scrollTo(0,0);
+  try{location.hash=S[i].id}catch(e){}
+}
+prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1);
+sel.onchange=e=>show(Number(e.target.value));
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(i+1);
+  if(e.key==='ArrowRight'||e.key==='PageUp')show(i-1);
+  if(e.key==='Home')show(0); if(e.key==='End')show(S.length-1);
+});
+const h=location.hash.slice(1);
+const at=S.findIndex(s=>s.id===h);
+show(at>=0?at:0);</script></body></html>

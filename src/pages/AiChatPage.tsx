@@ -153,7 +153,7 @@ User's current portfolio context:
               placeholder="sk-..."
               className="flex-1"
             />
-            <button onClick={saveKey} className="px-4 py-2 rounded-xl text-xs font-medium" style={{ background: 'linear-gradient(135deg, #B8941F, #D4AF37)', color: '#0D0D0D' }}>
+            <button onClick={saveKey} className="px-4 py-2 rounded-xl text-xs font-medium" style={{ background: 'linear-gradient(135deg, #1F9E8C, #5EE6D0)', color: '#0D0D0D' }}>
               {lang === 'he' ? 'שמור' : 'Save'}
             </button>
           </div>
@@ -222,7 +222,7 @@ User's current portfolio context:
           onClick={sendMessage}
           disabled={loading || !input.trim()}
           className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-30"
-          style={{ background: 'linear-gradient(135deg, #B8941F, #D4AF37, #F5E6A3)', color: '#0D0D0D' }}
+          style={{ background: 'linear-gradient(135deg, #1F9E8C, #5EE6D0, #BFE9FF)', color: '#0D0D0D' }}
         >
           {lang === 'he' ? 'שלח' : 'Send'}
         </button>

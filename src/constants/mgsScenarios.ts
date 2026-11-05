@@ -1,13 +1,34 @@
-/**
- * The two sets of assumptions behind every number on the tracks and children
- * pages, and the horizons each starting age gets.
+/** **ההנחות מאחורי כל מספר בדפי המסלולים והילדים.**
  *
- * Bitcoin is the one sleeve that does not get a flat rate in the realistic set:
- * a flat rate either understates the coming decade or implies a coin worth more
- * than the world, so it decelerates as the asset matures.
+ *  **שוּנה מהיסוד ב-4.11.2026. ביטקוין הוסר לחלוטין, ואיתו הבורסה
+ *  הישראלית.** עד כאן היוניברס היה `BTC · SMH · XLK · WORLD · SYN`,
+ *  ומנגנון הקנייה הקצה **48% מההפקדה של בן 25 לביטקוין** — דרך
+ *  תעודה ישראלית בתל אביב (תכלית 1217835).
+ *
+ *  **שלוש סיבות, וכל אחת מספיקה:**
+ *
+ *  **א · מס עיזבון.** ביטקוין אינו זמין בעטיפת UCITS אירית — אין
+ *  ולא יכולה להיות קרן UCITS על קריפטו — ולכן כל דרך להחזיק אותו
+ *  מחזירה את המשקיע לנכס שחשוף למס העיזבון האמריקאי. זה הדבר
+ *  היחיד שכל המבנה הזה בא למנוע.
+ *
+ *  **ב · הוא לא היה בשום קומבינציה.** עשרת התמהילים נבנו מתוך
+ *  הקרנות שעברו את מסנן ההתאוששות, וביטקוין לא נבדק שם בכלל.
+ *  כלומר מנגנון הקנייה קנה נכס שהתמהילים לא מכירים.
+ *
+ *  **ג · הבורסה הישראלית ירדה כמסלול קנייה.** הקנייה נעשית דרך
+ *  אינטראקטיב ישראל ב-LSE בדולר, ולכן תעודה ישראלית אינה אופציה
+ *  גם אם היינו רוצים בה.
+ *
+ *  **מעתה היוניברס הוא בדיוק שמונה הקרנות שבקטלוג** — אותן קרנות
+ *  שבקומבינציות, כך שמנגנון הקנייה והתמהילים אינם יכולים להיפרד.
+ *
+ *  **ההנחות קדימה נלקחות מ-`forward.ts`** — דאמודראן NYU לסקטורים
+ *  ו-LTCMA של ג׳יי־פי מורגן למדדים רחבים. **לא מהמדידה**, שהייתה
+ *  60 חודשים של עשור הבינה המלאכותית.
  */
-export type ScenarioId = 'pess' | 'real';
-export type SleeveId = 'BTC' | 'SMH' | 'XLK' | 'WORLD' | 'SYN';
+export type ScenarioId = 'real';
+export type SleeveId = 'SPXS' | 'CSPX' | 'MXWO' | 'IWDA' | 'VWRA' | 'XLKS' | 'WTEC' | 'SMH';
 
 export const TAX = 0.25;
 export const WITHDRAW = 0.04;
@@ -16,40 +37,29 @@ interface Scenario {
   label: string;
   /** annual total return per sleeve */
   rate: Record<SleeveId, number>;
-  /** bitcoin only: [rate, how many years it lasts] — empty means the flat rate */
-  btcStages: Array<[number, number]>;
   /** what each sleeve returned over the measured decade, for the table */
   decade: Record<SleeveId, string>;
   why: Record<SleeveId, string>;
 }
 
 export const SCENARIOS: Record<ScenarioId, Scenario> = {
-  pess: {
-    label: 'פסימית',
-    rate: { BTC: 0.15, SMH: 0.09, XLK: 0.09, WORLD: 0.07, SYN: 0.088 },
-    btcStages: [],
-    decade: { BTC: '63.4%', SMH: '34.3%', XLK: '24.8%',
-              WORLD: '13.2%', SYN: '15.4% / 21.0%' },
-    why: {
-      BTC: 'רבע ממה שעשה — ועדיין פי 66 בשלושים שנה',
-      SMH: 'מתחת ל-10.7% שעשה מאז 2000',
-      XLK: 'מתחת ל-10.7% שעשה מאז 1998',
-      WORLD: 'הרבה מתחת ל-10% ההיסטוריים',
-      SYN: 'הממוצע ההיסטורי של S&P',
-    },
-  },
   real: {
     label: 'ריאלית',
-    rate: { BTC: 0.20, SMH: 0.12, XLK: 0.11, WORLD: 0.08, SYN: 0.095 },
-    btcStages: [[0.20, 10], [0.12, 10], [0.07, 99]],
-    decade: { BTC: '63.4%', SMH: '34.3%', XLK: '24.8%',
-              WORLD: '13.2%', SYN: '15.4% / 21.0%' },
+    // ההנחה קדימה לכל קרן — מ-`forward.ts`, לא מהמדידה
+    rate: { SPXS: 0.0750, CSPX: 0.0750, MXWO: 0.0740, IWDA: 0.0740,
+            VWRA: 0.0770, XLKS: 0.0964, WTEC: 0.0964, SMH: 0.1072 },
+    // מה הקרן עשתה ב-60 החודשים שנמדדו — לטבלה, לא להקרנה
+    decade: { SPXS: '13.7%', CSPX: '13.5%', MXWO: '11.9%', IWDA: '11.8%',
+              VWRA: '10.9%', XLKS: '23.1%', WTEC: '19.0%', SMH: '32.3%' },
     why: {
-      BTC: 'מתבגר: עשור של אימוץ, עשור של התמתנות, ואז כמו השוק',
-      SMH: 'ההיסטוריה הארוכה מאז 2000, ועוד נקודה',
-      XLK: 'בדיוק ההיסטוריה הארוכה מאז 1998',
-      WORLD: 'מתחת לממוצע הארוך',
-      SYN: 'מעט מעל הממוצע ההיסטורי של S&P',
+      SPXS: 'ג׳יי־פי מורגן LTCMA 2027 · מניות ארה״ב גדולות',
+      CSPX: 'ג׳יי־פי מורגן LTCMA 2027 · מניות ארה״ב גדולות',
+      MXWO: 'ג׳יי־פי מורגן LTCMA 2027 · שווקים מפותחים',
+      IWDA: 'ג׳יי־פי מורגן LTCMA 2027 · שווקים מפותחים',
+      VWRA: 'ג׳יי־פי מורגן LTCMA 2027 · מניות עולמיות',
+      XLKS: 'דאמודראן NYU · תוכנה · 309 פירמות · שמרני',
+      WTEC: 'דאמודראן NYU · תוכנה · 309 פירמות · שמרני',
+      SMH: 'דאמודראן NYU · שבבים · 66 פירמות · בטא 1.52',
     },
   },
 };
@@ -65,15 +75,19 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
  * every 9.3, not the 4 and 6 this file used to claim.
  */
 export const CYCLE_YEARS: Record<string, number> =
-  { BTC: 4.0, SMH: 6.6, XLK: 9.3, SYN: 9.3 };
+  { SMH: 6.6, XLKS: 9.3, WTEC: 9.3, SPXS: 9.3, CSPX: 9.3,
+    MXWO: 9.3, IWDA: 9.3, VWRA: 9.3 };
 
 /** how many times each sleeve broke out over the measured history */
 export const CYCLE_SEEN: Record<string, [number, number]> =
-  { BTC: [3, 12.1], SMH: [4, 26.3], XLK: [3, 27.8] };
+  { SMH: [4, 26.3], XLKS: [3, 27.8] };
 
 export const SLEEVE_HE: Record<SleeveId, string> = {
-  BTC: 'ביטקוין', SMH: 'שבבים',
-  XLK: 'טכנולוגיה', WORLD: 'מדד עולמי', SYN: 'סינתטיות',
+  SPXS: 'S&P 500 · סינתטית', CSPX: 'S&P 500 · פיזית',
+  MXWO: 'MSCI World · סינתטית', IWDA: 'MSCI World · פיזית',
+  VWRA: 'כל העולם · פיזית',
+  XLKS: 'טכנולוגיה · סינתטית', WTEC: 'טכנולוגיה · פיזית',
+  SMH: 'מוליכים למחצה · פיזית',
 };
 
 /** investing years, then the years that glide into the world index */
@@ -85,13 +99,11 @@ export function horizonFor(age: number): [number, number] {
   return [7, 3];
 }
 
-export function btcRate(sc: ScenarioId, yearsIn: number): number {
-  const st = SCENARIOS[sc].btcStages;
-  if (!st.length) return SCENARIOS[sc].rate.BTC;
-  let acc = 0;
-  for (const [r, n] of st) { acc += n; if (yearsIn < acc) return r; }
-  return st[st.length - 1][0];
-}
+/** **`btcRate` הוסרה ב-4.11.2026.** היא החזירה את שיעור הביטקוין
+ *  לפי שלב התבגרות (20% עשור, 12% עשור, ואז 7%). ביטקוין אינו
+ *  בקטלוג ואינו ניתן להחזקה בעטיפה אירית, ולכן גם הפונקציה הזאת
+ *  איבדה את מושאה. כל קרן מקבלת שיעור קבוע מ-`SCENARIOS.rate`. */
+export const rateOf = (sc: ScenarioId, k: SleeveId): number => SCENARIOS[sc].rate[k];
 
 /** The bands `horizonFor` actually draws, named for the context strip. */
 export const COHORTS: Array<{ label: string; from: number; to: number }> = [
