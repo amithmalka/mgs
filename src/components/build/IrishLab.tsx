@@ -11,6 +11,7 @@
  *  אין בזה המלצה ואין בזה ייעוץ פיננסי.
  */
 import { useState, useMemo } from 'react';
+import { Stat } from '../shared/Stat';
 import { DataCards } from '../shared/DataCards';
 import {
   IRISH, TIER_HE, TIER_BAND, WINDOW,
@@ -893,16 +894,5 @@ export function IrishLab() {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}
 
 export type { IrishFund };

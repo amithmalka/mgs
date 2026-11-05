@@ -9,6 +9,7 @@
  *  לפי המשקלות שנבחרו**. ההפעלה החודשית של המנגנון היא שלב נפרד.
  */
 import { useMemo } from 'react';
+import { Stat } from '../shared/Stat';
 import { useMgsStore } from '../../store/mgsStore';
 import { IRISH, BUY, TIER_HE, mix, type Tier } from '../../constants/irish';
 import { useMyPortfolio, totalWeight, cohortForAge } from '../../store/myPortfolio';
@@ -180,14 +181,3 @@ export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

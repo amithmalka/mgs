@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Stat } from '../components/shared/Stat';
 import { useStore } from '../store';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import {
@@ -94,15 +95,6 @@ function Num({ value, min, max, step, unit, onCommit }: {
 
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
-}
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'gold' | 'up' }) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
 }
 
 /**

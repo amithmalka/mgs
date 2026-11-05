@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Stat } from '../components/shared/Stat';
 import { DataCards } from '../components/shared/DataCards';
 import { KidsGrowth } from '../components/build/KidsGrowth';
 import { useOnboardingStore } from '../store/onboardingStore';
@@ -18,15 +19,6 @@ const TARGETS = [3000, 5000, 10000, 20000];
 
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
-}
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'gold' | 'up' }) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
 }
 /** lets a number be typed out before it is clamped */
 function Num({ value, min, max, step, unit, onCommit }: {

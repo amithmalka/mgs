@@ -13,6 +13,7 @@
  *  והקו המנחה שנמדד הוא **2 עד 4 רכיבים**, אחד מכל רמה.
  */
 import { useMemo, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { IRISH, BUY, TIER_HE, TIER_BAND, REPL, mix, type Tier } from '../../constants/irish';
 import { ACCESS } from '../../constants/access';
 import { riskWords, type Combo } from '../../constants/combos';
@@ -190,14 +191,3 @@ export function CustomPick({ demo, toBroker }: { demo: number; toBroker: number 
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

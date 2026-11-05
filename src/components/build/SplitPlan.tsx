@@ -10,6 +10,7 @@
  *  אין בזה המלצה ואין בזה ייעוץ מס או ייעוץ פנסיוני.
  */
 import { useMemo, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { DataCards } from '../shared/DataCards';
 import {
   CEILINGS, PROVIDERS, MARKET, GONE, POLICY_RISK, selfDeduction, exemptCeiling,
@@ -409,14 +410,3 @@ export function SplitPlan() {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

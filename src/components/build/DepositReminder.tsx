@@ -13,6 +13,7 @@
  *  מגיעה בפברואר גרועה מתזכורת ביום אחר.
  */
 import { useCallback, useEffect, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { supabase } from '../../lib/supabase';
 import {
   pushSupported, pushStatus, subscribeToPush, unsubscribeFromPush,
@@ -137,14 +138,3 @@ export function DepositReminder({ toBroker }: { toBroker: number }) {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

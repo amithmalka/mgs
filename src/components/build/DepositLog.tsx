@@ -16,6 +16,7 @@
  *  מדויק שהוזן מאשר מספר שגוי שמוצג כאילו הוא חי.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { IRISH, BUY } from '../../constants/irish';
 import { useMyPortfolio, totalWeight } from '../../store/myPortfolio';
 import {
@@ -529,14 +530,3 @@ export function DepositLog({ toBroker, onBuild }: { toBroker: number; onBuild?: 
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

@@ -417,3 +417,28 @@ html, body { overflow-x: hidden; }
   /* מספרים ארוכים לא נשברים באמצע */
   .num, .term .dcard dd, [data-num] { white-space: nowrap; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * הכותרות — הגרדיאנט הקר מדף הנחיתה
+ *
+ * `<em>` בתוך `h1` הוא כבר הדפוס במערכת לסימון המילים שנושאות את
+ * המשמעות ("תבנו תיק, ותריצו עליו *את אותו כלל*"). עד כאן הוא לא
+ * קיבל שום טיפול ויזואלי. עכשיו הוא נושא את אותו גרדיאנט שנושאות
+ * המילים המודגשות בדף — אקווה אל פריוויקל — וזה מה שגורם לכותרת
+ * במערכת ולכותרת בדף להיראות כמו אותה משפחה.
+ *
+ * **`display: inline` ולא `inline-block`:** הגרדיאנט חייב להישבר
+ * יחד עם השורה. עם `inline-block` המילים היו נדחפות לשורה משלהן
+ * במסך צר, והכותרת הייתה נשברת במקום הלא נכון.
+ * ═══════════════════════════════════════════════════════════════════ */
+.term h1 em {
+  font-style: normal;
+  background: linear-gradient(100deg, var(--gold) 0%, #BFE9FF 44%, var(--peri) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+/* נקודת הנתונים החיה — אותו פעימה שבדף */
+.term .live { display: inline-flex; align-items: center; gap: .4rem;
+  font-size: 10.5px; letter-spacing: .4px; color: var(--gold); }
+.term .live i { width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold); animation: fut-pulse 1.8s ease-in-out infinite; }

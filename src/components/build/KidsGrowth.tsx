@@ -22,6 +22,7 @@
  *  עם `drawYears: 0`.
  */
 import { useMemo, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { IRISH, BUY, mix, type Tier } from '../../constants/irish';
 import { forwardFor, OUTLOOK_HE, type Outlook } from '../../constants/forward';
 import { runMix } from '../../utils/mixEngine';
@@ -278,14 +279,3 @@ export function KidsGrowth({ onBuild }: { onBuild?: () => void }) {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

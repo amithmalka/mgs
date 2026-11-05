@@ -10,6 +10,7 @@
  *  הסתיים שם או נמוך מזה.
  */
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { Stat } from '../shared/Stat';
 import { DataCards } from '../shared/DataCards';
 import { useMgsStore } from '../../store/mgsStore';
 import { IRISH, BUY, mix, type Tier } from '../../constants/irish';
@@ -487,14 +488,3 @@ export function ChosenMix() {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

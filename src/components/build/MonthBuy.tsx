@@ -12,6 +12,7 @@
  *  **והשיאים נשמרים מקומית.** בלעדיהם אי אפשר לדעת מה ירד ובכמה.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Stat } from '../shared/Stat';
 import { IRISH, BUY } from '../../constants/irish';
 import { useMyPortfolio, totalWeight } from '../../store/myPortfolio';
 import { ceilingFor } from '../../constants/studyFunds';
@@ -282,14 +283,3 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
   );
 }
 
-function Stat({ label, value, sub, tone }: {
-  label: string; value: string; sub?: string; tone?: 'gold' | 'up';
-}) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
-}

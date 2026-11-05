@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { Stat } from '../components/shared/Stat';
 import {
   simulateStudy, CEILING, type Status,
 } from '../utils/studySim';
@@ -38,15 +39,6 @@ function Num({ value, min, max, step, unit, onCommit }: {
 }
 function Opt({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return <button className="opt" type="button" aria-pressed={on} onClick={onClick}>{children}</button>;
-}
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'gold' | 'up' }) {
-  return (
-    <div className={`stat ${tone ?? ''}`}>
-      <span className="k">{label}</span>
-      <span className="n" dir="ltr">{value}</span>
-      <span className="s">{sub ?? ' '}</span>
-    </div>
-  );
 }
 
 /**
