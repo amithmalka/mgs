@@ -192,9 +192,14 @@ function path(sc: Scenario, mkt: Market, months: number, r: () => number) {
   const px = {} as Record<Sleeve, Float64Array>;
   for (const t of SLEEVES) px[t] = new Float64Array(months);
   const cur = { SEM: 100, TEC: 100 } as Record<Sleeve, number>;
+  // **נגזר מ-`SLEEVES.length`, ולא מקובע ב-3.** כאן ישב `i < 3` ושלוש
+  // דגימות `gauss` מהימים שבהם היו שלושה רכיבים. אחרי שהביטקוין ירד
+  // נשארו שניים ו-`CHOL` כווץ ל-2×2, אבל הלולאה המשיכה לרוץ עד 3 —
+  // `CHOL[2]` הוא `undefined`, ו**כל קריאה ל-`simulate` קרסה**. טיפוסים
+  // לא תופסים את זה: גישה מחוץ לתחום של מערך היא שגיאת ריצה בלבד.
   for (let m = 0; m < months; m++) {
-    const z = [gauss(r), gauss(r), gauss(r)];
-    for (let i = 0; i < 3; i++) {
+    const z = SLEEVES.map(() => gauss(r));
+    for (let i = 0; i < SLEEVES.length; i++) {
       let cz = 0;
       for (let j = 0; j <= i; j++) cz += CHOL[i][j] * z[j];
       const t = SLEEVES[i];
