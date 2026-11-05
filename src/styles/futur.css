@@ -260,8 +260,19 @@
   animation: mq-run var(--mq-dur, 22s) linear infinite;
 }
 .term .mq.rev .mq-rail { animation-direction: reverse; }
-.term .mq:hover .mq-rail,
-.term .mq:focus-within .mq-rail { animation-play-state: paused; }
+/* **העצירה רק במכשיר שבאמת מרחף — וזה הבאג שהכרטיסים לא זזו בו.**
+ *
+ * לכרטיסים יש `tabindex`, ולכן **נגיעה אחת במסך נותנת להם פוקוס**,
+ * `:focus-within` נדלק, והפס נעצר. במכשיר מגע הפוקוס לא יורד מעצמו,
+ * ולכן הוא נעצר **לתמיד** כבר במגע הראשון. גם `:hover` נדבק ב-iOS
+ * אחרי נגיעה ולא משתחרר עד שנוגעים במקום אחר.
+ *
+ * `(hover: hover) and (pointer: fine)` מגביל את שתי העצירות לעכבר
+ * או לטראקפד. במגע הפס פשוט ממשיך לזוז — וזה מה שהיה אמור לקרות. */
+@media (hover: hover) and (pointer: fine) {
+  .term .mq:hover .mq-rail,
+  .term .mq:focus-within .mq-rail { animation-play-state: paused; }
+}
 /* **חיובי, לא שלילי — וזה לא קוסמטיקה.**
  *
  * הפס יושב בהקשר RTL: הכרטיס הראשון בקצה הימני והתוכן נמשך שמאלה
