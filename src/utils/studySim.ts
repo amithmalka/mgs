@@ -104,8 +104,8 @@ function onePath(o: StudyInput, months: number, r: () => number) {
   for (const t of SLEEVES) px[t] = new Float64Array(months);
   const cur = { SEM: 100, TEC: 100 } as Record<Sleeve, number>;
   for (let m = 0; m < months; m++) {
-    const z = [gauss(r), gauss(r), gauss(r)];
-    for (let i = 0; i < 3; i++) {
+    const z = SLEEVES.map(() => gauss(r));
+    for (let i = 0; i < SLEEVES.length; i++) {
       let cz = 0;
       for (let j = 0; j <= i; j++) cz += CHOL[i][j] * z[j];
       cur[SLEEVES[i]] *= Math.exp(mu[SLEEVES[i]] + sd[SLEEVES[i]] * cz);
