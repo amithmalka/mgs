@@ -14,6 +14,7 @@ import { Onboarding } from './components/onboarding/Onboarding';
 import { useOnboardingStore } from './store/onboardingStore';
 import { TaxPage } from './pages/TaxPage';
 import { CommandPalette } from './components/shared/CommandPalette';
+import { useReveal } from './hooks/useReveal';
 
 const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   // ״מה קונים החודש״ התמזג לתוך ״התיק שלי״; ״מסלולים״ ו״מערכת״
@@ -87,6 +88,9 @@ function App() {
 
   const ActivePage = pages[activeTab];
   const isRtl = lang === 'he';
+
+  // החשיפה נקשרת מחדש בכל החלפת לשונית, כי הדף החדש מביא אלמנטים חדשים
+  useReveal([activeTab, onboarded]);
 
   // three questions first; nothing else is worth showing until we know the age,
   // the deposit and what the money is for

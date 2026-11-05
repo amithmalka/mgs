@@ -108,20 +108,20 @@ h1, h2, h3 {
 
 /* === Glassmorphism Card === */
 .glass-card {
-  background: rgba(15, 15, 15, 0.7);
+  background: rgba(11, 16, 24, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(94, 230, 208, 0.08);
   box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.02) inset;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.15);
+  border-color: rgba(94, 230, 208, 0.15);
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.4),
-    0 0 30px rgba(212, 175, 55, 0.05),
+    0 0 30px rgba(94, 230, 208, 0.05),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   transform: translateY(-1px);
 }
@@ -129,10 +129,10 @@ h1, h2, h3 {
 /* === Gold Glow === */
 .gold-glow {
   box-shadow:
-    0 0 20px rgba(212, 175, 55, 0.08),
-    0 0 60px rgba(212, 175, 55, 0.04),
+    0 0 20px rgba(94, 230, 208, 0.08),
+    0 0 60px rgba(94, 230, 208, 0.04),
     0 4px 30px rgba(0, 0, 0, 0.3);
-  border-color: rgba(212, 175, 55, 0.2) !important;
+  border-color: rgba(94, 230, 208, 0.2) !important;
 }
 
 /* === Floating Animation === */
@@ -159,8 +159,8 @@ h1, h2, h3 {
 
 /* === Gold Pulse === */
 @keyframes pulse-gold {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
-  50% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(94, 230, 208, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(94, 230, 208, 0); }
 }
 .pulse-gold { animation: pulse-gold 2s infinite; }
 
@@ -186,7 +186,7 @@ h1, h2, h3 {
   transform: translateX(100%);
 }
 .btn-gold:hover {
-  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3), 0 0 60px rgba(212, 175, 55, 0.1);
+  box-shadow: 0 0 30px rgba(94, 230, 208, 0.3), 0 0 60px rgba(94, 230, 208, 0.1);
   transform: translateY(-1px);
 }
 
@@ -208,8 +208,8 @@ input:not([type]), textarea, select {
 input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus,
 input[type="email"]:focus, input[type="url"]:focus, input[type="search"]:focus,
 input:not([type]):focus, textarea:focus, select:focus {
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08), 0 0 20px rgba(212, 175, 55, 0.05);
+  border-color: rgba(94, 230, 208, 0.4);
+  box-shadow: 0 0 0 3px rgba(94, 230, 208, 0.08), 0 0 20px rgba(94, 230, 208, 0.05);
 }
 input::placeholder, textarea::placeholder { color: #3a3a3a; }
 textarea { resize: vertical; }
@@ -251,7 +251,7 @@ th { color: #6a6a6a; font-weight: 500; font-family: 'Heebo', 'Inter', sans-serif
 }
 .academy-scroller::-webkit-scrollbar { height: 5px; }
 .academy-scroller::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.25);
+  background: rgba(94, 230, 208, 0.25);
   border-radius: 3px;
 }
-.academy-scroller::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.45); }
+.academy-scroller::-webkit-scrollbar-thumb:hover { background: rgba(94, 230, 208, 0.45); }

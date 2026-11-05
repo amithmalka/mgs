@@ -345,3 +345,75 @@
   border-top: 1px solid var(--goldsoft);
 }
 .term .dsum > div.fin .l { color: var(--ink); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * הכרטיס של המערכת — הגרסה שמחוץ ל-`.term`
+ *
+ * `.gcard` שב-futur.css מוגדר ללא תלות בהקשר, אבל `Card` יושב גם
+ * בדפים שאינם `.term` ולכן צריך גדלים משלו: פדינג נדיב יותר, ורדיוס
+ * שתואם את `rounded-2xl` של שאר המערכת.
+ * ═══════════════════════════════════════════════════════════════════ */
+.card-glow { border-radius: 16px; }
+.card-glow > .edge, .card-glow > .edge-lit { border-radius: 16px; }
+.card-glow > .face { border-radius: 15px; background: rgba(11, 16, 24, .72); }
+.card-glow > .body { padding: 1.25rem; min-height: 0; }
+/* `lit` = מה שהיה `glow` — ער עוד לפני שנוגעים בו */
+.card-glow.lit > .edge {
+  background: linear-gradient(140deg,
+    color-mix(in srgb, var(--color-accent) 34%, transparent),
+    var(--color-line) 42%,
+    color-mix(in srgb, var(--color-accent-2) 26%, transparent));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * חשיפה בגלילה — כמו בדף הנחיתה
+ *
+ * **הכלל שלא מוותרים עליו:** המצב ההתחלתי הוא **גלוי**. אלמנט שיושב
+ * על `opacity: 0` וממתין לתצפיתן הוא אלמנט שנעלם לחלוטין אם
+ * ה-JavaScript לא רץ, אם התצפיתן לא נתמך, או אם הדף צולם. לכן
+ * ההסתרה נעשית **רק אחרי** ש-JS סימן שהוא כאן, דרך `.js-reveal`
+ * על השורש — ובלעדיה הכל פשוט מוצג.
+ * ═══════════════════════════════════════════════════════════════════ */
+.js-reveal .rv { opacity: 0; transform: translateY(14px);
+  transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1); }
+.js-reveal .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal .rv { opacity: 1; transform: none; transition: none; }
+}
+
+/* דירוג קל בתוך רשת כרטיסים — הכרטיסים לא נוחתים כולם באותו רגע */
+.js-reveal .dcards.in > .dcard { animation: rv-step .5s cubic-bezier(.16,1,.3,1) both; }
+.js-reveal .dcards.in > .dcard:nth-child(2) { animation-delay: .06s; }
+.js-reveal .dcards.in > .dcard:nth-child(3) { animation-delay: .12s; }
+.js-reveal .dcards.in > .dcard:nth-child(4) { animation-delay: .18s; }
+.js-reveal .dcards.in > .dcard:nth-child(n+5) { animation-delay: .24s; }
+@keyframes rv-step { from { opacity: 0; transform: translateY(10px) } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal .dcards.in > .dcard { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * מובייל — אותה רשת ביטחון שתוקנה בדף הנחיתה
+ *
+ * **הבאג שהיה שם, ושהיה יכול להיות גם כאן.** פריט flex נושא
+ * `min-width: auto` כברירת מחדל, כלומר **הוא לא יורד מתחת לרוחב
+ * התוכן שלו**. ילד רחב אחד — טבלה, מספר ארוך, פס גלילה — מרחיב את
+ * ההורה, ההורה את שלו, והמסך הצר נחתך. `max-width` אינו עוזר: הוא
+ * מגביל למעלה, והבעיה היא למטה.
+ *
+ * `.term` עצמו הוא flex column, ולכן כל מקטע בתוכו הוא פריט flex.
+ * ═══════════════════════════════════════════════════════════════════ */
+.term, .term > *, .term section > * { min-width: 0; }
+/* `.scroll` הוא מכולת הגלילה המכוונת של הטבלאות הרחבות — היא
+   מותרת לגלוש בתוך עצמה, אבל לא לגרור את הדף */
+.term .scroll { max-width: 100%; }
+.term img, .term svg, .term video, .term canvas { max-width: 100%; }
+/* ושום דבר לא גורר את הדף לצדדים, בשום רוחב */
+html, body { overflow-x: hidden; }
+
+@media (max-width: 639px) {
+  .card-glow > .body { padding: 1rem 1.05rem; }
+  .term .dcard { padding: 11px 12px 12px; }
+  /* מספרים ארוכים לא נשברים באמצע */
+  .num, .term .dcard dd, [data-num] { white-space: nowrap; }
+}
