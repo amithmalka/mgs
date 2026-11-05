@@ -5,6 +5,7 @@
  *  כך שהיא לא יכולה להתיישן ביחס אליו.
  */
 import { useCallback, useEffect, useState } from 'react';
+import { lookupTerm } from '../../constants/decks/glossary';
 import type { Deck, Block } from '../../types/deck';
 import { LiveBlock } from './LiveBlock';
 
@@ -135,11 +136,45 @@ function BlockView({ b }: { b: Block }) {
   }
 }
 
-/** **הדגשה בטקסט בלי לפתוח דלת ל-HTML.** `**כך**` הופך למודגש,
- *  וכל השאר נשאר טקסט — אין כאן dangerouslySetInnerHTML. */
+/** **הדגשה ומונחים, בלי לפתוח דלת ל-HTML.**
+ *
+ *  `**כך**` הופך למודגש, ו-`[[חציון]]` הופך למונח שאפשר לפתוח
+ *  ולקרוא מה הוא אומר. כל השאר נשאר טקסט — אין כאן
+ *  `dangerouslySetInnerHTML`, ולכן אין דרך להזריק מכאן סימון.
+ *
+ *  **ולמה מונח ולא הערת שוליים.** הסבר שיושב בתחתית השקופית נקרא
+ *  רק אחרי שהקורא כבר נתקע. כאן ההסבר נמצא **על המילה עצמה**,
+ *  ברגע שהיא מופיעה — ומי שכבר יודע פשוט ממשיך לקרוא. */
 function rich(s: string) {
-  return s.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**')
-      ? <b key={i}>{part.slice(2, -2)}</b>
-      : <span key={i}>{part}</span>);
+  return s.split(/(\*\*[^*]+\*\*|\[\[[^\]]+\]\])/g).map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <b key={i}>{part.slice(2, -2)}</b>;
+    if (part.startsWith('[[') && part.endsWith(']]'))
+      return <TermChip key={i} k={part.slice(2, -2)} />;
+    return <span key={i}>{part}</span>;
+  });
+}
+
+/** **המונח שנפתח במקום.** סגור הוא מילה עם קו מקווקו; פתוח הוא
+ *  שלוש שורות — מה זה, למה מודדים את זה, ודוגמה במספרים. */
+function TermChip({ k }: { k: string }) {
+  const [open, setOpen] = useState(false);
+  const t = lookupTerm(k);
+  if (!t) return <span>{k}</span>;   // מונח שאין לו ערך — טקסט רגיל
+  return (
+    <span className="gl-wrap">
+      <button type="button" className="gl-term" aria-expanded={open}
+        onClick={() => setOpen(o => !o)}>
+        {k}
+      </button>
+      {open && (
+        <span className="gl-pop" role="note">
+          <b className="gl-h">{t.he}</b>
+          <span className="gl-what">{rich(t.what)}</span>
+          <span className="gl-why">{rich(t.why)}</span>
+          {t.ex && <span className="gl-ex">{rich(t.ex)}</span>}
+        </span>
+      )}
+    </span>
+  );
 }
