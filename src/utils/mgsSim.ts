@@ -64,6 +64,22 @@ export const TER: Record<Market, Record<Sleeve, number>> = {
   fx: { SEM: 0.0035, TEC: 0.0014 },
 };
 export const FX_DRAG = 0.004, CPI = 0.02, TAX = 0.25, UP_CAP = 10;
+
+/** **משקל היעד של כל שרוול, לפי מסלול — נגזר מהקומבינציות עצמן.**
+ *
+ *  לא מספר שנבחר: זה **ממוצע משקל השבבים בתמהילים של אותו מסלול**
+ *  ב-`combos.ts`. תזרים 0% ו-10% ⇒ 5%; משולב 10/10/20 ⇒ 13%;
+ *  צמיחה 30/30/50/70/90 ⇒ 54%. היתרה היא שרוול הטכנולוגיה. */
+export const SLEEVE_TARGET: Record<Track, Record<Sleeve, number>> = {
+  flow:   { SEM: 0.05, TEC: 0.95 },
+  both:   { SEM: 0.13, TEC: 0.87 },
+  growth: { SEM: 0.54, TEC: 0.46 },
+};
+
+/** כמה מטים לנופל, לפי מסלול — אותם ערכים שב-`monthPlan`. */
+export const DIP_TILT: Record<Track, number> = { flow: 0.5, both: 1.0, growth: 1.5 };
+/** ואף רכיב לא מעל פי זה ממשקל היעד בהפקדה אחת. */
+export const DIP_CAP = 3;
 /** the year the plan would have moved to a global track — and does not */
 /** שנת המעבר במסלול הצמיחה — מתי ההפקדה מתחילה לדעוך ומתי המשיכות
  *  נפתחות. הסולם יורד בחמש לכל קבוצה, כך שהמשיכות מתחילות בגיל
@@ -257,20 +273,31 @@ function runPath(px: Record<Sleeve, Float64Array>, months: number, o: SimInput) 
       paid += lump;
     }
     if (dep > 0) {
-      const f = {} as Record<Sleeve, number>, drop = {} as Record<Sleeve, number>;
-      let s = 0, deepest: Sleeve = SLEEVES[0], worst = -1;
+      // **אותו כלל שרשימת הקנייה מריצה — משקל יעד, הטיה, ותקרה.**
+      // הכלל שהיה כאן חילק לפי עומק הנפילה בלבד, **והעודף כולו הלך
+      // לנופל העמוק ביותר בלי תקרה**. נמדד: בתמהיל שבו השבבים הם
+      // 10%, הם קיבלו בפועל **65% מההפקדות** — כלומר ההקרנה תיארה
+      // תיק שאיש לא בחר, עם התשואה הגבוהה והסיכון של רכיב אחד.
+      const w = SLEEVE_TARGET[o.track];
+      const raw = {} as Record<Sleeve, number>;
+      let s = 0;
       for (const t of SLEEVES) {
-        const x = (px[t][m] / peak[t] - 1) * 100;
-        f[t] = (x >= 0 ? Math.min(x, UP_CAP) : -x) / 100;
-        drop[t] = Math.max(0, -x);
-        s += f[t];
-        if (drop[t] > worst) { worst = drop[t]; deepest = t; }
+        const fall = Math.max(0, 1 - px[t][m] / peak[t]);
+        raw[t] = w[t] * (1 + DIP_TILT[o.track] * fall * 3);
+        s += raw[t];
       }
       const al = {} as Record<Sleeve, number>;
-      if (s >= 1) for (const t of SLEEVES) al[t] = dep * f[t] / s;
-      else {
-        for (const t of SLEEVES) al[t] = dep * f[t];
-        al[deepest] += dep * (1 - s);
+      for (const t of SLEEVES) al[t] = dep * raw[t] / s;
+      // התקרה: אף רכיב מעל פי DIP_CAP ממשקל היעד, והעודף למי שיש לו מקום
+      let over = 0;
+      for (const t of SLEEVES) {
+        const cap = dep * w[t] * DIP_CAP;
+        if (al[t] > cap) { over += al[t] - cap; al[t] = cap; }
+      }
+      if (over > 0) {
+        const room = SLEEVES.map(t => Math.max(0, dep * w[t] * DIP_CAP - al[t]));
+        const rs = room.reduce((a, b) => a + b, 0);
+        if (rs > 0) SLEEVES.forEach((t, i) => { al[t] += over * room[i] / rs; });
       }
       for (const t of SLEEVES) if (al[t] > 0) {
         sh[t] += al[t] / px[t][m]; cost[t] += al[t]; costIdx[t] += al[t] / idx;
