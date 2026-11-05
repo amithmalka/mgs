@@ -51,7 +51,7 @@ export function GoalsMarquee() {
     <section
       className="mq"
       aria-label="שלוש המטרות של השיטה"
-      style={{ ['--mq-dur' as string]: '34s' }}
+      style={{ ['--mq-dur' as string]: '22s' }}
     >
       <div className="mq-rail">
         {GOALS.map(g => <GoalCard key={g.k} g={g} />)}

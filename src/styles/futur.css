@@ -257,12 +257,24 @@
    הרוחב הוא בדיוק 6×(כרטיס+רווח), וחציו 3×(כרטיס+רווח) — תפר מדויק. */
 .term .mq-rail {
   display: flex; width: max-content;
-  animation: mq-run var(--mq-dur, 38s) linear infinite;
+  animation: mq-run var(--mq-dur, 22s) linear infinite;
 }
 .term .mq.rev .mq-rail { animation-direction: reverse; }
 .term .mq:hover .mq-rail,
 .term .mq:focus-within .mq-rail { animation-play-state: paused; }
-@keyframes mq-run { to { transform: translateX(-50%); } }
+/* **חיובי, לא שלילי — וזה לא קוסמטיקה.**
+ *
+ * הפס יושב בהקשר RTL: הכרטיס הראשון בקצה הימני והתוכן נמשך שמאלה
+ * אל מחוץ למכולה. `translateX(-50%)` דוחף אותו **עוד שמאלה**, כך
+ * שהצד הימני מתרוקן ו**שום דבר לא נכנס במקומו** — הכרטיסים נעלמים
+ * ולא חוזרים. בחיובי ההעתק השני, שיושב משמאל, נכנס פנימה ימינה
+ * ובסוף המסלול עומד בדיוק במקום שההעתק הראשון התחיל בו.
+ *
+ * נמדד: ב-25%- הצד הימני ריק, ב-25%+ הפס מלא לכל הרוחב. */
+@keyframes mq-run { to { transform: translateX(50%); } }
+/* בהקשר LTR הכיוון מתהפך */
+[dir="ltr"] .mq-rail { animation-name: mq-run-ltr; }
+@keyframes mq-run-ltr { to { transform: translateX(-50%); } }
 
 /* הכרטיס שבפס — אותה שפה של `.dcard`, רק ברוחב קבוע */
 .term .mq-card {
