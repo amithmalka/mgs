@@ -22,8 +22,10 @@ import { EACH_FUND_DECK } from './generated-funds';
 
 import { BUY_DECK } from './buy';
 import { MECHVS_DECK } from './mechvs';
+import { MECHMIX_DECK } from './mechmix';
 export const DECKS: Deck[] = [
   BUY_DECK,
+  MECHMIX_DECK,
   MECHVS_DECK,
   SYSTEM_DECK,
   FUNDS_DECK,
