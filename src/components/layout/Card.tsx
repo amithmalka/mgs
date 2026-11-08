@@ -32,10 +32,12 @@ interface CardProps {
   plain?: boolean;
   /** שואל ״?״ ליד הכותרת, שפותח את ההסבר לנושא */
   explain?: ExplainKey;
+  /** מזהה על האלמנט — כדי שאפשר יהיה לגלול אליו מתוך תזכורת */
+  id?: string;
 }
 
 export function Card({
-  title, subtitle, children, className = '',
+  title, subtitle, children, className = '', id,
   glow = false, float = false, plain = false, explain,
 }: CardProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -61,7 +63,7 @@ export function Card({
 
   if (plain) {
     return (
-      <div className={`glass-card rounded-2xl p-5 ${glow ? 'gold-glow' : ''} ${className}`}>
+      <div id={id} className={`glass-card rounded-2xl p-5 ${glow ? 'gold-glow' : ''} ${className}`}>
         {head}{children}
       </div>
     );
@@ -70,6 +72,7 @@ export function Card({
   return (
     <div
       ref={ref}
+      id={id}
       className={`gcard card-glow ${glow ? 'lit' : ''} ${float ? 'animate-float' : ''} ${className}`}
       onMouseMove={e => at(e.clientX, e.clientY)}
       onMouseEnter={e => { on(true); at(e.clientX, e.clientY); }}

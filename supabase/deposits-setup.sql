@@ -147,9 +147,13 @@ select
   d.user_id,
   d.fund_key                                    as k,
   sum(d.units)                                  as units,
-  sum(d.units * d.price) / nullif(sum(d.units), 0) as avg_price,
+  -- **unit_price, לא price.** בטבלה אין עמודה `price`, ולכן הגרסה
+  -- הראשונה של התצוגה הזאת נכשלה בהרצה ו**התצוגה מעולם לא נוצרה** —
+  -- מה שהשתיק את הודעת המשיכה המותאמת בקרון. לגרסה שמפחיתה גם
+  -- משיכות: `push-snooze-setup.sql`.
+  sum(d.units * d.unit_price) / nullif(sum(d.units), 0) as avg_price,
   sum(d.amount_ils)                             as invested_ils,
-  sum(d.units * d.price)                        as invested_ccy,
+  sum(d.units * d.unit_price)                   as invested_ccy,
   min(d.currency)                               as currency,
   max(m.price)                                  as mark
 from public.mgs_deposits d

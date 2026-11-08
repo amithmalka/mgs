@@ -1,29 +1,29 @@
 /** MGS · מה קונים החודש — על התיק שנבחר, לא על רכיבים קבועים.
  *
- *  **כלל החלוקה, כפי שהוא:** רכיב שנמצא על השיא הקודם שלו או מעליו
- *  מקבל **10%** מההפקדה. רכיב שמתחתיו מקבל את **אחוז הירידה שלו** —
- *  ירד 30%, מקבל 30%. **כל השארית הולכת למה שירד הכי עמוק** באותו
- *  יום. אם ביקשו יחד יותר מ-100%, החלוקה לפי היחס ביניהם; אם אף
- *  רכיב אינו מתחת לשיא, ההפקדה מתחלקת שווה בשווה.
+ *  **הכלל עצמו נמצא ב-`utils/buySplit.ts`**, ושני מסכים קוראים לו:
+ *  המסך הזה, שמציג, ומסך אישור ההפקדה, שרושם. אחד.
+ *
+ *  **מה שהיה כאן, ומה שהקוד באמת מריץ.** הכתב התחתון כאן תיאר
+ *  חלוקה לפי עומק הנפילה בלבד, עם השארית כולה לנופל העמוק ביותר.
+ *  **הקוד מריץ משהו אחר מאז 3.11.2026** — קנייה לכיוון משקל היעד
+ *  עם הטיה לנופלים ותקרה של פי שלושה — ולכן ההסבר תוקן. בלי
+ *  התקרה נמדד שרכיב שירד 10% קיבל 80% מכל הפקדה.
  *
  *  **התמהיל זז בהפקדות ולא במכירות** — ולכן אין בדרך הזאת אף אירוע
- *  מס.
- *
- *  **והשיאים נשמרים מקומית.** בלעדיהם אי אפשר לדעת מה ירד ובכמה.
+ *  מס. **והשיאים נשמרים מקומית**; בלעדיהם אי אפשר לדעת מה ירד ובכמה.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Stat } from '../shared/Stat';
 import { IRISH, BUY } from '../../constants/irish';
-import { useMyPortfolio, totalWeight } from '../../store/myPortfolio';
+import { useMyPortfolio } from '../../store/myPortfolio';
 import { ceilingFor } from '../../constants/studyFunds';
 import { mix } from '../../constants/irish';
-import { DIP_TILT, DIP_CAP } from '../../utils/monthPlan';
+import { buySplit } from '../../utils/buySplit';
+import type { TrackKey } from '../../utils/buySplit';
 import { listDeposits, listMarks, listWithdrawals, positionsNet } from '../../lib/deposits';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
-const pc = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
 
-const UP_CAP = 10;
 const PEAKS_KEY = 'mgs-peaks';
 
 interface Quote { price: number | null; currency: string | null; change: number | null }
@@ -42,7 +42,7 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
   // להתאים לאופי התיק שנבחר, לא לגיל המשקיע: מי שבחר תיק בתנודתיות
   // 13% מושך ממנו, וקנייה אגרסיבית בירידה אינה מתאימה לו **גם אם
   // הוא בן עשרים.** וזו גם אותה חלוקה שהקטלוג עצמו משתמש בה.
-  const track = useMemo<'flow' | 'both' | 'growth'>(() => {
+  const track = useMemo<TrackKey>(() => {
     const v = mix(holdings).vol;
     return v < 0.145 ? 'flow' : v < 0.225 ? 'both' : 'growth';
   }, [holdings]);
@@ -101,79 +101,14 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
     return Math.max(0, deposit - Math.min(deposit, ceil)) + extra;
   }, [deposit, extra, fundStatus]);
 
-  /** כלל החלוקה — על המחירים והשיאים של עכשיו */
-  const plan = useMemo(() => {
-    const tot = totalWeight(holdings) || 1;
-    const live = holdings.map(h => {
-      const sym = BUY[h.k]?.sym;
-      const px = sym ? quotes[sym]?.price ?? null : null;
-      const pk = peaks[h.k] ?? px ?? null;
-      const drop = px && pk && pk > 0 ? Math.max(0, 1 - px / pk) : null;
-      return { ...h, px, pk, drop };
-    });
-
-    const haveAll = live.every(x => x.drop !== null);
-    if (!haveAll) {
-      // בלי מחירים — חלוקה לפי המשקלות, ומסומן ככזה
-      return live.map(x => ({
-        ...x, ask: (x.w / tot) * 100, why: 'לפי המשקלות שבחרתם · אין מחירים',
-        deepest: false,
-      }));
-    }
-
-    // **קונים לכיוון משקל היעד, ומטים לנופלים בתוך הגבול הזה.**
-    //
-    // רכיב שנפל הוא תת-משקל ולכן מקבל יותר — **וברגע שהוא חוזר
-    // למשקל שבחרתם הוא נעצר.** זה מה שמבדיל איזון מחדש ממיצוע
-    // כלפי מטה בלי גבול.
-    //
-    // **מה היה כאן קודם, ולמה זה תוקן ב-3.11.2026.** ההקצאה הייתה
-    // לפי גודל הנפילה בלבד, והשארית הלכה כולה לנופל העמוק ביותר.
-    // נמדד ש**רכיב שירד 10% בלבד קיבל 80% מכל הפקדה**, ונשאר שם
-    // ככל שירד יותר. בירידה של 80% לאורך שנתיים זה שלח אליו 80%
-    // מכל הכסף והפך אותו ל-61% מהתיק — **בדיוק מה שקרה למשקיעים
-    // ב-KWEB.** לא הקנייה בירידה הזיקה, אלא שלא היה לה גבול.
-    const pfNow = live.reduce((t, x) => t + (x.px ?? 0) * (held[x.k] ?? 0), 0);
-    const pf = pfNow + toBroker;
-    const tilt = DIP_TILT[track];
-    let gaps = live.map(x => {
-      const target = x.w / tot;
-      const cur = pf > 0 ? (x.px ?? 0) * (held[x.k] ?? 0) / pf : 0;
-      return Math.max(0, target - cur) * (1 + (x.drop ?? 0) * tilt);
-    });
-    if (gaps.reduce((a, b) => a + b, 0) <= 0) gaps = live.map(x => x.w / tot);
-    const gsum = gaps.reduce((a, b) => a + b, 0);
-    let share = gaps.map(g => (gsum > 0 ? g / gsum : 1 / live.length) * 100);
-
-    // **התקרה:** אף רכיב לא מעל פי DIP_CAP ממשקל היעד שלו
-    let over = 0;
-    share = share.map((v, i) => {
-      const max = (live[i].w / tot) * 100 * DIP_CAP;
-      if (v > max) { over += v - max; return max; }
-      return v;
-    });
-    if (over > 0.01) {
-      const room = share.map((v, i) => Math.max(0, (live[i].w / tot) * 100 * DIP_CAP - v));
-      const rs = room.reduce((a, b) => a + b, 0);
-      if (rs > 0) share = share.map((v, i) => v + over * room[i] / rs);
-    }
-
-    let deepest = 0;
-    for (let i = 1; i < live.length; i++) if (live[i].drop! > live[deepest].drop!) deepest = i;
-    const anyDown = live.some(x => x.drop! > 0);
-
-    return live.map((x, i) => ({
-      ...x, ask: share[i],
-      deepest: anyDown && i === deepest,
-      why: !anyDown
-        ? 'כל הרכיבים על השיא — ההפקדה מתחלקת לפי המשקלות שבחרתם'
-        : x.drop! > 0
-          ? (i === deepest
-            ? `ירד ${pc(x.drop!)} — הנפילה העמוקה החודש, ולכן מקבל הכי הרבה · עד ${pc(x.w / tot)} בתיק ולא מעל`
-            : `ירד ${pc(x.drop!)} — מקבל יותר, עד שיחזור ל-${pc(x.w / tot)} שבחרתם`)
-          : `על השיא שלו — מקבל רק מה שצריך כדי להישאר על ${pc(x.w / tot)}`,
-    }));
-  }, [holdings, quotes, peaks]);
+  /** **כלל החלוקה — ב-`buySplit`, ולא כאן.**
+   *
+   *  **ולמה הוא יצא מהקובץ הזה.** מסך אישור ההפקדה חייב להציג
+   *  **בדיוק את אותה חלוקה**; שני עתקים של אותו חישוב נפרדים
+   *  בעדכון הראשון, והמשתמש יאשר סכומים שאינם מה שראה. */
+  const plan = useMemo(() => buySplit({
+    holdings, quotes, peaks, held, amount: toBroker, track,
+  }).lines, [holdings, quotes, peaks, held, toBroker, track]);
 
   if (!holdings.length) {
     return (
@@ -261,11 +196,12 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
       </div>
 
       <p className="note">
-        <b>כלל החלוקה.</b> רכיב שנמצא על השיא הקודם שלו או מעליו מקבל{' '}
-        <b>{UP_CAP}%</b> מההפקדה. רכיב שמתחתיו מקבל את <b>אחוז הירידה
-        שלו</b> — ירד 30%, מקבל 30%. <b>כל השארית הולכת למה שירד הכי
-        עמוק</b> באותו יום. אם ביקשו יחד יותר מ-100%, החלוקה לפי היחס
-        ביניהם; אם אף רכיב אינו מתחת לשיא, ההפקדה מתחלקת שווה בשווה.
+        <b>כלל החלוקה.</b> קונים לכיוון המשקלות שבחרתם, ומטים לנופלים
+        בתוך הגבול הזה: הפער בין משקל היעד למשקל בפועל, כפול הנפילה
+        מהשיא. רכיב שנפל הוא תת-משקל ולכן מקבל יותר — <b>וברגע שהוא
+        חוזר למשקל שבחרתם הוא נעצר.</b> אף רכיב לא מקבל מעל{' '}
+        <b>פי שלושה</b> ממשקל היעד שלו בהפקדה אחת, והעודף עובר למי
+        שיש לו מקום תחת התקרה.
       </p>
       <p className="note">
         <b>התמהיל זז בהפקדות ולא במכירות</b>, ולכן <b>אין בדרך הזאת אף

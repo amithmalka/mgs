@@ -271,7 +271,7 @@ export const translations = {
   tabHome: { en: 'My portfolio', he: 'התיק שלי' },
   tabBuild: { en: 'Choose a portfolio', he: 'לבחור תיק' },
   tabStudy: { en: 'Study fund', he: 'קרן השתלמות' },
-  tabTax: { en: 'Withdrawal tax', he: 'מחשבון מס משיכה' },
+  tabTax: { en: 'Deposits & withdrawals', he: 'הפקדות ומשיכות' },
   tabBroker: { en: 'Where to buy', he: 'ברוקר זר' },
   tabKids: { en: 'MGS Kids', he: 'MGS Kids' },
   navGroupStart: { en: 'Start here', he: 'מתחילים כאן' },

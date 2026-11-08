@@ -500,3 +500,61 @@ html, body { overflow-x: hidden; }
   .term .gl-pop { position: static; width: auto; margin: .5rem 0; display: flex; }
 }
 @media (prefers-reduced-motion: reduce) { .term .gl-pop { animation: none; } }
+
+/* ─────────────────────────────────────────────────────────────
+   פופאפ התזכורת
+   ─────────────────────────────────────────────────────────────
+   **למה זה לא `<dialog>`.** ‏`showModal()` מעביר את הדף ל-inert
+   ומחזיר פוקוס בעצמו, אבל הוא גם צובע רקע משלו ב-`::backdrop`
+   שאינו עובר דרך הטוקנים — ובתוך `.term`, שמגדיר צבעים משלו,
+   זה יצא רקע לבן על רקע כחול-שחור. כאן השכבה היא אלמנט רגיל
+   עם צבע מהטוקנים.
+
+   והגלילה מאחור נעצרת בכוונה: פופאפ שאפשר לגלול מתחתיו נראה
+   כמו באנר, ולא כמו שאלה שממתינה לתשובה. */
+.rp-wrap {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center; padding: 20px;
+  background: color-mix(in srgb, #06080C 72%, transparent);
+  backdrop-filter: blur(6px);
+  animation: rp-in .18s ease-out;
+}
+@keyframes rp-in { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .rp-wrap { animation: none } }
+
+.rp {
+  width: min(29rem, 100%);
+  background: var(--surface, #0B1018);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 30%, var(--rule, #1E2A3A));
+  border-radius: 14px; padding: 20px 20px 16px;
+  box-shadow: 0 24px 70px -12px rgba(0, 0, 0, .66);
+}
+.rp .eyebrow {
+  display: block; font-size: 10.5px; font-weight: 600; letter-spacing: 2.2px;
+  color: var(--gold, #5EE6D0); margin-bottom: 8px;
+}
+.rp h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--ink, #E8EEF6); }
+.rp p { margin: 0 0 16px; font-size: 12.5px; line-height: 1.65; color: var(--muted, #8E9CAE); }
+.rp p b { color: var(--ink, #E8EEF6); font-weight: 600; }
+
+/* **הכפתורים נערמים לפני שהם נחתכים.** בטלפון צר שלושה כפתורים
+   בשורה אחת מצמצמים את ״להזכיר בעוד 10 ימים״ לשתי אותיות. */
+.rp-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.rp-btns .opt { flex: 1 1 8.5rem; min-width: 0; text-align: center; }
+.rp-btns .rp-go {
+  background: var(--gold, #5EE6D0); border-color: var(--gold, #5EE6D0);
+  color: #04121A; font-weight: 600; flex-basis: 100%;
+}
+.rp-skip {
+  display: block; margin: 14px auto 0; padding: 4px 8px;
+  font: inherit; font-size: 11.5px; color: var(--dim, #5D6878);
+  background: none; border: 0; cursor: pointer;
+  border-bottom: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+}
+.rp-skip:hover { color: var(--muted, #8E9CAE); }
+.rp-skip:focus-visible,
+.rp-btns .opt:focus-visible { outline: 2px solid var(--gold, #5EE6D0); outline-offset: 2px; }
+.rp-note {
+  margin: 12px 0 0; font-size: 11px; line-height: 1.6;
+  color: var(--warn, #FBBF4A);
+}

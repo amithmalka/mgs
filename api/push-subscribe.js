@@ -16,8 +16,8 @@ export default async function handler(req, res) {
 
   const admin = createClient(SUPABASE_URL, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  if (req.method !== 'POST' && req.method !== 'DELETE') {
-    res.setHeader('Allow', 'POST, DELETE');
+  if (req.method !== 'POST' && req.method !== 'DELETE' && req.method !== 'PATCH') {
+    res.setHeader('Allow', 'POST, DELETE, PATCH');
     return res.status(405).json({ error: 'method not allowed' });
   }
 
@@ -61,6 +61,49 @@ export default async function handler(req, res) {
         );
       if (error) throw error;
       return res.status(200).json({ ok: true, deposit_day: depositDay });
+    }
+
+    // PATCH — push the next reminder out to a date the user chose.
+    //
+    // Why this has to be server-side: the popup that asked "remind me in five
+    // days" can go quiet on its own, but the push itself is sent by the daily
+    // cron, which only knows deposit_day. Without a stored date the second
+    // reminder would simply never arrive, and the choice would be a lie.
+    //
+    // The date is clamped to 60 days out so a bad client value cannot park a
+    // subscription in silence forever.
+    if (req.method === 'PATCH') {
+      const endpoint = body.endpoint;
+      if (typeof endpoint !== 'string' || !endpoint) return res.status(400).json({ error: 'endpoint required' });
+
+      const raw = String(body.snoozeUntil ?? body.snooze_until ?? '');
+      let snooze = null;
+      if (raw) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          return res.status(400).json({ error: 'snoozeUntil must be YYYY-MM-DD' });
+        }
+        const when = new Date(raw + 'T00:00:00Z').getTime();
+        if (!Number.isFinite(when)) return res.status(400).json({ error: 'snoozeUntil is not a date' });
+        const cap = Date.now() + 60 * 86400000;
+        snooze = when > cap ? new Date(cap).toISOString().slice(0, 10) : raw;
+      }
+
+      const { error } = await admin
+        .from('push_subscriptions')
+        .update({ snooze_until: snooze, updated_at: new Date().toISOString() })
+        .eq('endpoint', endpoint)
+        .eq('user_id', userId);
+      // A missing column means push-snooze-setup.sql has not been run; say so
+      // plainly rather than returning a bare 500 the UI cannot explain.
+      if (error) {
+        const missing = /snooze_until/i.test(error.message || '');
+        return res.status(missing ? 501 : 500).json({
+          error: missing
+            ? 'עמודת snooze_until חסרה — צריך להריץ supabase/push-snooze-setup.sql פעם אחת'
+            : error.message,
+        });
+      }
+      return res.status(200).json({ ok: true, snooze_until: snooze });
     }
 
     // DELETE — forget this one device.

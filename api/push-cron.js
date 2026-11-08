@@ -90,13 +90,33 @@ export default async function handler(req, res) {
   try {
     const today = todayInJerusalem();
 
-    const { data: subs, error } = await admin
-      .from('push_subscriptions')
-      .select('id, endpoint, p256dh, auth, deposit_day, user_id, track, plan_year')
-      .eq('deposit_day', today);
-    if (error) throw error;
+    // **שני טריגרים, לא אחד.** יום ההפקדה הקבוע, **וגם** תאריך
+    // שהמשתמש בחר בפופאפ (״להזכיר לי בעוד חמישה ימים״). בלי השני
+    // הבחירה ההיא הייתה מתה בדפדפן ושום תזכורת לא הייתה נשלחת.
+    //
+    // ו-`snooze_until` עשוי לא להיות קיים — העמודה נוספת ב-SQL
+    // נפרד. אם היא חסרה, חוזרים לשאילתה שעבדה עד כה **במקום
+    // להפיל את ה-cron ולשתוק לכולם.**
+    const COLS = 'id, endpoint, p256dh, auth, deposit_day, user_id, track, plan_year';
+    let subs = null, snoozeReady = true;
+    {
+      const r = await admin.from('push_subscriptions')
+        .select(COLS + ', snooze_until')
+        .or(`deposit_day.eq.${today},snooze_until.eq.${today}`);
+      if (r.error) {
+        if (!/snooze_until/i.test(r.error.message || '')) throw r.error;
+        snoozeReady = false;
+        const f = await admin.from('push_subscriptions').select(COLS).eq('deposit_day', today);
+        if (f.error) throw f.error;
+        subs = f.data;
+      } else {
+        subs = r.data;
+      }
+    }
 
-    if (!subs?.length) return res.status(200).json({ ok: true, day: today, sent: 0, removed: 0 });
+    if (!subs?.length) {
+      return res.status(200).json({ ok: true, day: today, sent: 0, removed: 0, snoozeReady });
+    }
 
     // **ההודעה נבנית לכל נמען בנפרד**, כי המסלול והמצב שונים.
     // אם אין יומן הפקדות — או אין בו כלום — נשלחת תזכורת ההפקדה
@@ -119,8 +139,21 @@ export default async function handler(req, res) {
         body: msg?.body ?? BODY,
         icon: '/favicon.svg',
         tag: msg ? 'mgs-withdraw' : 'mgs-deposit',
-        data: { url: msg ? `${APP_URL}/#tax` : `${APP_URL}/` },
+        // **`?remind=1` לפני ה-hash, ולא אחריו.** ‏hash הוא הסוף של
+        // ה-URL; מה שבא אחריו הוא חלק מהשבר ו-`searchParams` לא
+        // יראה אותו — והפופאפ לא היה נפתח.
+        data: { url: `${APP_URL}/?remind=1#tax` },
       }));
+    }
+
+    // הדחייה היא חד־פעמית: אחרי שנשלחה היא מתנקה, אחרת אותה שורה
+    // הייתה נבחרת כל יום מכאן והלאה.
+    if (snoozeReady) {
+      const due = subs.filter(x => x.snooze_until === today).map(x => x.id);
+      if (due.length) {
+        await admin.from('push_subscriptions')
+          .update({ snooze_until: null }).in('id', due);
+      }
     }
 
     const results = await Promise.allSettled(

@@ -24,7 +24,7 @@ const pc = (v: number) => `${(v * 100).toFixed(1)}%`;
  * הנייר, **ועליית הדולר אינה רווח לצורכי מס.** זה יכול להוריד את
  * המס בעשרות אחוזים, והמשקיע לא יודע את זה אם אף אחד לא מראה לו.
  */
-export function TaxPage() {
+export function TaxPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [pos, setPos] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [setupNeeded, setSetup] = useState(false);
@@ -73,7 +73,11 @@ export function TaxPage() {
   return (
     <div className="space-y-6" dir="rtl">
       <Card glow>
-        <h2 className="text-xl font-bold text-gold-gradient">מחשבון מס משיכה</h2>
+        <h2 className={embedded
+          ? 'text-[15px] font-bold text-gold-light'
+          : 'text-xl font-bold text-gold-gradient'}>
+          {embedded ? 'הפירוק לפי סעיף 88' : 'מחשבון מס משיכה'}
+        </h2>
         <p className="text-[12px] text-text-muted mt-1.5 leading-relaxed">
           כמה מס תשלמו על המשיכה של החודש, ומה יגיע לחשבון. <b className="text-gold">25%
           על הרווח הריאלי</b> — ובנייר במטבע חוץ, לפי סעיף 88, ה״מדד״ הוא
@@ -122,8 +126,11 @@ export function TaxPage() {
             </p>
           </div>
 
+          {!embedded && (
           <Card>
-            <h3 className="text-[15px] font-bold text-gold-light mb-3">המשיכה של החודש</h3>
+            <h3 className="text-[15px] font-bold text-gold-light mb-3">
+              {embedded ? 'הנתונים שהחישוב רץ עליהם' : 'המשיכה של החודש'}
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {[
                 ['המסלול', track === 'flow' ? 'תזרים' : track === 'both' ? 'תזרים וצמיחה' : 'צמיחה'],
@@ -149,7 +156,10 @@ export function TaxPage() {
               </p>
             )}
           </Card>
+          )}
 
+          {!embedded && (
+            <>
           <div className="term cx-edit">
             <div className="grp">
               <span className="glab">למשוך החודש</span>
@@ -189,6 +199,9 @@ export function TaxPage() {
               </p>
             )}
           </Card>
+
+            </>
+          )}
 
           <Card>
             <h3 className="text-[15px] font-bold text-gold-light mb-3">
@@ -244,7 +257,7 @@ export function TaxPage() {
         </p>
       </div>
 
-      <Disclaimer />
+      {!embedded && <Disclaimer />}
     </div>
   );
 }

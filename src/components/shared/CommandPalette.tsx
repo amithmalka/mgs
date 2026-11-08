@@ -23,7 +23,7 @@ const TARGETS: Array<{ id: Tab; he: string; en: string; alias: string }> = [
   { id: 'month', he: 'החודש', en: 'This month', alias: 'קנייה הפקדה buy deposit month' },
   { id: 'build', he: 'לבחור תיק', en: 'Choose a portfolio', alias: 'מסלול קומבינציה combo track build' },
   { id: 'study', he: 'קרן השתלמות', en: 'Study fund', alias: 'השתלמות גמל study fund pension' },
-  { id: 'tax', he: 'מחשבון מס משיכה', en: 'Withdrawal tax', alias: 'מס משיכה tax withdraw 88' },
+  { id: 'tax', he: 'הפקדות ומשיכות', en: 'Deposits & withdrawals', alias: 'הפקדה משיכה מס אישור תזכורת tax withdraw deposit 88' },
   { id: 'kids', he: 'MGS Kids', en: 'MGS Kids', alias: 'ילדים ילד kids child' },
   { id: 'academy', he: 'ללמוד', en: 'Learn', alias: 'מצגות שיעור academy learn decks' },
   { id: 'mgs', he: 'MGS', en: 'MGS', alias: 'mgs מנוע engine' },

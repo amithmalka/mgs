@@ -56,6 +56,11 @@ export interface TaxLine {
   inflation: number;
   /** והרווח הריאלי — **זה בסיס המס** */
   gainReal: number;
+  /** **כמה שקלים נלקחים מהרכיב הזה במשיכה הזאת** — פרו־רטה לפי
+   *  השווי, ואפס לרכיב שמתחת לעלות ולכן אינו נמכר. נחשב בסבב שני,
+   *  אחרי שידוע מי זכאי בכלל; מסך האישור צריך אותו כדי לומר **מה
+   *  למכור**, ולא רק כמה מס יצא. */
+  sold: number;
 }
 
 export interface WithdrawTax {
@@ -127,7 +132,7 @@ export function withdrawTax(
     lines.push({
       k: p.k, ccy, units: p.units, valueIls,
       investedIls: p.investedIls, investedCcy: p.investedCcy, valueCcy,
-      gainNominal, inflation, gainReal,
+      gainNominal, inflation, gainReal, sold: 0,
     });
   }
 
@@ -141,6 +146,7 @@ export function withdrawTax(
   let taxable = 0, nominalTaxable = 0;
   for (const l of sellable) {
     const part = pool > 0 ? (l.valueIls / pool) * take : 0;
+    l.sold = part;
     const realFrac = l.valueIls > 0 ? Math.max(0, l.gainReal) / l.valueIls : 0;
     const nomFrac = l.valueIls > 0 ? Math.max(0, l.gainNominal) / l.valueIls : 0;
     taxable += part * realFrac;

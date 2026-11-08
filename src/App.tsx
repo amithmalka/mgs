@@ -12,7 +12,7 @@ import { useLangStore } from './store/langStore';
 import { Disclaimer } from './components/shared/Disclaimer';
 import { Onboarding } from './components/onboarding/Onboarding';
 import { useOnboardingStore } from './store/onboardingStore';
-import { TaxPage } from './pages/TaxPage';
+import { InvestPage } from './pages/InvestPage';
 import { CommandPalette } from './components/shared/CommandPalette';
 import { useReveal } from './hooks/useReveal';
 
@@ -28,7 +28,7 @@ const pages: Record<Tab, React.FC<{ onNavigate?: (tab: Tab) => void }>> = {
   kids: KidsPage,
   build: BuildPage,
   study: StudyPage,
-  tax: TaxPage,
+  tax: InvestPage,
   academy: AcademyPage,
 };
 

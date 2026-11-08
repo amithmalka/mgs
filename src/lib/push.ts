@@ -150,6 +150,36 @@ export async function unsubscribeFromPush(userId: string): Promise<PushResult> {
   }
 }
 
+/** **דחיית התזכורת לתאריך — בשרת, לא רק בדפדפן.**
+ *
+ *  **ולמה זה חייב להגיע לשרת.** הפופאפ שנפתח כאן יודע לשתוק עד
+ *  התאריך, אבל **הדחיפה נשלחת מ-cron ולא מהדפדפן** — ולכן אם
+ *  הדחייה נשארת מקומית, לא תישלח שום תזכורת נוספת והמשתמש שביקש
+ *  ״להזכיר לי בעוד חמישה ימים״ לא יקבל כלום. הדחייה נכתבת לשורת
+ *  המינוי, וה-cron בודק אותה בנוסף ליום ההפקדה.
+ *
+ *  **וכשלון כאן אינו כשלון של הדחייה.** הפופאפ כבר שתק מקומית, ולכן
+ *  התוצאה חוזרת כדי שהמסך יוכל לומר שהתזכורת החוזרת לא מובטחת —
+ *  לא כדי לבטל את הדחייה. */
+export async function snoozePush(userId: string, until: string): Promise<PushResult> {
+  if (!pushSupported()) return { ok: false, reason: 'הדפדפן הזה לא תומך בהתראות דחיפה.' };
+  try {
+    const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+    const subscription = await registration?.pushManager.getSubscription();
+    if (!subscription) return { ok: false, reason: 'אין מינוי להתראות במכשיר הזה.' };
+    const res = await fetch(ENDPOINT, {
+      method: 'PATCH',
+      headers: await authHeaders(),
+      body: JSON.stringify({ userId, endpoint: subscription.endpoint, snoozeUntil: until }),
+    });
+    if (!res.ok) return { ok: false, reason: await serverReason(res) };
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { ok: false, reason: `דחיית התזכורת נכשלה: ${message}` };
+  }
+}
+
 /**
  * /api/* only exists on the deployed site, so under `npm run dev` the request
  * falls through to Vite and we get index.html back. Say so plainly instead of
