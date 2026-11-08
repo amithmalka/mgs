@@ -142,20 +142,22 @@ function onePath(o: StudyInput, months: number, r: () => number) {
       let open = accs.find(a => a.open);
       if (!open) { open = empty(m); accs.push(open); }
 
-      const f = {} as Record<Sleeve, number>, drop = {} as Record<Sleeve, number>;
-      let s = 0, deepest: Sleeve = SLEEVES[0], worst = -1;
+      // אותו כלל שב-mixEngine וב-portfolioSim: בשיא UP_CAP בלי קשר
+      // לגודל העלייה, מתחת לשיא עומק הנפילה, והיתרה למי שעלה הכי פחות.
+      const f = {} as Record<Sleeve, number>, rise = {} as Record<Sleeve, number>;
+      let s = 0, target: Sleeve = SLEEVES[0];
       for (const t of SLEEVES) {
         const x = (px[t][m] / peak[t] - 1) * 100;
-        f[t] = (x >= 0 ? Math.min(x, UP_CAP) : -x) / 100;
-        drop[t] = Math.max(0, -x);
+        rise[t] = x;
+        f[t] = (x >= 0 ? UP_CAP : -x) / 100;
         s += f[t];
-        if (drop[t] > worst) { worst = drop[t]; deepest = t; }
       }
+      for (const t of SLEEVES) if (rise[t] < rise[target]) target = t;
       const al = {} as Record<Sleeve, number>;
-      if (s >= 1 || worst <= 0) for (const t of SLEEVES) al[t] = dep * f[t] / s;
+      if (s >= 1) for (const t of SLEEVES) al[t] = dep * f[t] / s;
       else {
         for (const t of SLEEVES) al[t] = dep * f[t];
-        al[deepest] += dep * (1 - s);
+        al[target] += dep * (1 - s);
       }
       for (const t of SLEEVES) if (al[t] > 0) {
         open.sh[t] += al[t] / px[t][m];

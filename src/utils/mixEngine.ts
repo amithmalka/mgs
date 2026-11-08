@@ -192,21 +192,29 @@ export function runMix(o: MixInput): MixResult {
         const dep = depositAt(year, o.base, o.growth, depYears);
         let al: number[];
         if (o.useRule) {
-          // בשיא 10%, מתחת לשיא אחוז הירידה, והשארית לעמוק ביותר
-          const ask = new Array(n).fill(0), drop = new Array(n).fill(0);
+          // **הכלל כפי שנאמר, ולא כפי שהיה כאן.** רכיב בשיא מבקש
+          // UP_CAP מההפקדה **בלי קשר לגודל העלייה**; רכיב מתחת לשיא
+          // מבקש את עומק הנפילה שלו; והיתרה הולכת למי שהעלייה שלו
+          // הנמוכה ביותר — שהוא הנופל העמוק ביותר אם מישהו נפל, ומי
+          // שעלה הכי פחות אם כולם בשיא. שתי השורות בכלל אחד.
+          //
+          // מה שהיה כאן: הבקשה של רכיב בשיא הייתה min(עלייה, 10), ולכן
+          // **כשכולם בשיא הכסף הלך בעיקר למי שעלה הכי הרבה** — ההיפך
+          // מהכלל. ובמקרה הזה השארית לא חולקה בכלל.
+          const ask = new Array(n).fill(0), rise = new Array(n).fill(0);
+          let s = 0, target = 0;
           for (let i = 0; i < n; i++) {
             const x = (px[i] / peak[i] - 1) * 100;
-            ask[i] = x >= 0 ? Math.min(x, UP_CAP) : -x;
-            drop[i] = Math.max(0, -x);
+            rise[i] = x;
+            ask[i] = x >= 0 ? UP_CAP : -x;
+            s += ask[i];
           }
-          const s = ask.reduce((a, b) => a + b, 0);
-          let deepest = 0;
-          for (let i = 1; i < n; i++) if (drop[i] > drop[deepest]) deepest = i;
-          if (s >= 100 || Math.max(...drop) <= 0) {
-            al = s > 0 ? ask.map(a => dep * a / s) : new Array(n).fill(dep / n);
+          for (let i = 1; i < n; i++) if (rise[i] < rise[target]) target = i;
+          if (s >= 100) {
+            al = ask.map(a => dep * a / s);
           } else {
             al = ask.map(a => dep * a / 100);
-            al[deepest] += dep * (100 - s) / 100;
+            al[target] += dep * (100 - s) / 100;
           }
         } else {
           al = keys.map(k => dep * (o.parts.find(x => x.k === k)!.w / totW));

@@ -159,20 +159,23 @@ function onePath(o: PortInput, L: number[][], mu: number[], sd: number[], months
 
     const dep = depositFor(o.track, o.cohort, year, o.base, o.growth, o.years, o.startYear);
     if (dep > 0) {
-      const f = new Array(n).fill(0), drop = new Array(n).fill(0);
-      let s = 0, deepest = 0, worst = -1;
+      // רכיב בשיא מבקש UP_CAP בלי קשר לגודל העלייה, רכיב מתחת לשיא
+      // את עומק הנפילה, והיתרה למי שהעלייה שלו הנמוכה ביותר — הנופל
+      // העמוק ביותר, או מי שעלה הכי פחות כשכולם בשיא. ראו mixEngine.
+      const f = new Array(n).fill(0), rise = new Array(n).fill(0);
+      let s = 0, target = 0;
       for (let i = 0; i < n; i++) {
         const x = (P(i, m) / peak[i] - 1) * 100;
-        f[i] = (x >= 0 ? Math.min(x, UP_CAP) : -x) / 100;
-        drop[i] = Math.max(0, -x);
+        rise[i] = x;
+        f[i] = (x >= 0 ? UP_CAP : -x) / 100;
         s += f[i];
-        if (drop[i] > worst) { worst = drop[i]; deepest = i; }
       }
+      for (let i = 1; i < n; i++) if (rise[i] < rise[target]) target = i;
       const al = new Array(n).fill(0);
-      if (s >= 1 || worst <= 0) for (let i = 0; i < n; i++) al[i] = dep * f[i] / s;
+      if (s >= 1) for (let i = 0; i < n; i++) al[i] = dep * f[i] / s;
       else {
         for (let i = 0; i < n; i++) al[i] = dep * f[i];
-        al[deepest] += dep * (1 - s);
+        al[target] += dep * (1 - s);
       }
       for (let i = 0; i < n; i++) if (al[i] > 0) {
         sh[i] += al[i] / P(i, m); cost[i] += al[i]; costIdx[i] += al[i] / idx; put[i] += al[i];
