@@ -36,6 +36,11 @@ import type { Position } from './deposits';
 /** שיעור מס רווחי הון על נייר ערך סחיר — סעיף 91(ב)(1) */
 export const CGT = 0.25;
 
+/** **השנה הראשונה שבה משיכה נפתחת בכלל.** ראו הנימוק המדוד
+ *  ב-`mgsSim.RAMP` — שלוש שנות צבירה הן ההפרש בין 28% מהמתחילים
+ *  שנחסמים לבין אפס. */
+export const WITHDRAW_FROM_YEAR = 3;
+
 export interface TaxLine {
   /** מפתח הרכיב בקטלוג */
   k: string;
@@ -182,6 +187,13 @@ export function monthlyDraw(
   track: 'flow' | 'both' | 'growth', planYear: number, value: number,
 ): { rate: number; amount: number; nextStep: number | null } {
   if (track === 'growth') return { rate: 0, amount: 0, nextStep: null };
+  // **שנתיים ראשונות סגורות — אותו כלל שב-`mgsSim.RAMP`.**
+  // בלי זה אפשר היה למשוך מהחודש הראשון, ונמדד שמי שמתחיל למשוך
+  // אחרי 12 חודשי צבירה נחסם ב-28% מנקודות ההתחלה, עד 28 חודשים
+  // ברצף. משנה 3 — אפס חסימות ב-168 נקודות התחלה.
+  if (planYear < WITHDRAW_FROM_YEAR) {
+    return { rate: 0, amount: 0, nextStep: WITHDRAW_FROM_YEAR - planYear };
+  }
   const step = track === 'flow' ? 6 : 10;
   const rate = planYear >= step ? 0.04 : 0.01;
   return {
