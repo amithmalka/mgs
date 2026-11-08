@@ -5,6 +5,7 @@ import { Card } from '../components/layout/Card';
 import { TrackBanner } from '../components/layout/TrackBanner';
 import { AllocationPie } from '../components/charts/AllocationPie';
 import { formatCurrency, formatPercent } from '../utils/format';
+import { Rows } from '../components/shared/Rows';
 
 export function DashboardPage() {
   const { allocations, currentPortfolioValue, monthlyDeposit, phase, goal, getTotalDeposited, getProfit, notifications } = useStore();
@@ -73,39 +74,38 @@ export function DashboardPage() {
       </div>
 
       <Card title={t('allocationBreakdown', lang)}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-surface-4">
-                <th className="text-start py-2 text-text-muted font-medium text-xs">{t('asset', lang)}</th>
-                <th className="text-end py-2 text-text-muted font-medium text-xs">{t('target', lang)}</th>
-                <th className="text-end py-2 text-text-muted font-medium text-xs">{t('current', lang)}</th>
-                <th className="text-end py-2 text-text-muted font-medium text-xs">{t('value', lang)}</th>
-                <th className="text-end py-2 text-text-muted font-medium text-xs">{t('drift', lang)}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0).map(a => {
-                const currentPct = currentPortfolioValue > 0 ? (a.currentValue / currentPortfolioValue) * 100 : 0;
-                const drift = currentPct - a.targetPercent;
-                return (
-                  <tr key={a.assetClass} className="border-b border-surface-3/50">
-                    <td className="py-2.5 flex items-center gap-2 text-text">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
-                      {a.label}
-                    </td>
-                    <td className="text-end py-2.5 text-text-muted">{formatPercent(a.targetPercent)}</td>
-                    <td className="text-end py-2.5 text-text">{formatPercent(currentPct)}</td>
-                    <td className="text-end py-2.5 text-text">{formatCurrency(a.currentValue)}</td>
-                    <td className={`text-end py-2.5 font-medium ${Math.abs(drift) < 2 ? 'text-success' : drift > 0 ? 'text-warning' : 'text-danger'}`}>
-                      {drift > 0 ? '+' : ''}{formatPercent(drift)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Rows
+          cols={[
+            { k: 'asset', label: t('asset', lang), lead: true },
+            { k: 'target', label: t('target', lang), ltr: true },
+            { k: 'current', label: t('current', lang), ltr: true },
+            { k: 'value', label: t('value', lang), ltr: true, big: true },
+            { k: 'drift', label: t('drift', lang), ltr: true },
+          ]}
+          rows={allocations.filter(a => a.targetPercent > 0 || a.currentValue > 0).map(a => {
+            const currentPct = currentPortfolioValue > 0 ? (a.currentValue / currentPortfolioValue) * 100 : 0;
+            const drift = currentPct - a.targetPercent;
+            return {
+              id: a.assetClass,
+              cells: {
+                asset: (
+                  <span className="flex items-center gap-2 text-text">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                    {a.label}
+                  </span>
+                ),
+                target: <span className="text-text-muted">{formatPercent(a.targetPercent)}</span>,
+                current: formatPercent(currentPct),
+                value: formatCurrency(a.currentValue),
+                drift: (
+                  <span className={`font-medium ${Math.abs(drift) < 2 ? 'text-success' : drift > 0 ? 'text-warning' : 'text-danger'}`}>
+                    {drift > 0 ? '+' : ''}{formatPercent(drift)}
+                  </span>
+                ),
+              },
+            };
+          })}
+        />
       </Card>
     </div>
   );

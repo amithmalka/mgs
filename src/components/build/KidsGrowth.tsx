@@ -23,6 +23,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Stat } from '../shared/Stat';
+import { Rows } from '../shared/Rows';
 import { IRISH, BUY, mix, type Tier } from '../../constants/irish';
 import { forwardFor, OUTLOOK_HE, type Outlook } from '../../constants/forward';
 import { runMix } from '../../utils/mixEngine';
@@ -232,42 +233,36 @@ export function KidsGrowth({ onBuild }: { onBuild?: () => void }) {
         </>
       )}
 
-      <div className="scroll bleed">
-        <table>
-          <thead>
-            <tr>
-              <th className="lead">הרכיב</th>
-              <th>משקל</th>
-              <th>כמה בחודש</th>
-              <th>סימול</th>
-              <th>ההנחה</th>
-              <th>תנודתיות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {holdings.map(h => {
-              const f = IRISH.find(x => x.k === h.k);
-              const b = BUY[h.k];
-              if (!f) return null;
-              return (
-                <tr key={h.k}>
-                  <td className="lead">
-                    <span className={`lab-dot ${DOT[f.tier]}`} aria-hidden="true" />
-                    {f.he}
-                  </td>
-                  <td dir="ltr">{pc(tot ? h.w / tot : 0)}</td>
-                  <td dir="ltr" className="gold">
-                    <b>{n0(base * (tot ? h.w / tot : 0))}₪</b>
-                  </td>
-                  <td dir="ltr" className="tk">{b ? b.sym : '—'}</td>
-                  <td dir="ltr">{sg(f.cagr)}</td>
-                  <td dir="ltr">{pc(f.vol)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <Rows
+        cols={[
+          { k: 'part', label: 'הרכיב', lead: true },
+          { k: 'w', label: 'משקל', ltr: true },
+          { k: 'mo', label: 'כמה בחודש', ltr: true, big: true },
+          { k: 'sym', label: 'סימול', ltr: true },
+          { k: 'cagr', label: 'ההנחה', ltr: true },
+          { k: 'vol', label: 'תנודתיות', ltr: true },
+        ]}
+        rows={holdings.flatMap(h => {
+          const f = IRISH.find(x => x.k === h.k);
+          const b = BUY[h.k];
+          if (!f) return [];
+          return [{
+            id: h.k,
+            cells: {
+              part: <>
+                <span className={`lab-dot ${DOT[f.tier]}`} aria-hidden="true" />
+                {f.he}
+              </>,
+              w: pc(tot ? h.w / tot : 0),
+              mo: <b className="gold">{n0(base * (tot ? h.w / tot : 0))}₪</b>,
+              sym: <span className="tk">{b ? b.sym : '—'}</span>,
+              cagr: sg(f.cagr),
+              vol: pc(f.vol),
+            },
+          }];
+        })}
+        empty="אין רכיבים בתיק."
+      />
 
       <p className="note">
         <b>זה אותו מנוע של כל המערכת</b> — כל רכיב מדומה בנפרד עם

@@ -13,6 +13,7 @@
 import { useState, useMemo } from 'react';
 import { Stat } from '../shared/Stat';
 import { DataCards } from '../shared/DataCards';
+import { Rows } from '../shared/Rows';
 import {
   IRISH, TIER_HE, TIER_BAND, WINDOW,
   RULE_BY_SIZE, RULE_BY_PICK, RULE_FLOOR, mix, corr,
@@ -269,41 +270,35 @@ export function IrishLab() {
           מסחר מקוון רגיל, בשקלים, <b>בלי עמלת המרת מט״ח</b>. כל ברוקר
           ישראלי, בלי חדר מסחר ובלי טלפון.
         </p>
-        <div className="scroll bleed">
-          <table>
-            <thead>
-              <tr>
-                <th className="lead">הקרן</th>
-                <th>נייר</th>
-                <th>סימול</th>
-                <th>תמורה יומית</th>
-                <th>דמי ניהול</th>
-                <th>תשואה</th>
-                <th>תנודתיות</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ilsFunds.map(f => {
-                const t = TURNOVER[f.k] ?? 0;
-                return (
-                  <tr key={f.k}>
-                    <td className="lead">{f.he}
-                      <small className="lab-sub">{f.desc}</small></td>
-                    <td dir="ltr" className="gold">{f.tase}</td>
-                    <td dir="ltr" className="tk">{f.tick}</td>
-                    <td dir="ltr" className={t < 0 ? 'gold' : ''}>
-                      {t < 0 ? 'מ-5.11.2026' : `${t.toLocaleString('en-US')}₪`}
-                    </td>
-                    <td dir="ltr">{pc(f.ter, 2)}</td>
-                    <td dir="ltr" className="up">{sg(f.cagr)}
-                      {f.short && <span className="lab-flag">חלון קצר</span>}</td>
-                    <td dir="ltr">{pc(f.vol, 0)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Rows
+          cols={[
+            { k: 'he', label: 'הקרן', lead: true },
+            { k: 'tase', label: 'נייר', ltr: true },
+            { k: 'tick', label: 'סימול', ltr: true },
+            { k: 'turn', label: 'תמורה יומית', ltr: true, big: true },
+            { k: 'ter', label: 'דמי ניהול', ltr: true },
+            { k: 'cagr', label: 'תשואה', ltr: true },
+            { k: 'vol', label: 'תנודתיות', ltr: true },
+          ]}
+          rows={ilsFunds.map(f => {
+            const t = TURNOVER[f.k] ?? 0;
+            return {
+              id: f.k,
+              cells: {
+                he: <>{f.he}<small className="lab-sub">{f.desc}</small></>,
+                tase: <span className="gold">{f.tase}</span>,
+                tick: <span className="tk">{f.tick}</span>,
+                turn: <span className={t < 0 ? 'gold' : undefined}>
+                  {t < 0 ? 'מ-5.11.2026' : `${t.toLocaleString('en-US')}₪`}
+                </span>,
+                ter: pc(f.ter, 2),
+                cagr: <span className="up">{sg(f.cagr)}
+                  {f.short && <span className="lab-flag">חלון קצר</span>}</span>,
+                vol: pc(f.vol, 0),
+              },
+            };
+          })}
+        />
         <p className="note">
           <b>אבל {ilsFunds.length} קרנות אינן {ilsFunds.length} אפשרויות.</b>{' '}
           קרנות שמתואמות 0.92 ומעלה הן אותו נכס באריזה אחרת, ואין טעם
@@ -417,46 +412,41 @@ export function IrishLab() {
                 {TIER_HE[t]}
                 <small>{TIER_BAND[t]} · {rows.length} קרנות</small>
               </h3>
-              <div className="scroll bleed">
-                <table>
-                  <thead>
-                    <tr>
-                      <th className="lead">הקרן</th>
-                      <th>סימול</th>
-                      <th>מחליפה את</th>
-                      <th>איפה אפשר לקנות</th>
-                      <th>דמי ניהול</th>
-                      <th>תשואה שנתית</th>
-                      <th>תנודתיות</th>
-                      <th>תשואה לכל יחידת תנודתיות</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map(f => (
-                      <tr key={f.k}>
-                        <td className="lead">
-                          {f.he}
-                          {f.short && <span className="lab-flag">חלון קצר · {f.months} חודשים</span>}
-                          <small className="lab-sub">{f.desc}</small>
-                        </td>
-                        <td dir="ltr" className="tk">{f.tick}</td>
-                        <td dir="ltr" className="dim">{f.us}</td>
-                        <td>{f.tase ? `ת״א ${f.tase}` : 'ברוקר אירופי'}</td>
-                        <td dir="ltr">{pc(f.ter, 2)}</td>
-                        <td className={f.cagr >= 0 ? 'up' : 'warn'} dir="ltr">
-                          {sg(f.cagr)}
-                          <Bar v={Math.abs(f.cagr)} max={maxC}
-                            tone={f.cagr >= 0 ? 'var(--up, #4ADE80)' : 'var(--dn, #F87171)'} />
-                        </td>
-                        <td dir="ltr">{pc(f.vol, 0)}</td>
-                        <td dir="ltr" className={f.cagr / f.vol >= 1 ? 'gold' : ''}>
-                          {(f.cagr / f.vol).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Rows
+                cols={[
+                  { k: 'he', label: 'הקרן', lead: true },
+                  { k: 'tick', label: 'סימול', ltr: true },
+                  { k: 'us', label: 'מחליפה את', ltr: true, dim: true },
+                  { k: 'where', label: 'איפה אפשר לקנות' },
+                  { k: 'ter', label: 'דמי ניהול', ltr: true },
+                  { k: 'cagr', label: 'תשואה שנתית', ltr: true },
+                  { k: 'vol', label: 'תנודתיות', ltr: true },
+                  { k: 'ratio', label: 'תשואה לכל יחידת תנודתיות', ltr: true, big: true },
+                ]}
+                rows={rows.map(f => ({
+                  id: f.k,
+                  cells: {
+                    he: <>
+                      {f.he}
+                      {f.short && <span className="lab-flag">חלון קצר · {f.months} חודשים</span>}
+                      <small className="lab-sub">{f.desc}</small>
+                    </>,
+                    tick: <span className="tk">{f.tick}</span>,
+                    us: f.us,
+                    where: f.tase ? `ת״א ${f.tase}` : 'ברוקר אירופי',
+                    ter: pc(f.ter, 2),
+                    cagr: <span className={f.cagr >= 0 ? 'up' : 'warn'}>
+                      {sg(f.cagr)}
+                      <Bar v={Math.abs(f.cagr)} max={maxC}
+                        tone={f.cagr >= 0 ? 'var(--up, #4ADE80)' : 'var(--dn, #F87171)'} />
+                    </span>,
+                    vol: pc(f.vol, 0),
+                    ratio: <span className={f.cagr / f.vol >= 1 ? 'gold' : undefined}>
+                      {(f.cagr / f.vol).toFixed(2)}
+                    </span>,
+                  },
+                }))}
+              />
             </div>
           );
         })}
@@ -634,36 +624,31 @@ export function IrishLab() {
           תמהיל על המחצית הראשונה של התקופה, <b>בלי לראות את ההמשך</b>,
           ובודקים אותו על המחצית השנייה. בלי זה כל השוואה מרמה את עצמה.
         </p>
-        <div className="scroll bleed">
-          <table>
-            <thead>
-              <tr>
-                <th className="lead">החלון</th>
-                <th>תקופת האימון</th>
-                <th>תקופת המבחן</th>
-                <th>המנגנון על כל הקרנות</th>
-                <th>חלוקה שווה על הכל</th>
-                <th>התמהיל שנבחר</th>
-                <th>ההפרש</th>
-              </tr>
-            </thead>
-            <tbody>
-              {OUT_OF_SAMPLE.map(t => (
-                <tr key={t.months}>
-                  <td className="lead">{t.months} חודשים</td>
-                  <td dir="ltr" className="dim">{t.train}</td>
-                  <td dir="ltr" className="dim">{t.test}</td>
-                  <td dir="ltr" className="warn">{sg(t.ruleAll, 1)}</td>
-                  <td dir="ltr">{sg(t.equalAll, 1)}</td>
-                  <td dir="ltr" className="gold"><b>{sg(t.picked, 1)}</b></td>
-                  <td dir="ltr" className="up">
-                    +{((Math.max(t.picked, t.rulePicked) - t.ruleAll) * 100).toFixed(1)} נק׳
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Rows
+          cols={[
+            { k: 'win', label: 'החלון', lead: true },
+            { k: 'train', label: 'תקופת האימון', ltr: true, dim: true },
+            { k: 'test', label: 'תקופת המבחן', ltr: true, dim: true },
+            { k: 'ruleAll', label: 'המנגנון על כל הקרנות', ltr: true },
+            { k: 'equalAll', label: 'חלוקה שווה על הכל', ltr: true },
+            { k: 'picked', label: 'התמהיל שנבחר', ltr: true },
+            { k: 'diff', label: 'ההפרש', ltr: true, big: true },
+          ]}
+          rows={OUT_OF_SAMPLE.map(t => ({
+            id: String(t.months),
+            cells: {
+              win: `${t.months} חודשים`,
+              train: t.train,
+              test: t.test,
+              ruleAll: <span className="warn">{sg(t.ruleAll, 1)}</span>,
+              equalAll: sg(t.equalAll, 1),
+              picked: <span className="gold"><b>{sg(t.picked, 1)}</b></span>,
+              diff: <span className="up">
+                +{((Math.max(t.picked, t.rulePicked) - t.ruleAll) * 100).toFixed(1)} נק׳
+              </span>,
+            },
+          }))}
+        />
         <p>
           <b>הבחירה ניצחה בכל שלושת החלונות</b>, ובהפרש של 2.4 עד 17.5
           נקודות בשנה. <b>והמנגנון על יוניברס רחב היה הגרוע ביותר</b>{' '}

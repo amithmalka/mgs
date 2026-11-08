@@ -13,6 +13,7 @@
  */
 import { useMemo, useState } from 'react';
 import { DataCards } from '../components/shared/DataCards';
+import { Rows } from '../components/shared/Rows';
 import { IRISH, UMBRELLA, HOLDINGS, LENDING, WINDOW, type IrishFund } from '../constants/irish';
 import { BUY, BUY_UNVERIFIED } from '../constants/irish';
 import { ACCESS, TURNOVER, MIN_TURNOVER, EXPOSURES, ASK } from '../constants/access';
@@ -185,74 +186,67 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
 
           {ROLES.map(role => {
             const rows = byRole(role);
-            if (!rows.length) return null;
             return (
               <section key={role}>
                 <h2>{ROLE_HE[role].he} — {ROLE_HE[role].sub} ({rows.length})</h2>
-                <div className="scroll bleed">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th className="lead">הקרן</th>
-                        <th>סימול להזמנה</th>
-                        <th>בורסה</th>
-                        <th>מטבע</th>
-                        <th>ISIN</th>
-                        <th>מבנה</th>
-                        <th>מחזיקה</th>
-                        <th>3 הגדולות</th>
-                        <th>השאלה בפועל</th>
-                        <th>דמי ניהול</th>
-                        <th>תשואה</th>
-                        <th>תנודתיות</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map(f => {
-                        const b = BUY[f.k];
-                        const h = HOLDINGS[f.k];
-                        const l = LENDING[f.k];
-                        const unv = BUY_UNVERIFIED.includes(f.k);
-                        return (
-                          <tr key={f.k}>
-                            <td className="lead">
-                              {f.he}
-                              <small className="bk-sub">{f.desc}</small>
-                            </td>
-                            <td dir="ltr" className="tk"><b>{b.sym}</b></td>
-                            <td>{b.ex}</td>
-                            <td dir="ltr">
-                              <Flag tone={unv ? 'warn' : 'ok'}>{b.cur}</Flag>
-                              {unv && <small className="bk-sub">לא אומת מול הבורסה</small>}
-                            </td>
-                            <td dir="ltr" className="dim">{f.isin}</td>
-                            <td dir="ltr">
-                              {UMBRELLA[f.k] === 'ICAV'
-                                ? <Flag tone="warn">ICAV</Flag>
-                                : <span className="dim">plc</span>}
-                            </td>
-                            <td dir="ltr">{h ? n0(h.n) : '—'}</td>
-                            <td dir="ltr" className={h && h.top3 > 0.45 ? 'warn' : ''}>
-                              {h ? pc(h.top3, 0) : '—'}
-                            </td>
-                            <td dir="ltr" className={l && l.actual !== null && l.actual > 0.15 ? 'warn' : ''}>
-                              {l
-                                ? l.actual === null ? `עד ${pc(l.max ?? 0, 0)}`
-                                  : l.actual === 0 ? '—' : pc(l.actual, 1)
-                                : '—'}
-                            </td>
-                            <td dir="ltr">{pc(f.ter, 2)}</td>
-                            <td dir="ltr" className={f.cagr >= 0 ? 'up' : 'warn'}>
-                              {sg(f.cagr)}
-                              {f.short && <span className="lab-flag">חלון קצר</span>}
-                            </td>
-                            <td dir="ltr">{pc(f.vol, 0)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <Rows
+                  cols={[
+                    { k: 'he', label: 'הקרן', lead: true },
+                    { k: 'sym', label: 'סימול להזמנה', ltr: true },
+                    { k: 'ex', label: 'בורסה' },
+                    { k: 'cur', label: 'מטבע', ltr: true },
+                    { k: 'isin', label: 'ISIN', ltr: true, dim: true },
+                    { k: 'struct', label: 'מבנה', ltr: true },
+                    { k: 'holds', label: 'מחזיקה', ltr: true },
+                    { k: 'top3', label: '3 הגדולות', ltr: true },
+                    { k: 'lend', label: 'השאלה בפועל', ltr: true },
+                    { k: 'ter', label: 'דמי ניהול', ltr: true },
+                    { k: 'cagr', label: 'תשואה', ltr: true },
+                    { k: 'vol', label: 'תנודתיות', ltr: true },
+                  ]}
+                  empty="אין כאן קרנות — אף קרן בתפקיד הזה לא אומתה להזמנה דרך ברוקר זר."
+                  rows={rows.map(f => {
+                    const b = BUY[f.k];
+                    const h = HOLDINGS[f.k];
+                    const l = LENDING[f.k];
+                    const unv = BUY_UNVERIFIED.includes(f.k);
+                    return {
+                      id: f.k,
+                      cells: {
+                        he: <>
+                          {f.he}
+                          <small className="bk-sub">{f.desc}</small>
+                        </>,
+                        sym: <span className="tk"><b>{b.sym}</b></span>,
+                        ex: b.ex,
+                        cur: <>
+                          <Flag tone={unv ? 'warn' : 'ok'}>{b.cur}</Flag>
+                          {unv && <small className="bk-sub">לא אומת מול הבורסה</small>}
+                        </>,
+                        isin: f.isin,
+                        struct: UMBRELLA[f.k] === 'ICAV'
+                          ? <Flag tone="warn">ICAV</Flag>
+                          : <span className="dim">plc</span>,
+                        holds: h ? n0(h.n) : '—',
+                        top3: <span className={h && h.top3 > 0.45 ? 'warn' : undefined}>
+                          {h ? pc(h.top3, 0) : '—'}
+                        </span>,
+                        lend: <span className={l && l.actual !== null && l.actual > 0.15 ? 'warn' : undefined}>
+                          {l
+                            ? l.actual === null ? `עד ${pc(l.max ?? 0, 0)}`
+                              : l.actual === 0 ? '—' : pc(l.actual, 1)
+                            : '—'}
+                        </span>,
+                        ter: pc(f.ter, 2),
+                        cagr: <span className={f.cagr >= 0 ? 'up' : 'warn'}>
+                          {sg(f.cagr)}
+                          {f.short && <span className="lab-flag">חלון קצר</span>}
+                        </span>,
+                        vol: pc(f.vol, 0),
+                      },
+                    };
+                  })}
+                />
               </section>
             );
           })}
@@ -315,44 +309,39 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
               איריות בדיוק, ולכן <b>אותו פטור ממס עיזבון</b> — פשוט דרך
               הבורסה המקומית.
             </p>
-            <div className="scroll bleed">
-              <table>
-                <thead>
-                  <tr>
-                    <th className="lead">הקרן</th>
-                    <th>מספר נייר</th>
-                    <th>מטבע</th>
-                    <th>תמורה יומית</th>
-                    <th>ISIN</th>
-                    <th>מבנה</th>
-                    <th>דמי ניהול</th>
-                    <th>תשואה</th>
-                    <th>תנודתיות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ils.map(f => {
-                    const t = TURNOVER[f.k] ?? 0;
-                    return (
-                      <tr key={f.k}>
-                        <td className="lead">{f.he}<small className="bk-sub">{f.desc}</small></td>
-                        <td dir="ltr" className="gold"><b>{f.tase}</b></td>
-                        <td><Flag tone="ok">₪ שקלים</Flag></td>
-                        <td dir="ltr" className={t < 0 ? 'gold' : ''}>
-                          {t < 0 ? 'מ-5.11.2026' : `${n0(t)}₪`}
-                        </td>
-                        <td dir="ltr" className="dim">{f.isin}</td>
-                        <td dir="ltr" className="dim">{UMBRELLA[f.k] ?? '—'}</td>
-                        <td dir="ltr">{pc(f.ter, 2)}</td>
-                        <td dir="ltr" className="up">{sg(f.cagr)}
-                          {f.short && <span className="lab-flag">חלון קצר</span>}</td>
-                        <td dir="ltr">{pc(f.vol, 0)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Rows
+              cols={[
+                { k: 'he', label: 'הקרן', lead: true },
+                { k: 'tase', label: 'מספר נייר', ltr: true, big: true },
+                { k: 'cur', label: 'מטבע' },
+                { k: 'turn', label: 'תמורה יומית', ltr: true },
+                { k: 'isin', label: 'ISIN', ltr: true, dim: true },
+                { k: 'struct', label: 'מבנה', ltr: true, dim: true },
+                { k: 'ter', label: 'דמי ניהול', ltr: true },
+                { k: 'cagr', label: 'תשואה', ltr: true },
+                { k: 'vol', label: 'תנודתיות', ltr: true },
+              ]}
+              rows={ils.map(f => {
+                const t = TURNOVER[f.k] ?? 0;
+                return {
+                  id: f.k,
+                  cells: {
+                    he: <>{f.he}<small className="bk-sub">{f.desc}</small></>,
+                    tase: <span className="gold"><b>{f.tase}</b></span>,
+                    cur: <Flag tone="ok">₪ שקלים</Flag>,
+                    turn: <span className={t < 0 ? 'gold' : undefined}>
+                      {t < 0 ? 'מ-5.11.2026' : `${n0(t)}₪`}
+                    </span>,
+                    isin: f.isin,
+                    struct: UMBRELLA[f.k] ?? '—',
+                    ter: pc(f.ter, 2),
+                    cagr: <span className="up">{sg(f.cagr)}
+                      {f.short && <span className="lab-flag">חלון קצר</span>}</span>,
+                    vol: pc(f.vol, 0),
+                  },
+                };
+              })}
+            />
             <p className="note">
               <b>אבל {ils.length} קרנות אינן {ils.length} אפשרויות.</b>{' '}
               קרנות שמתואמות 0.92 ומעלה הן אותו נכס באריזה אחרת. בפועל יש
@@ -695,30 +684,25 @@ export function BrokerPage({ embedded = false }: { embedded?: boolean } = {}) {
               שנים, כולל דמי ניהול. זה מה שקרה בפועל מול מה ש״פי 2״
               ו״פי 3״ היו אמורים לתת.
             </p>
-            <div className="scroll bleed">
-              <table>
-                <thead>
-                  <tr>
-                    <th className="lead">המדד</th>
-                    <th>המדד עצמו</th>
-                    <th>×2 בפועל</th>
-                    <th>×3 בפועל</th>
-                    <th>״פי 3״ היה אמור</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {DECAY.map(d => (
-                    <tr key={d.he}>
-                      <td className="lead">{d.he}</td>
-                      <td dir="ltr">{sg(d.idx, 0)}</td>
-                      <td dir="ltr">{sg(d.x2, 0)}</td>
-                      <td dir="ltr" className="gold">{sg(d.x3, 0)}</td>
-                      <td dir="ltr" className="dim">{sg(d.naive3, 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Rows
+              cols={[
+                { k: 'he', label: 'המדד', lead: true },
+                { k: 'idx', label: 'המדד עצמו', ltr: true },
+                { k: 'x2', label: '×2 בפועל', ltr: true },
+                { k: 'x3', label: '×3 בפועל', ltr: true, big: true },
+                { k: 'naive3', label: '״פי 3״ היה אמור', ltr: true, dim: true },
+              ]}
+              rows={DECAY.map(d => ({
+                id: d.he,
+                cells: {
+                  he: d.he,
+                  idx: sg(d.idx, 0),
+                  x2: sg(d.x2, 0),
+                  x3: <span className="gold">{sg(d.x3, 0)}</span>,
+                  naive3: sg(d.naive3, 0),
+                },
+              }))}
+            />
             <p>
               <b>בנאסד״ק, ×3 החזיר 144% במקום 468%.</b> השחיקה אכלה
               שתי שלישים מהתשואה התיאורטית — ובתמורה הוא ספג נפילה של{' '}

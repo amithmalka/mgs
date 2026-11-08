@@ -17,6 +17,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Stat } from '../shared/Stat';
+import { Rows } from '../shared/Rows';
 import { IRISH, BUY } from '../../constants/irish';
 import { useMyPortfolio, totalWeight } from '../../store/myPortfolio';
 import {
@@ -199,38 +200,37 @@ export function DepositLog({ toBroker, onBuild }: { toBroker: number; onBuild?: 
             הביצוע בברוקר. <b>היחידות מחושבות לבד</b>, כדי שלא יהיה
             שדה אחד שאפשר לטעות בו.
           </p>
-          <div className="scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th className="lead">הרכיב</th><th>סימול</th>
-                  <th>כמה שקלים</th><th>מחיר ליחידה</th><th>יחידות</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(r => (
-                  <tr key={r.h.k}>
-                    <td className="lead">{r.f?.he ?? r.h.k}</td>
-                    <td dir="ltr" className="tk">{BUY[r.h.k]?.sym ?? '—'}</td>
-                    <td>
-                      <input className="amt" type="number" min={0} step={1}
-                        value={r.v.ils} aria-label={`סכום ${r.f?.he}`}
-                        onChange={e => setForm(f => ({ ...f, [r.h.k]: { ...r.v, ils: e.target.value } }))} />
-                    </td>
-                    <td>
-                      <input className="amt" type="number" min={0} step="0.01"
-                        value={r.v.px} aria-label={`מחיר ${r.f?.he}`}
-                        placeholder={BUY[r.h.k]?.cur ?? 'USD'}
-                        onChange={e => setForm(f => ({ ...f, [r.h.k]: { ...r.v, px: e.target.value } }))} />
-                    </td>
-                    <td dir="ltr" className="dim">
-                      {r.units > 0 ? r.units.toFixed(4) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Rows
+            cols={[
+              { k: 'part', label: 'הרכיב', lead: true },
+              { k: 'sym', label: 'סימול', ltr: true },
+              { k: 'ils', label: 'כמה שקלים' },
+              { k: 'px', label: 'מחיר ליחידה' },
+              { k: 'units', label: 'יחידות', ltr: true, dim: true },
+            ]}
+            rows={rows.map(r => ({
+              id: r.h.k,
+              cells: {
+                part: r.f?.he ?? r.h.k,
+                sym: <span className="tk">{BUY[r.h.k]?.sym ?? '—'}</span>,
+                ils: (
+                  <input className="amt" type="number" min={0} step={1}
+                    id={`dl-ils-${r.h.k}`}
+                    value={r.v.ils} aria-label={`סכום ${r.f?.he}`}
+                    onChange={e => setForm(f => ({ ...f, [r.h.k]: { ...r.v, ils: e.target.value } }))} />
+                ),
+                px: (
+                  <input className="amt" type="number" min={0} step="0.01"
+                    id={`dl-px-${r.h.k}`}
+                    value={r.v.px} aria-label={`מחיר ${r.f?.he}`}
+                    placeholder={BUY[r.h.k]?.cur ?? 'USD'}
+                    onChange={e => setForm(f => ({ ...f, [r.h.k]: { ...r.v, px: e.target.value } }))} />
+                ),
+                units: r.units > 0 ? r.units.toFixed(4) : '—',
+              },
+            }))}
+            empty="אין רכיבים בתיק."
+          />
           <div className="cta">
             <span className="dl-sum">
               סך ההפקדה: <b dir="ltr">{n0(formTotal)}₪</b>
@@ -360,54 +360,54 @@ export function DepositLog({ toBroker, onBuild }: { toBroker: number; onBuild?: 
       {ps.length > 0 && (
         <>
           <h3 className="dl-h3">המחיר הממוצע לכל רכיב</h3>
-          <div className="scroll bleed">
-            <table>
-              <thead>
-                <tr>
-                  <th className="lead">הרכיב</th>
-                  <th>קניות</th>
-                  <th>יחידות</th>
-                  <th>מחיר ממוצע</th>
-                  <th>מחיר נוכחי</th>
-                  <th>מול הממוצע</th>
-                  <th>הושקע</th>
-                  <th>שווי</th>
-                  <th>רווח/הפסד</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ps.map(p => {
-                  const f = IRISH.find(x => x.k === p.k);
-                  return (
-                    <tr key={p.k}>
-                      <td className="lead">{f?.he ?? p.k}</td>
-                      <td dir="ltr">{p.buys}</td>
-                      <td dir="ltr" className="dim">{p.units.toFixed(3)}</td>
-                      <td dir="ltr" className="gold"><b>{n2(p.avgPrice)}</b></td>
-                      <td>
-                        <input className="amt dl-mark" type="number" min={0} step="0.01"
-                          defaultValue={p.mark ?? ''} placeholder="הזינו"
-                          aria-label={`מחיר נוכחי ${f?.he}`}
-                          onBlur={e => {
-                            const v = Number(e.target.value);
-                            if (v > 0 && v !== p.mark) void mark(p.k, v);
-                          }} />
-                      </td>
-                      <td dir="ltr" className={p.vsAvg === null ? 'dim' : p.vsAvg >= 0 ? 'up' : 'warn'}>
-                        {p.vsAvg === null ? '—' : <b>{sg(p.vsAvg)}</b>}
-                      </td>
-                      <td dir="ltr">{n0(p.investedIls)}₪</td>
-                      <td dir="ltr">{p.valueIls !== null ? `${n0(p.valueIls)}₪` : '—'}</td>
-                      <td dir="ltr" className={p.plIls === null ? 'dim' : p.plIls >= 0 ? 'up' : 'warn'}>
-                        {p.plIls === null ? '—'
-                          : `${p.plIls >= 0 ? '+' : '−'}${n0(Math.abs(p.plIls))}₪`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Rows
+            cols={[
+              { k: 'part', label: 'הרכיב', lead: true },
+              { k: 'buys', label: 'קניות', ltr: true },
+              { k: 'units', label: 'יחידות', ltr: true, dim: true },
+              { k: 'avg', label: 'מחיר ממוצע', ltr: true, big: true },
+              { k: 'mark', label: 'מחיר נוכחי' },
+              { k: 'vs', label: 'מול הממוצע', ltr: true },
+              { k: 'inv', label: 'הושקע', ltr: true },
+              { k: 'val', label: 'שווי', ltr: true },
+              { k: 'pl', label: 'רווח/הפסד', ltr: true },
+            ]}
+            rows={ps.map(p => {
+              const f = IRISH.find(x => x.k === p.k);
+              return {
+                id: p.k,
+                cells: {
+                  part: f?.he ?? p.k,
+                  buys: p.buys,
+                  units: p.units.toFixed(3),
+                  avg: <b className="gold">{n2(p.avgPrice)}</b>,
+                  mark: (
+                    <input className="amt dl-mark" type="number" min={0} step="0.01"
+                      id={`dl-mark-${p.k}`}
+                      defaultValue={p.mark ?? ''} placeholder="הזינו"
+                      aria-label={`מחיר נוכחי ${f?.he}`}
+                      onBlur={e => {
+                        const v = Number(e.target.value);
+                        if (v > 0 && v !== p.mark) void mark(p.k, v);
+                      }} />
+                  ),
+                  vs: (
+                    <span className={p.vsAvg === null ? 'dim' : p.vsAvg >= 0 ? 'up' : 'warn'}>
+                      {p.vsAvg === null ? '—' : <b>{sg(p.vsAvg)}</b>}
+                    </span>
+                  ),
+                  inv: `${n0(p.investedIls)}₪`,
+                  val: p.valueIls !== null ? `${n0(p.valueIls)}₪` : '—',
+                  pl: (
+                    <span className={p.plIls === null ? 'dim' : p.plIls >= 0 ? 'up' : 'warn'}>
+                      {p.plIls === null ? '—'
+                        : `${p.plIls >= 0 ? '+' : '−'}${n0(Math.abs(p.plIls))}₪`}
+                    </span>
+                  ),
+                },
+              };
+            })}
+          />
           <p className="note">
             <b>״מול הממוצע״ שלילי אינו הפסד שנצבר — הוא הזדמנות.</b>{' '}
             רכיב שנמצא מתחת למחיר הממוצע שלכם הוא בדיוק מה שמנגנון

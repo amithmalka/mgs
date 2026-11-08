@@ -4,6 +4,7 @@ import { useCustomStore } from '../../store/customStore';
 import { t } from '../../i18n/translations';
 import { Card } from '../layout/Card';
 import { Icon } from '../shared/Icon';
+import { Rows } from '../shared/Rows';
 import { formatCurrency } from '../../utils/format';
 import { fetchHistory } from '../../lib/marketData';
 import type { PriceInfo, HistoryInfo, SymbolHit } from '../../lib/marketData';
@@ -81,117 +82,114 @@ export function HoldingsEditor({ prices, history }: {
         <p className="text-[12px] text-text-dim text-center py-6">{t('noHoldings', lang)}</p>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[720px]">
-              <thead>
-                <tr className="border-b border-surface-4 text-text-muted text-[11px]">
-                  <th className="text-start py-2 w-16">{t('order', lang)}</th>
-                  <th className="text-start py-2">{t('ticker', lang)}</th>
-                  <th className="text-end py-2">{t('livePrice', lang)}</th>
-                  <th className="text-end py-2">{t('targetPercent', lang)}</th>
-                  <th className="text-end py-2">{t('historicalReturn', lang)}</th>
-                  <th className="text-end py-2">{t('expectedReturn', lang)}</th>
-                  <th className="text-end py-2">{t('heldNow', lang)}</th>
-                  <th className="text-end py-2">{t('actualPercent', lang)}</th>
-                  <th className="text-end py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {holdings.map((h, i) => {
-                  const p = prices[h.ticker.toUpperCase()];
-                  const hist = history[h.ticker.toUpperCase()];
-                  const seeded = seedReturn(hist);
-                  const hasHist = seeded.basis !== 'default';
-                  const actual = totalValue > 0 ? (h.currentValue / totalValue) * 100 : 0;
-                  return (
-                    <tr key={h.id} className="border-b border-surface-3/50">
-                      <td className="py-2">
-                        <div className="flex gap-0.5">
-                          <button onClick={() => moveHolding(i, -1)} disabled={i === 0} title={t('moveUp', lang)}
-                            className="w-5 h-5 rounded border border-surface-4 text-text-muted hover:text-gold disabled:opacity-25 flex items-center justify-center">
-                            <Icon name="chevronUp" size={11} />
-                          </button>
-                          <button onClick={() => moveHolding(i, 1)} disabled={i === holdings.length - 1} title={t('moveDown', lang)}
-                            className="w-5 h-5 rounded border border-surface-4 text-text-muted hover:text-gold disabled:opacity-25 flex items-center justify-center">
-                            <Icon name="chevronDown" size={11} />
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-2">
-                        <span className="block text-text font-medium" dir="ltr">{h.ticker}</span>
-                        <span className="block text-[10px] text-text-dim truncate max-w-[130px]">{h.name}</span>
-                      </td>
-                      <td className="py-2 text-end text-[11px]" dir="ltr">
-                        {p?.price != null
-                          ? <span className="text-text-muted">{p.price.toFixed(2)} {p.currency ?? ''}</span>
-                          : <span className="text-text-dim">—</span>}
-                        {typeof p?.perf30 === 'number' && (
-                          <span className={`block ${p.perf30 >= 0 ? 'text-success' : 'text-danger'}`}>
-                            {p.perf30 >= 0 ? '+' : ''}{p.perf30}% / 30d
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 text-end">
-                        <input type="number" min={0} max={100} step={0.5} value={h.targetPercent}
-                          onChange={e => updateHolding(h.id, { targetPercent: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
-                          className="w-[70px] text-end" />
-                      </td>
-                      <td className="py-2 text-end text-[11px]" dir="ltr">
-                        {hasHist ? (
-                          <>
-                            <span style={{ color: seeded.value >= 0 ? '#4ADE80' : '#F87171' }}>
-                              {seeded.value > 0 ? '+' : ''}{seeded.value.toFixed(1)}%
-                            </span>
-                            <span className="block text-text-dim">{seeded.basis}</span>
-                            {clampReturn(seeded.value) !== h.expectedReturn && (
-                              <button
-                                onClick={() => updateHolding(h.id, { expectedReturn: clampReturn(seeded.value) })}
-                                className="mt-0.5 text-[9px] px-1.5 py-0.5 rounded border border-gold-border text-gold hover:bg-gold-muted"
-                              >
-                                {t('useHistorical', lang)}
-                              </button>
-                            )}
-                          </>
-                        ) : <span className="text-text-dim">—</span>}
-                      </td>
-                      <td className="py-2 text-end">
-                        <input type="number" min={-50} max={40} step={0.5} value={h.expectedReturn}
-                          onChange={e => updateHolding(h.id, { expectedReturn: Number(e.target.value) || 0 })}
-                          className="w-[70px] text-end" />
-                      </td>
-                      <td className="py-2 text-end">
-                        <input type="number" min={0} step={100} value={h.currentValue}
-                          onChange={e => updateHolding(h.id, { currentValue: Math.max(0, Number(e.target.value) || 0) })}
-                          className="w-[95px] text-end" />
-                      </td>
-                      <td className="py-2 text-end text-[11px] text-text-muted">{actual.toFixed(1)}%</td>
-                      <td className="py-2 text-end">
-                        <button onClick={() => removeHolding(h.id)} title={t('delete', lang)}
-                          className="w-6 h-6 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 inline-flex items-center justify-center">
-                          <Icon name="trash" size={12} />
+          <Rows
+            cols={[
+              { k: 'ord', label: t('order', lang) },
+              { k: 'tk', label: t('ticker', lang), lead: true },
+              { k: 'px', label: t('livePrice', lang), ltr: true },
+              { k: 'target', label: t('targetPercent', lang) },
+              { k: 'hist', label: t('historicalReturn', lang), ltr: true },
+              { k: 'exp', label: t('expectedReturn', lang) },
+              { k: 'held', label: t('heldNow', lang) },
+              { k: 'actual', label: t('actualPercent', lang), ltr: true },
+              { k: 'del', label: '' },
+            ]}
+            rows={holdings.map((h, i) => {
+              const p = prices[h.ticker.toUpperCase()];
+              const hist = history[h.ticker.toUpperCase()];
+              const seeded = seedReturn(hist);
+              const hasHist = seeded.basis !== 'default';
+              const actual = totalValue > 0 ? (h.currentValue / totalValue) * 100 : 0;
+              return {
+                id: h.id,
+                cells: {
+                  ord: (
+                    <div className="flex gap-0.5">
+                      <button onClick={() => moveHolding(i, -1)} disabled={i === 0} title={t('moveUp', lang)}
+                        className="w-5 h-5 rounded border border-surface-4 text-text-muted hover:text-gold disabled:opacity-25 flex items-center justify-center">
+                        <Icon name="chevronUp" size={11} />
+                      </button>
+                      <button onClick={() => moveHolding(i, 1)} disabled={i === holdings.length - 1} title={t('moveDown', lang)}
+                        className="w-5 h-5 rounded border border-surface-4 text-text-muted hover:text-gold disabled:opacity-25 flex items-center justify-center">
+                        <Icon name="chevronDown" size={11} />
+                      </button>
+                    </div>
+                  ),
+                  tk: (
+                    <>
+                      <span className="block text-text font-medium" dir="ltr">{h.ticker}</span>
+                      <span className="block text-[10px] text-text-dim truncate max-w-[130px]">{h.name}</span>
+                    </>
+                  ),
+                  px: (
+                    <span className="block text-[11px]">
+                      {p?.price != null
+                        ? <span className="text-text-muted">{p.price.toFixed(2)} {p.currency ?? ''}</span>
+                        : <span className="text-text-dim">—</span>}
+                      {typeof p?.perf30 === 'number' && (
+                        <span className={`block ${p.perf30 >= 0 ? 'text-success' : 'text-danger'}`}>
+                          {p.perf30 >= 0 ? '+' : ''}{p.perf30}% / 30d
+                        </span>
+                      )}
+                    </span>
+                  ),
+                  target: (
+                    <input type="number" min={0} max={100} step={0.5} value={h.targetPercent}
+                      id={`he-target-${h.id}`} aria-label={t('targetPercent', lang)}
+                      onChange={e => updateHolding(h.id, { targetPercent: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
+                      className="w-[70px] text-end" />
+                  ),
+                  hist: hasHist ? (
+                    <span className="block text-[11px]">
+                      <span style={{ color: seeded.value >= 0 ? '#4ADE80' : '#F87171' }}>
+                        {seeded.value > 0 ? '+' : ''}{seeded.value.toFixed(1)}%
+                      </span>
+                      <span className="block text-text-dim">{seeded.basis}</span>
+                      {clampReturn(seeded.value) !== h.expectedReturn && (
+                        <button
+                          onClick={() => updateHolding(h.id, { expectedReturn: clampReturn(seeded.value) })}
+                          className="mt-0.5 text-[9px] px-1.5 py-0.5 rounded border border-gold-border text-gold hover:bg-gold-muted"
+                        >
+                          {t('useHistorical', lang)}
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                {/* Columns: order · ticker · price · target · actual return · expected · held · actual% · delete */}
-                <tr className="text-[11px]">
-                  <td />
-                  <td className="py-2 text-text-muted">{t('total', lang)}</td>
-                  <td />
-                  <td className={`py-2 text-end font-bold ${Math.abs(totalTarget - 100) > 0.5 ? 'text-warning' : 'text-success'}`}>
+                      )}
+                    </span>
+                  ) : <span className="text-text-dim">—</span>,
+                  exp: (
+                    <input type="number" min={-50} max={40} step={0.5} value={h.expectedReturn}
+                      id={`he-exp-${h.id}`} aria-label={t('expectedReturn', lang)}
+                      onChange={e => updateHolding(h.id, { expectedReturn: Number(e.target.value) || 0 })}
+                      className="w-[70px] text-end" />
+                  ),
+                  held: (
+                    <input type="number" min={0} step={100} value={h.currentValue}
+                      id={`he-held-${h.id}`} aria-label={t('heldNow', lang)}
+                      onChange={e => updateHolding(h.id, { currentValue: Math.max(0, Number(e.target.value) || 0) })}
+                      className="w-[95px] text-end" />
+                  ),
+                  actual: <span className="text-[11px] text-text-muted">{actual.toFixed(1)}%</span>,
+                  del: (
+                    <button onClick={() => removeHolding(h.id)} title={t('delete', lang)}
+                      className="w-6 h-6 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 inline-flex items-center justify-center">
+                      <Icon name="trash" size={12} />
+                    </button>
+                  ),
+                },
+              };
+            })}
+            total={{
+              label: t('total', lang),
+              value: (
+                <>
+                  <span className={Math.abs(totalTarget - 100) > 0.5 ? 'text-warning' : 'text-success'}>
                     {totalTarget.toFixed(1)}%
-                  </td>
-                  <td />
-                  <td />
-                  <td className="py-2 text-end text-gold font-bold">{formatCurrency(totalValue)}</td>
-                  <td colSpan={2} />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                  </span>
+                  {' · '}
+                  <span className="text-gold">{formatCurrency(totalValue)}</span>
+                </>
+              ),
+            }}
+          />
 
           <p className="text-[10px] text-text-dim mt-3 leading-relaxed">{t('historyNote', lang)}</p>
 

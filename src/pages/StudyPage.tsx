@@ -5,6 +5,7 @@ import {
 } from '../utils/studySim';
 import { COHORT_YEAR, type Track, type Cohort, type Scenario } from '../utils/mgsSim';
 import { SplitPlan } from '../components/build/SplitPlan';
+import { Rows } from '../components/shared/Rows';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
 const pc = (v: number, d = 1) => `${(v * 100).toFixed(d)}%`;
@@ -229,28 +230,38 @@ export function StudyLab() {
           מסלולי הדגימה — הוא יחס של שני חציונים של התפלגות מוטה, ולכן
           רועש מדי להציג אותו כמספר.
         </p>
-        <div className="scroll">
-          <table>
-            <thead><tr>{['', 'שווי בסוף', 'הכנסה לחודש', 'נמשך מצטבר', 'מס שולם']
-              .map(h => <th key={h}>{h}</th>)}</tr></thead>
-            <tbody>
-              <tr className="mark">
-                <td className="lead">קרן השתלמות</td>
-                <td className="v">{n0(ira.value)}</td>
-                <td className="v gold">{n0(last.income)}</td>
-                <td className="v">{n0(ira.taken)}</td>
-                <td className="v up">{n0(ira.taxPaid)}</td>
-              </tr>
-              <tr>
-                <td className="lead">חשבון ממוסה</td>
-                <td className="v">{n0(tax.value)}</td>
-                <td className="v dim">{n0(lastT.income)}</td>
-                <td className="v dim">{n0(tax.taken)}</td>
-                <td className="v dn">{n0(tax.taxPaid)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Rows
+          cols={[
+            { k: 'kind', label: '', lead: true },
+            { k: 'value', label: 'שווי בסוף', ltr: true },
+            { k: 'income', label: 'הכנסה לחודש', ltr: true },
+            { k: 'taken', label: 'נמשך מצטבר', ltr: true },
+            { k: 'taxPaid', label: 'מס שולם', ltr: true, big: true },
+          ]}
+          rows={[
+            {
+              id: 'ira',
+              mark: true,
+              cells: {
+                kind: 'קרן השתלמות',
+                value: n0(ira.value),
+                income: <span className="gold">{n0(last.income)}</span>,
+                taken: n0(ira.taken),
+                taxPaid: <span className="up">{n0(ira.taxPaid)}</span>,
+              },
+            },
+            {
+              id: 'taxed',
+              cells: {
+                kind: 'חשבון ממוסה',
+                value: n0(tax.value),
+                income: <span className="dim">{n0(lastT.income)}</span>,
+                taken: <span className="dim">{n0(tax.taken)}</span>,
+                taxPaid: <span className="dn">{n0(tax.taxPaid)}</span>,
+              },
+            },
+          ]}
+        />
       </section>
 
       <section>

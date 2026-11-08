@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Stat } from '../components/shared/Stat';
+import { Rows } from '../components/shared/Rows';
 import { DataCards } from '../components/shared/DataCards';
 import {
   MEASURED, ASSUME, FUND, ALT, BY_RETURN, corr, type SleeveKey,
@@ -474,32 +475,37 @@ export function LegacyBuild() {
               <Stat label="חלון המדידה הקצר" value={`${vol.months} ח׳`}
                 sub={vol.shortest ? `${vol.shortest.he}, מאז ${vol.since}` : ''} />
             </div>
-            <div className="scroll bleed">
-              <table>
-                <thead><tr>{['הרכיב', 'משקל', 'תנודתיות שלו', 'חלקו בתנודתיות',
-                  'מתאם לשאר התיק', 'התיק בלעדיו', 'ההשפעה', 'נמדד מאז', 'חודשים']
-                  .map(h => <th key={h}>{h}</th>)}</tr></thead>
-                <tbody>
-                  {vol.rows.map(r => (
-                    <tr key={r.k}>
-                      <td style={{ fontWeight: 600 }}>{r.he}</td>
-                      <td className="v">{pc(r.w, 0)}</td>
-                      <td className="v" style={{ color: r.vol > 0.3 ? 'var(--gold)' : 'var(--muted)' }}>
-                        {pc(r.vol, 0)}</td>
-                      <td className="v" style={{ color: r.share > 0.4 ? 'var(--gold)' : 'var(--mid)' }}>
-                        {pc(r.share, 0)}</td>
-                      <td className="v" style={{ color: r.avgCorr > 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
-                        {r.avgCorr.toFixed(2)}</td>
-                      <td className="v dim">{pc(r.without, 1)}</td>
-                      <td className="v" style={{ color: r.delta < 0 ? 'var(--down)' : 'var(--up)' }}>
-                        {r.delta < 0 ? `מרים ${pc(-r.delta, 1)}` : `מוריד ${pc(r.delta, 1)}`}</td>
-                      <td className="v dim" dir="ltr">{r.since}</td>
-                      <td className="v dim">{r.months}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Rows
+              cols={[
+                { k: 'part', label: 'הרכיב', lead: true },
+                { k: 'w', label: 'משקל', ltr: true },
+                { k: 'vol', label: 'תנודתיות שלו', ltr: true },
+                { k: 'share', label: 'חלקו בתנודתיות', ltr: true },
+                { k: 'corr', label: 'מתאם לשאר התיק', ltr: true },
+                { k: 'without', label: 'התיק בלעדיו', ltr: true, dim: true, big: true },
+                { k: 'impact', label: 'ההשפעה' },
+                { k: 'since', label: 'נמדד מאז', ltr: true, dim: true },
+                { k: 'months', label: 'חודשים', ltr: true, dim: true },
+              ]}
+              rows={vol.rows.map(r => ({
+                id: r.k,
+                cells: {
+                  part: <span style={{ fontWeight: 600 }}>{r.he}</span>,
+                  w: pc(r.w, 0),
+                  vol: <span style={{ color: r.vol > 0.3 ? 'var(--gold)' : 'var(--muted)' }}>
+                    {pc(r.vol, 0)}</span>,
+                  share: <span style={{ color: r.share > 0.4 ? 'var(--gold)' : 'var(--mid)' }}>
+                    {pc(r.share, 0)}</span>,
+                  corr: <span style={{ color: r.avgCorr > 0.85 ? 'var(--gold)' : 'var(--muted)' }}>
+                    {r.avgCorr.toFixed(2)}</span>,
+                  without: pc(r.without, 1),
+                  impact: <span style={{ color: r.delta < 0 ? 'var(--down)' : 'var(--up)' }}>
+                    {r.delta < 0 ? `מרים ${pc(-r.delta, 1)}` : `מוריד ${pc(r.delta, 1)}`}</span>,
+                  since: r.since,
+                  months: r.months,
+                },
+              }))}
+            />
             <div className="note"><p>
               <b>איך לקרוא את הטור ״ההשפעה״.</b> הוא מחושב מהטור שלפניו:
               ״מרים״ אומר שבלי הרכיב התיק היה <b>רגוע יותר</b>, ו״מוריד״ אומר

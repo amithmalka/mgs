@@ -14,6 +14,7 @@
 import { useMemo, useState } from 'react';
 import { IRISH, BUY, TIER_HE, type Tier } from '../../constants/irish';
 import { LEVERAGED, DECAY } from '../../constants/leveraged';
+import { Rows } from '../shared/Rows';
 
 const pc = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
 const sg = (v: number, d = 1) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
@@ -141,26 +142,25 @@ export function IrishVsUS() {
             <b>שתי העמודות האמצעיות לעולם לא ירוקות יחד</b> — מה שאירי
             אינו UCITS, ומה ש-UCITS אינו אירי.
           </p>
-          <div className="scroll">
-            <table>
-              <thead>
-                <tr><th className="lead">המדד</th><th>המדד עצמו</th>
-                  <th>×2 בפועל</th><th>×3 בפועל</th>
-                  <th>״פי 3״ היה אמור</th></tr>
-              </thead>
-              <tbody>
-                {DECAY.map(d => (
-                  <tr key={d.he}>
-                    <td className="lead">{d.he}</td>
-                    <td dir="ltr">{sg(d.idx, 0)}</td>
-                    <td dir="ltr">{sg(d.x2, 0)}</td>
-                    <td dir="ltr" className="gold">{sg(d.x3, 0)}</td>
-                    <td dir="ltr" className="dim">{sg(d.naive3, 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Rows
+            cols={[
+              { k: 'idxName', label: 'המדד', lead: true },
+              { k: 'idx', label: 'המדד עצמו', ltr: true },
+              { k: 'x2', label: '×2 בפועל', ltr: true },
+              { k: 'x3', label: '×3 בפועל', ltr: true, big: true },
+              { k: 'naive3', label: '״פי 3״ היה אמור', ltr: true, dim: true },
+            ]}
+            rows={DECAY.map(d => ({
+              id: d.he,
+              cells: {
+                idxName: d.he,
+                idx: sg(d.idx, 0),
+                x2: sg(d.x2, 0),
+                x3: <span className="gold">{sg(d.x3, 0)}</span>,
+                naive3: sg(d.naive3, 0),
+              },
+            }))}
+          />
           <p className="note">
             <b>סימולציה על 1,255 ימי מסחר אמיתיים</b>, כולל דמי ניהול.
             בנאסד״ק ×3 החזיר 144% במקום 468% — השחיקה אכלה שתי שלישים,

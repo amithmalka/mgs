@@ -13,6 +13,7 @@ import { depositAt, WITHDRAW_AFTER_STOP, DEPOSIT_YEARS } from '../../utils/combo
 import { withdrawRate } from '../../utils/mgsSim';
 import { COMBOS, TRACK_HE, type TrackKey } from '../../constants/combos';
 import { CEILINGS, RATE } from '../../constants/studyFunds';
+import { Rows, type Col, type Row } from '../shared/Rows';
 
 const pc = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
 const sg = (v: number, d = 1) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
@@ -107,66 +108,64 @@ function Tracks() {
   const firstDraw: Record<TrackKey, string> = {
     flow: 'שנה 1', both: 'שנה 1', growth: 'שנת המעבר, לפי הגיל',
   };
-  return (
-    <div className="scroll bleed">
-      <table>
-        <thead><tr>
-          <th className="lead">המסלול</th><th>תנודתיות</th>
-          <th>מתי מתחילים למשוך</th><th>הקצב בשלב הצבירה</th>
-          <th>אחרי עצירת ההפקדות</th>
-        </tr></thead>
-        <tbody>
-          {T.map(t => (
-            <tr key={t}>
-              <td className="lead">{TRACK_HE[t]}</td>
-              <td dir="ltr">{t === 'flow' ? 'עד 14%' : t === 'both' ? '14%–22%' : 'מעל 22%'}</td>
-              <td className="up">{firstDraw[t]}</td>
-              <td dir="ltr" className="dim">
-                {t === 'growth'
-                  ? '0% → 4% משנת המעבר'
-                  : `${pc(withdrawRate(t, '30-40', 1), 0)} → ${pc(withdrawRate(t, '30-40', 12), 0)}`}
-              </td>
-              <td dir="ltr" className={WITHDRAW_AFTER_STOP[t] > 0 ? 'gold' : 'dim'}>
-                {WITHDRAW_AFTER_STOP[t] > 0 ? pc(WITHDRAW_AFTER_STOP[t], 1) : 'אין משיכות'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const cols: Col[] = [
+    { k: 'track', label: 'המסלול', lead: true },
+    // **בלי `ltr` — התא מכיל עברית.** ``dir="ltr"`` היה שם מלפני
+    // ההמרה, והוא הפך את ״עד 14%״ לקריאה הפוכה: בכיוון שמאל-לימין
+    // המילה יושבת בשמאל והמספר בימין, ולכן קורא עברית רואה ״14% עד״.
+    { k: 'vol', label: 'תנודתיות', big: true },
+    { k: 'first', label: 'מתי מתחילים למשוך' },
+    { k: 'rate', label: 'הקצב בשלב הצבירה', ltr: true, dim: true },
+    { k: 'after', label: 'אחרי עצירת ההפקדות', ltr: true },
+  ];
+  const rows: Row[] = T.map(t => ({
+    id: t,
+    cells: {
+      track: TRACK_HE[t],
+      vol: t === 'flow' ? 'עד 14%' : t === 'both' ? '14%–22%' : 'מעל 22%',
+      first: <span className="up">{firstDraw[t]}</span>,
+      rate: t === 'growth'
+        ? '0% → 4% משנת המעבר'
+        : `${pc(withdrawRate(t, '30-40', 1), 0)} → ${pc(withdrawRate(t, '30-40', 12), 0)}`,
+      after: (
+        <span className={WITHDRAW_AFTER_STOP[t] > 0 ? 'gold' : 'dim'}>
+          {WITHDRAW_AFTER_STOP[t] > 0 ? pc(WITHDRAW_AFTER_STOP[t], 1) : 'אין משיכות'}
+        </span>
+      ),
+    },
+  }));
+  return <Rows cols={cols} rows={rows} />;
 }
 
 function Combos() {
   const T: TrackKey[] = ['flow', 'both', 'growth'];
-  return (
-    <div className="scroll bleed">
-      <table>
-        <thead><tr>
-          <th className="lead">המסלול</th><th>כמה תמהילים</th>
-          <th>טווח תנודתיות</th><th>טווח תשואה</th><th>היחס הטוב ביותר</th>
-        </tr></thead>
-        <tbody>
-          {T.map(t => {
-            const c = COMBOS.filter(x => x.track === t);
-            if (!c.length) return null;
-            const best = c.reduce((a, b) => (b.ratio > a.ratio ? b : a));
-            return (
-              <tr key={t}>
-                <td className="lead">{TRACK_HE[t]}</td>
-                <td dir="ltr">{c.length}</td>
-                <td dir="ltr">{pc(Math.min(...c.map(x => x.vol)))}–{pc(Math.max(...c.map(x => x.vol)))}</td>
-                <td dir="ltr" className="up">
-                  {sg(Math.min(...c.map(x => x.cagr)), 0)}–{sg(Math.max(...c.map(x => x.cagr)), 0)}
-                </td>
-                <td dir="ltr" className="gold"><b>{best.ratio.toFixed(2)}</b></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
+  const cols: Col[] = [
+    { k: 'track', label: 'המסלול', lead: true },
+    { k: 'count', label: 'כמה תמהילים', ltr: true },
+    { k: 'vol', label: 'טווח תנודתיות', ltr: true },
+    { k: 'cagr', label: 'טווח תשואה', ltr: true },
+    { k: 'ratio', label: 'היחס הטוב ביותר', ltr: true, big: true },
+  ];
+  const rows: Row[] = T.flatMap(t => {
+    const c = COMBOS.filter(x => x.track === t);
+    if (!c.length) return [];
+    const best = c.reduce((a, b) => (b.ratio > a.ratio ? b : a));
+    return [{
+      id: t,
+      cells: {
+        track: TRACK_HE[t],
+        count: c.length,
+        vol: <>{pc(Math.min(...c.map(x => x.vol)))}–{pc(Math.max(...c.map(x => x.vol)))}</>,
+        cagr: (
+          <span className="up">
+            {sg(Math.min(...c.map(x => x.cagr)), 0)}–{sg(Math.max(...c.map(x => x.cagr)), 0)}
+          </span>
+        ),
+        ratio: <span className="gold"><b>{best.ratio.toFixed(2)}</b></span>,
+      },
+    }];
+  });
+  return <Rows cols={cols} rows={rows} />;
 }
 
 function Ceilings() {

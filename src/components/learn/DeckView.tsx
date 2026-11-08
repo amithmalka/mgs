@@ -8,6 +8,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { lookupTerm } from '../../constants/decks/glossary';
 import type { Deck, Block } from '../../types/deck';
 import { LiveBlock } from './LiveBlock';
+import { Rows } from '../shared/Rows';
+
+/** אותיות עבריות — עמודה שיש בה כאלה לא מיושרת לשמאל-לימין */
+const HE = /[\u0590-\u05FF]/;
 
 export function DeckView({ deck, onClose }: { deck: Deck; onClose: () => void }) {
   const [i, setI] = useState(0);
@@ -91,19 +95,28 @@ function BlockView({ b }: { b: Block }) {
     );
     case 'table': return (
       <>
-        <div className="scroll bleed">
-          <table>
-            <thead><tr>{b.head.map((h, i) => (
-              <th key={i} className={i === 0 ? 'lead' : undefined}>{h}</th>
-            ))}</tr></thead>
-            <tbody>{b.rows.map((r, i) => (
-              <tr key={i}>{r.map((c, j) => (
-                <td key={j} className={j === 0 ? 'lead' : undefined}
-                  dir={j === 0 ? undefined : 'ltr'}>{c}</td>
-              ))}</tr>
-            ))}</tbody>
-          </table>
-        </div>
+        {/* **טבלת מצגת שמחליטה לפי מספר השורות.** שקף עם שתיים-שלוש
+            שורות הוא רוב השקפים כאן, ובטבלה כזאת אין מה להשוות
+            לאורך — רק רשת. ‏`Rows` מחליף אותה בכרטיסים, ומחזיר
+            טבלה בשקף עם ארבע שורות ומעלה.
+
+            **וגם תוקן כאן יישור שהיה שגוי.** הקוד הקודם כפה
+            ``dir="ltr"`` על **כל** עמודה פרט לראשונה — כולל עמודות
+            שהתוכן בהן משפט בעברית, ואז המילים נקראו מהסוף להתחלה.
+            עכשיו העמודה מיושרת לשמאל-לימין **רק אם כל הערכים בה
+            אינם עברית** (מספרים, אחוזים, סימולים, תאריכים). */}
+        <Rows
+          cols={b.head.map((h, i) => ({
+            k: `c${i}`,
+            label: h,
+            lead: i === 0,
+            ltr: i > 0 && b.rows.every(r => !HE.test(String(r[i] ?? ''))),
+          }))}
+          rows={b.rows.map((r, i) => ({
+            id: `r${i}`,
+            cells: Object.fromEntries(r.map((c, j) => [`c${j}`, c])),
+          }))}
+        />
         {b.note && <p className="note">{rich(b.note)}</p>}
       </>
     );

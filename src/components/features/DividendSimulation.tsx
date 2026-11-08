@@ -10,6 +10,7 @@ import { simulateDividends, yearIncomeReached, MAX_MODELLED_YIELD } from '../../
 import { defaultYieldFor } from '../../constants/dividendYields';
 import { ASSET_META, ASSET_RETURNS, PROJECTION_HORIZON } from '../../constants/defaults';
 import { getTrackById } from '../../constants/tracks';
+import { Rows } from '../shared/Rows';
 
 /** One asset feeding the dividend calculation. */
 interface DivAsset {
@@ -146,6 +147,15 @@ export function DividendSimulation() {
     );
   }
 
+  /** The per-asset yield table's column labels — reused by its summary line. */
+  const yLbl = {
+    asset: he ? 'נכס' : 'Asset',
+    w: he ? 'משקל' : 'Weight',
+    tr: he ? 'תשואה כוללת' : 'Total return',
+    dy: he ? 'תשואת דיבידנד %' : 'Dividend yield %',
+    cont: he ? 'תרומה לתשואת התיק' : 'Contribution',
+  };
+
   return (
     <Card
       title={he ? 'סימולציית דיבידנדים' : 'Dividend Simulation'}
@@ -168,62 +178,59 @@ export function DividendSimulation() {
       )}
 
       {/* Per-asset yields — this is what drives the portfolio yield */}
-      <div className="overflow-x-auto mb-4">
-        <table className="w-full text-sm min-w-[460px]">
-          <thead>
-            <tr className="border-b border-surface-4 text-text-muted text-[11px]">
-              <th className="text-start py-2">{he ? 'נכס' : 'Asset'}</th>
-              <th className="text-end py-2">{he ? 'משקל' : 'Weight'}</th>
-              <th className="text-end py-2">{he ? 'תשואה כוללת' : 'Total return'}</th>
-              <th className="text-end py-2">{he ? 'תשואת דיבידנד %' : 'Dividend yield %'}</th>
-              <th className="text-end py-2">{he ? 'תרומה לתשואת התיק' : 'Contribution'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assets.map(a => {
-              const y = yieldOf(a);
-              const share = totalWeight > 0 ? a.weight / totalWeight : 0;
-              return (
-                <tr key={a.key} className="border-b border-surface-3/50">
-                  <td className="py-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: a.color }} />
-                      <div className="min-w-0">
-                        <span className="block text-[13px] text-text truncate">{a.label}</span>
-                        <span className="block text-[10px] text-text-dim font-mono" dir="ltr">{a.ticker}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-2 text-end text-text-muted">{a.weight.toFixed(1)}%</td>
-                  <td className="py-2 text-end text-text-muted">{a.totalReturn.toFixed(1)}%</td>
-                  <td className="py-2 text-end">
-                    <input
-                      type="number" step={0.1} min={0} max={20} value={y}
-                      onChange={e => {
-                        const n = Number(e.target.value);
-                        if (Number.isNaN(n)) return;
-                        setYieldOverrides(o => ({ ...o, [a.key]: Math.max(0, Math.min(20, n)) }));
-                      }}
-                      className="w-[72px] text-end"
-                    />
-                  </td>
-                  <td className="py-2 text-end" style={{ color: '#F472B6' }}>
-                    {(y * share).toFixed(2)}%
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="text-[12px]">
-              <td className="py-2 text-text-muted">{he ? 'תיק' : 'Portfolio'}</td>
-              <td className="py-2 text-end text-text-muted">{totalWeight.toFixed(1)}%</td>
-              <td className="py-2 text-end text-text-muted">{portfolioTotalReturn.toFixed(2)}%</td>
-              <td className="py-2 text-end font-bold" style={{ color: '#F472B6' }}>{portfolioYield.toFixed(2)}%</td>
-              <td className="py-2 text-end text-text-dim">{he ? 'מחיר' : 'price'} {portfolioPriceReturn.toFixed(2)}%</td>
-            </tr>
-          </tfoot>
-        </table>
+      <div className="mb-4">
+        <Rows
+          cols={[
+            { k: 'asset', label: yLbl.asset, lead: true },
+            { k: 'w', label: yLbl.w, ltr: true },
+            { k: 'tr', label: yLbl.tr, ltr: true },
+            { k: 'dy', label: yLbl.dy, ltr: true },
+            { k: 'cont', label: yLbl.cont, ltr: true, big: true },
+          ]}
+          rows={assets.map(a => {
+            const y = yieldOf(a);
+            const share = totalWeight > 0 ? a.weight / totalWeight : 0;
+            return {
+              id: a.key,
+              cells: {
+                asset: (
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: a.color }} />
+                    <span className="min-w-0">
+                      <span className="block text-[13px] text-text truncate">{a.label}</span>
+                      <span className="block text-[10px] text-text-dim font-mono" dir="ltr">{a.ticker}</span>
+                    </span>
+                  </span>
+                ),
+                w: <span className="text-text-muted">{a.weight.toFixed(1)}%</span>,
+                tr: <span className="text-text-muted">{a.totalReturn.toFixed(1)}%</span>,
+                dy: (
+                  <input
+                    type="number" step={0.1} min={0} max={20} value={y}
+                    onChange={e => {
+                      const n = Number(e.target.value);
+                      if (Number.isNaN(n)) return;
+                      setYieldOverrides(o => ({ ...o, [a.key]: Math.max(0, Math.min(20, n)) }));
+                    }}
+                    className="w-[72px] text-end"
+                  />
+                ),
+                cont: <span style={{ color: '#F472B6' }}>{(y * share).toFixed(2)}%</span>,
+              },
+            };
+          })}
+          total={{
+            label: he ? 'תיק' : 'Portfolio',
+            value: (
+              <span className="inline-flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-[12px] font-normal">
+                <span className="text-text-muted">{yLbl.w} {totalWeight.toFixed(1)}%</span>
+                <span className="text-text-muted">{yLbl.tr} {portfolioTotalReturn.toFixed(2)}%</span>
+                <span className="font-bold" style={{ color: '#F472B6' }}>{yLbl.dy} {portfolioYield.toFixed(2)}%</span>
+                <span className="text-text-dim">{he ? 'מחיר' : 'price'} {portfolioPriceReturn.toFixed(2)}%</span>
+              </span>
+            ),
+          }}
+        />
       </div>
 
       {Object.keys(yieldOverrides).length > 0 && (

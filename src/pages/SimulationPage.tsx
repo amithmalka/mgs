@@ -12,6 +12,7 @@ import type { AllocationTarget, AssetClass } from '../types';
 import { Dot } from '../components/shared/Icon';
 import { DividendSimulation } from '../components/features/DividendSimulation';
 import { Disclaimer } from '../components/shared/Disclaimer';
+import { Rows, type Row } from '../components/shared/Rows';
 
 const MILESTONES = [5, 10, 25, 30, 40] as const;
 
@@ -71,6 +72,9 @@ export function SimulationPage() {
     { key: 'moderate'     as const, label: t('moderate',     lang), color: SCENARIOS.moderate.color     },
     { key: 'aggressive'   as const, label: t('aggressive',   lang), color: SCENARIOS.aggressive.color   },
   ];
+
+  /** The milestone column label — the table header used to inline this. */
+  const milestoneLabel = (yr: number) => `${yr} ${lang === 'he' ? 'שנה' : 'yr'}`;
 
   const activeAssets = liveAllocations.filter(a => (localTargets[a.assetClass] ?? 0) > 0);
   // Row for the selected milestone year in the active scenario
@@ -149,70 +153,86 @@ export function SimulationPage() {
             ? 'ערוך אחוזים — הסימולציה מתעדכנת מיידית בכל שינוי'
             : 'Edit percentages — every change recalculates the simulation instantly'}
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-surface-4">
-                <th className="text-start py-2 text-text-muted text-xs">{t('asset', lang)}</th>
-                <th className="text-center py-2 text-xs text-gold">{t('allocation', lang)} %</th>
-                <th className="text-center py-2 text-xs" style={{ color: SCENARIOS.conservative.color }}>{t('conservative', lang)}</th>
-                <th className="text-center py-2 text-xs" style={{ color: SCENARIOS.moderate.color }}>{t('moderate', lang)}</th>
-                <th className="text-center py-2 text-xs" style={{ color: SCENARIOS.aggressive.color }}>{t('aggressive', lang)}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allocations.map(a => {
-                const pct = localTargets[a.assetClass] ?? 0;
-                return (
-                  <tr key={a.assetClass} className="border-b border-surface-3/50">
-                    <td className="py-2 font-medium">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: a.color }} />
-                        <div>
-                          <div style={{ color: a.color }}>
-                            {ASSET_META[a.assetClass].label}
-                          </div>
-                          <div className="text-[9px] text-text-dim font-normal">{ASSET_META[a.assetClass].index}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-1.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <input
-                          type="number" min="0" max="100" value={pct}
-                          onChange={e => setLocalTargets(prev => ({ ...prev, [a.assetClass]: Number(e.target.value) || 0 }))}
-                          className="w-16 text-center py-1.5 px-2"
-                          style={{ fontSize: '13px' }}
-                        />
-                        <span className="text-text-dim text-xs">%</span>
-                      </div>
-                    </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.conservative.color : '#5D6878' }}>
-                      {pct > 0 ? `${ASSET_RETURNS.conservative[a.assetClass]}%` : '—'}
-                    </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.moderate.color : '#5D6878' }}>
-                      {pct > 0 ? `${ASSET_RETURNS.moderate[a.assetClass]}%` : '—'}
-                    </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.aggressive.color : '#5D6878' }}>
-                      {pct > 0 ? `${ASSET_RETURNS.aggressive[a.assetClass]}%` : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr className="border-t-2 border-gold/20">
-                <td className="py-2 font-bold text-gold text-xs uppercase tracking-wider">{t('weightedReturn', lang)}</td>
-                <td className="text-center py-2">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctOk ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                    {totalPct}%
+        <Rows
+          cols={[
+            { k: 'asset', label: t('asset', lang), lead: true },
+            { k: 'pct', label: `${t('allocation', lang)} %`, ltr: true },
+            // **הצבע חוזר לכותרת.** ב-`<th>` המקורי לכל תרחיש היה
+            // הצבע שלו, וההמרה מחקה אותו כי `Col.label` היה `string`.
+            // עכשיו הוא `ReactNode`, ולכן אותו צבע בדיוק — גם בשורת
+            // הכותרות וגם בתווית שבכרטיס.
+            { k: 'cons', ltr: true,
+              label: <span style={{ color: SCENARIOS.conservative.color }}>{t('conservative', lang)}</span> },
+            { k: 'mod', ltr: true,
+              label: <span style={{ color: SCENARIOS.moderate.color }}>{t('moderate', lang)}</span> },
+            { k: 'aggr', ltr: true,
+              label: <span style={{ color: SCENARIOS.aggressive.color }}>{t('aggressive', lang)}</span> },
+          ]}
+          rows={allocations.map(a => {
+            const pct = localTargets[a.assetClass] ?? 0;
+            return {
+              id: a.assetClass,
+              cells: {
+                asset: (
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: a.color }} />
+                    <span className="min-w-0">
+                      <span className="block" style={{ color: a.color }}>
+                        {ASSET_META[a.assetClass].label}
+                      </span>
+                      <span className="block text-[9px] text-text-dim font-normal">{ASSET_META[a.assetClass].index}</span>
+                    </span>
                   </span>
-                </td>
-                <td className="text-center py-2 font-bold" style={{ color: SCENARIOS.conservative.color }}>{weightedReturns.conservative}%</td>
-                <td className="text-center py-2 font-bold" style={{ color: SCENARIOS.moderate.color }}>{weightedReturns.moderate}%</td>
-                <td className="text-center py-2 font-bold" style={{ color: SCENARIOS.aggressive.color }}>{weightedReturns.aggressive}%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                ),
+                pct: (
+                  <span className="flex items-center gap-1">
+                    <input
+                      type="number" min="0" max="100" value={pct}
+                      onChange={e => setLocalTargets(prev => ({ ...prev, [a.assetClass]: Number(e.target.value) || 0 }))}
+                      className="w-16 text-center py-1.5 px-2"
+                      style={{ fontSize: '13px' }}
+                    />
+                    <span className="text-text-dim text-xs">%</span>
+                  </span>
+                ),
+                cons: (
+                  <span style={{ color: pct > 0 ? SCENARIOS.conservative.color : '#5D6878' }}>
+                    {pct > 0 ? `${ASSET_RETURNS.conservative[a.assetClass]}%` : '—'}
+                  </span>
+                ),
+                mod: (
+                  <span style={{ color: pct > 0 ? SCENARIOS.moderate.color : '#5D6878' }}>
+                    {pct > 0 ? `${ASSET_RETURNS.moderate[a.assetClass]}%` : '—'}
+                  </span>
+                ),
+                aggr: (
+                  <span style={{ color: pct > 0 ? SCENARIOS.aggressive.color : '#5D6878' }}>
+                    {pct > 0 ? `${ASSET_RETURNS.aggressive[a.assetClass]}%` : '—'}
+                  </span>
+                ),
+              },
+            };
+          })}
+          total={{
+            label: t('weightedReturn', lang),
+            value: (
+              <span className="inline-flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-[12px] font-normal">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctOk ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                  {totalPct}%
+                </span>
+                <span className="font-bold" style={{ color: SCENARIOS.conservative.color }}>
+                  {t('conservative', lang)} {weightedReturns.conservative}%
+                </span>
+                <span className="font-bold" style={{ color: SCENARIOS.moderate.color }}>
+                  {t('moderate', lang)} {weightedReturns.moderate}%
+                </span>
+                <span className="font-bold" style={{ color: SCENARIOS.aggressive.color }}>
+                  {t('aggressive', lang)} {weightedReturns.aggressive}%
+                </span>
+              </span>
+            ),
+          }}
+        />
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-surface-4">
           <span className={`text-xs ${pctOk ? 'text-success' : 'text-danger'}`}>
             {pctOk
@@ -239,57 +259,64 @@ export function SimulationPage() {
 
       {/* ── 3. Milestone projections (5 / 10 / 20 / 30 yr) ──────────── */}
       <Card glow title={lang === 'he' ? 'תחזית ערך לאורך זמן — כל 3 תרחישים' : 'Wealth Milestones — All 3 Scenarios'}>
-        <div className="overflow-x-auto mt-2">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-surface-4">
-                <th className="text-start py-2 text-text-muted text-xs">{lang === 'he' ? 'תרחיש' : 'Scenario'}</th>
-                <th className="text-center py-2 text-text-muted text-xs">{lang === 'he' ? 'תשואה' : 'Return'}</th>
-                {MILESTONES.map(yr => (
-                  <th key={yr} className="text-end py-2 text-text-muted text-xs">
-                    {yr} {lang === 'he' ? 'שנה' : 'yr'}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {scenarioCards.map(s => (
-                <tr key={s.key} className="border-b border-surface-3/50">
-                  <td className="py-3">
-                    <span className="text-xs font-semibold" style={{ color: s.color }}>{s.label}</span>
-                  </td>
-                  <td className="text-center py-3">
-                    <span className="text-xs font-bold" style={{ color: s.color }}>{weightedReturns[s.key]}%</span>
-                  </td>
+        <div className="mt-2">
+          <Rows
+            cols={[
+              { k: 'scenario', label: lang === 'he' ? 'תרחיש' : 'Scenario', lead: true },
+              { k: 'ret', label: lang === 'he' ? 'תשואה' : 'Return', ltr: true },
+              /* The milestone columns are built from MILESTONES — the same list
+                 the table header was built from — so adding a year there adds
+                 a column here too. */
+              ...MILESTONES.map(yr => ({
+                k: `y${yr}`,
+                label: milestoneLabel(yr),
+                ltr: true,
+                /* Year 30 is the figure this table is opened for: the income
+                   phase starts the year after it, and it is where this page's
+                   own milestone selector already opens. */
+                big: yr === 30,
+              })),
+            ]}
+            rows={scenarioCards.map(s => {
+              const cells: Row['cells'] = {
+                scenario: <span className="text-xs font-semibold" style={{ color: s.color }}>{s.label}</span>,
+                ret: <span className="text-xs font-bold" style={{ color: s.color }}>{weightedReturns[s.key]}%</span>,
+              };
+              for (const yr of MILESTONES) {
+                const row = simData[s.key][yr];
+                if (!row) {
+                  cells[`y${yr}`] = <span className="text-text-dim text-xs">—</span>;
+                  continue;
+                }
+                const xFactor = p.initialDeposit > 0 ? (row.totalValue / p.initialDeposit).toFixed(1) : null;
+                cells[`y${yr}`] = (
+                  <>
+                    <span className="block font-bold" style={{ color: s.color }}>{formatCurrency(row.totalValue)}</span>
+                    <span className="block text-[9px] text-text-dim">
+                      +{formatCurrency(row.totalGrowth)}
+                      {xFactor && yr >= 10 && <span className="mr-1 ml-1">({xFactor}x)</span>}
+                    </span>
+                  </>
+                );
+              }
+              return { id: s.key, cells };
+            })}
+            total={{
+              label: lang === 'he' ? 'סה״כ הפקדות' : 'Total deposited',
+              value: (
+                <span className="inline-flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-[12px] font-normal text-text-dim">
                   {MILESTONES.map(yr => {
-                    const row = simData[s.key][yr];
-                    if (!row) return <td key={yr} className="text-end py-3 text-text-dim text-xs">—</td>;
-                    const xFactor = p.initialDeposit > 0 ? (row.totalValue / p.initialDeposit).toFixed(1) : null;
+                    const row = simData.moderate[yr];
                     return (
-                      <td key={yr} className="text-end py-3">
-                        <div className="font-bold" style={{ color: s.color }}>{formatCurrency(row.totalValue)}</div>
-                        <div className="text-[9px] text-text-dim">
-                          +{formatCurrency(row.totalGrowth)}
-                          {xFactor && yr >= 10 && <span className="mr-1 ml-1">({xFactor}x)</span>}
-                        </div>
-                      </td>
+                      <span key={yr}>
+                        {milestoneLabel(yr)} {row ? formatCurrency(row.totalDeposited) : '—'}
+                      </span>
                     );
                   })}
-                </tr>
-              ))}
-              <tr className="border-t border-gold/10">
-                <td className="py-2 text-xs text-text-dim" colSpan={2}>{lang === 'he' ? 'סה״כ הפקדות' : 'Total deposited'}</td>
-                {MILESTONES.map(yr => {
-                  const row = simData.moderate[yr];
-                  return (
-                    <td key={yr} className="text-end py-2 text-xs text-text-dim">
-                      {row ? formatCurrency(row.totalDeposited) : '—'}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tbody>
-          </table>
+                </span>
+              ),
+            }}
+          />
         </div>
       </Card>
 
