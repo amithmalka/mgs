@@ -18,7 +18,7 @@ export function DividendChart({ data }: Props) {
         <XAxis dataKey="year" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
         <YAxis tickFormatter={(v) => `₪${(v / 1000).toFixed(0)}K`} stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
         <Tooltip
-          contentStyle={{ background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', color: '#E8E8E8', fontSize: '12px' }}
+          contentStyle={{ background: '#0B1018', border: '1px solid rgba(150,180,212,0.22)', borderRadius: '10px', color: '#E8EEF6', fontSize: '12px' }}
           formatter={(value) => `₪${Number(value).toLocaleString()}`}
         />
         <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />

@@ -24,9 +24,9 @@ export function TrackBanner() {
   const aEnd = track.phaseADuration;
   const bEnd = track.phaseADuration + track.phaseBDuration;
   const segments = [
-    { dotColor: 'red' as const, color: '#ef4444', range: `0–${aEnd}`, label: t('phaseDepositSplit', lang), width: aEnd },
-    { dotColor: 'green' as const, color: '#10b981', range: `${aEnd}–${bEnd}`, label: t('phaseSchdOnly', lang), width: Math.max(0.001, bEnd - aEnd) },
-    { dotColor: 'gold' as const, color: '#C9A24B', range: `${bEnd}+`, label: t('phaseHarvest', lang), width: 8 },
+    { dotColor: 'red' as const, color: '#F87171', range: `0–${aEnd}`, label: t('phaseDepositSplit', lang), width: aEnd },
+    { dotColor: 'green' as const, color: '#4ADE80', range: `${aEnd}–${bEnd}`, label: t('phaseSchdOnly', lang), width: Math.max(0.001, bEnd - aEnd) },
+    { dotColor: 'gold' as const, color: '#5EE6D0', range: `${bEnd}+`, label: t('phaseHarvest', lang), width: 8 },
   ].filter(s => s.width > 0.01);
 
   return (

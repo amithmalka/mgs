@@ -79,7 +79,7 @@ const DOT_COLORS = {
   yellow: '#FBBF4A',
   green: '#4ADE80',
   orange: '#FB923C',
-  brown: '#A1887F',
+  brown: '#8E9CAE',
   gold: '#5EE6D0',
 } as const;
 

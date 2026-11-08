@@ -149,7 +149,7 @@ export function EngineTrack() {
             <XAxis dataKey="year" stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
             <YAxis yAxisId="l" tickFormatter={v => `₪${(v / 1_000_000).toFixed(1)}M`} stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
             <YAxis yAxisId="r" orientation="right" tickFormatter={v => `₪${(v / 1000).toFixed(0)}K`} stroke="#555" tick={{ fill: '#666', fontSize: 11 }} />
-            <Tooltip contentStyle={{ background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', color: '#E8E8E8', fontSize: '12px' }}
+            <Tooltip contentStyle={{ background: '#0B1018', border: '1px solid rgba(150,180,212,0.22)', borderRadius: '10px', color: '#E8EEF6', fontSize: '12px' }}
               formatter={v => `₪${Number(v).toLocaleString()}`} />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
             <Area yAxisId="l" type="monotone" dataKey={he ? 'שווי התיק' : 'Portfolio'} stroke="#5EE6D0" fill="url(#engGrad)" strokeWidth={2} />

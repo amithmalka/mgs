@@ -7,7 +7,7 @@ type Mode = 'login' | 'signup' | 'forgot';
 
 const inputStyle: React.CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(212,175,55,0.2)',
+  border: '1px solid rgba(94,230,208,0.2)',
   color: '#ECE7DC',
   outline: 'none',
 };
@@ -81,8 +81,8 @@ export function LoginGate({ children }: { children: ReactNode }) {
 
   if (session) {
     const chip: React.CSSProperties = {
-      fontSize: 11, color: '#C9A24B', background: 'rgba(6,6,5,0.6)',
-      border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
+      fontSize: 11, color: '#5EE6D0', background: 'rgba(6,8,12,0.6)',
+      border: '1px solid rgba(94,230,208,0.25)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
     };
     return (
       <>
@@ -109,12 +109,12 @@ export function LoginGate({ children }: { children: ReactNode }) {
 
   return (
     <div dir="rtl" className="min-h-screen flex items-center justify-center px-6"
-      style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(212,175,55,0.10) 0%, transparent 55%), #060605' }}>
+      style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(94,230,208,0.10) 0%, transparent 55%), #06080C' }}>
       <div className="w-full max-w-sm rounded-2xl p-8"
-        style={{ background: 'rgba(18,17,15,0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(212,175,55,0.18)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+        style={{ background: 'rgba(11,16,24,0.72)', backdropFilter: 'blur(16px)', border: '1px solid rgba(94,230,208,0.18)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
         <div className="text-center mb-7">
           <div style={{ fontWeight: 800, fontSize: '2rem', letterSpacing: '0.18em',
-            background: 'linear-gradient(135deg,#9A7B2E,#5EE6D0 40%,#BFE9FF 55%,#5EE6D0 70%,#9A7B2E)',
+            background: 'linear-gradient(135deg,#1F9E8C,#5EE6D0 40%,#BFE9FF 55%,#5EE6D0 70%,#1F9E8C)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>MGS</div>
           <p style={{ fontSize: '0.62rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#8A8A8A', marginTop: 4 }}>Money Growth System</p>
           <p style={{ color: '#C9C4B8', fontSize: '0.9rem', marginTop: 18 }}>{title}</p>
@@ -141,13 +141,13 @@ export function LoginGate({ children }: { children: ReactNode }) {
         <div className="mt-5 text-center" style={{ fontSize: '0.78rem', color: '#9C968A' }}>
           {mode === 'login' && (
             <>
-              <button onClick={() => { setMode('signup'); reset(); }} style={{ color: '#C9A24B', background: 'none', border: 'none', cursor: 'pointer' }}>אין לך חשבון? הרשמה</button>
+              <button onClick={() => { setMode('signup'); reset(); }} style={{ color: '#5EE6D0', background: 'none', border: 'none', cursor: 'pointer' }}>אין לך חשבון? הרשמה</button>
               <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
               <button onClick={() => { setMode('forgot'); reset(); }} style={{ color: '#9C968A', background: 'none', border: 'none', cursor: 'pointer' }}>שכחתי סיסמה</button>
             </>
           )}
           {mode !== 'login' && (
-            <button onClick={() => { setMode('login'); reset(); }} style={{ color: '#C9A24B', background: 'none', border: 'none', cursor: 'pointer' }}>← חזרה לכניסה</button>
+            <button onClick={() => { setMode('login'); reset(); }} style={{ color: '#5EE6D0', background: 'none', border: 'none', cursor: 'pointer' }}>← חזרה לכניסה</button>
           )}
         </div>
 
@@ -195,7 +195,7 @@ function SetPassword({ onDone }: { onDone: () => void }) {
     }}>
       <div className="w-full max-w-sm rounded-2xl p-7" style={{
         background: 'rgba(18,17,15,0.95)', backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(212,175,55,0.18)',
+        border: '1px solid rgba(94,230,208,0.18)',
       }}>
         <p style={{ color: '#C9C4B8', fontSize: '0.95rem', marginBottom: 16 }}>בחירת סיסמה חדשה</p>
 

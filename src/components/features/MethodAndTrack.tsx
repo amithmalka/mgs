@@ -184,9 +184,9 @@ export function MethodAndTrack() {
       <Card>
         <div className="grid gap-3 md:grid-cols-3 mt-2">
           {[
-            { color: '#ef4444', glow: 'rgba(239,68,68,0.15)', dotColor: 'red' as const, titleKey: 'redTitle', descKey: 'redDesc', labelKey: 'redPhase', active: true },
-            { color: '#eab308', glow: 'rgba(234,179,8,0.15)', dotColor: 'yellow' as const, titleKey: 'yellowTitle', descKey: 'yellowDesc', labelKey: 'yellowPhase', active: hasYellow },
-            { color: '#22c55e', glow: 'rgba(34,197,94,0.15)', dotColor: 'green' as const, titleKey: 'greenTitle', descKey: 'greenDesc', labelKey: 'greenPhase2', active: true },
+            { color: '#F87171', glow: 'rgba(239,68,68,0.15)', dotColor: 'red' as const, titleKey: 'redTitle', descKey: 'redDesc', labelKey: 'redPhase', active: true },
+            { color: '#FBBF4A', glow: 'rgba(251,191,74,0.15)', dotColor: 'yellow' as const, titleKey: 'yellowTitle', descKey: 'yellowDesc', labelKey: 'yellowPhase', active: hasYellow },
+            { color: '#4ADE80', glow: 'rgba(34,197,94,0.15)', dotColor: 'green' as const, titleKey: 'greenTitle', descKey: 'greenDesc', labelKey: 'greenPhase2', active: true },
           ].map(p => (
             <div
               key={p.titleKey}

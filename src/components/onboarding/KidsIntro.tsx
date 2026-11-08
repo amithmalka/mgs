@@ -55,7 +55,7 @@ export function KidsIntro() {
       </div>
 
       {preview && childAge !== null && (
-        <div className="rounded-xl border border-gold-border p-4" style={{ background: 'rgba(212,175,55,0.05)' }}>
+        <div className="rounded-xl border border-gold-border p-4" style={{ background: 'rgba(94,230,208,0.05)' }}>
           <p className="text-[11px] text-text-muted">בהערכה הזהירה, בגיל 20 הילד יקבל</p>
           <p className="text-[26px] font-semibold text-gold tabular-nums leading-tight mt-1" dir="ltr">
             {n0(preview.net)} ₪

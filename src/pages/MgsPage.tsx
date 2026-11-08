@@ -401,7 +401,7 @@ export function MgsPage() {
             <XAxis dataKey={he ? 'גיל' : 'Age'} stroke="#555" tick={{ fill: '#888', fontSize: 11 }}
               label={{ value: he ? 'גיל' : 'Age', position: 'insideBottomRight', offset: -4, fill: '#666', fontSize: 10 }} />
             <YAxis tickFormatter={v => `₪${(v / 1_000_000).toFixed(1)}M`} stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
-            <Tooltip contentStyle={{ background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', color: '#E8E8E8', fontSize: '12px' }}
+            <Tooltip contentStyle={{ background: '#0B1018', border: '1px solid rgba(150,180,212,0.22)', borderRadius: '10px', color: '#E8EEF6', fontSize: '12px' }}
               formatter={v => `₪${Number(v).toLocaleString()}`}
               labelFormatter={v => (he ? `גיל ${v}` : `Age ${v}`)} />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />

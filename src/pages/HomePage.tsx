@@ -30,7 +30,7 @@ function Door({ icon, title, body, stats, cta, onGo }: {
     <div className="glass-card rounded-2xl p-5 flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <span className="w-7 h-7 rounded-lg grid place-items-center flex-shrink-0"
-              style={{ background: 'rgba(212,175,55,0.12)' }}>
+              style={{ background: 'rgba(94,230,208,0.12)' }}>
           <Icon name={icon} size={14} />
         </span>
         <h3 className="text-[15px] font-bold text-gold-light">{title}</h3>
@@ -84,8 +84,9 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
 
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
-      {/* **מה תדעו לעשות בסוף — ראשון על הדף.** לפני כל מספר, שלוש
-          המטרות: לבנות הון, לנהל אותו בעצמכם, ולהתחיל גם לילדים. */}
+      {/* **מה המערכת עושה — ראשון על הדף.** לא ההבטחות מדף המכירה:
+          מי שמגיע לכאן כבר נכנס. חמישה כללים ומספרים, כל אחד נגזר
+          מהקוד ומהקטלוג. */}
       <div className="term">
         <GoalsMarquee />
       </div>

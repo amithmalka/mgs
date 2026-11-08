@@ -187,13 +187,13 @@ export function SimulationPage() {
                         <span className="text-text-dim text-xs">%</span>
                       </div>
                     </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.conservative.color : '#333' }}>
+                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.conservative.color : '#5D6878' }}>
                       {pct > 0 ? `${ASSET_RETURNS.conservative[a.assetClass]}%` : '—'}
                     </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.moderate.color : '#333' }}>
+                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.moderate.color : '#5D6878' }}>
                       {pct > 0 ? `${ASSET_RETURNS.moderate[a.assetClass]}%` : '—'}
                     </td>
-                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.aggressive.color : '#333' }}>
+                    <td className="text-center py-2" style={{ color: pct > 0 ? SCENARIOS.aggressive.color : '#5D6878' }}>
                       {pct > 0 ? `${ASSET_RETURNS.aggressive[a.assetClass]}%` : '—'}
                     </td>
                   </tr>
@@ -455,7 +455,7 @@ export function SimulationPage() {
                 <th className="text-end py-2 text-text-muted text-xs">{t('portfolioValue', lang)}</th>
                 <th className="text-end py-2 text-text-muted text-xs">{t('totalDeposits', lang)}</th>
                 <th className="text-end py-2 text-text-muted text-xs">{t('growth', lang)}</th>
-                <th className="text-end py-2 text-xs" style={{ color: '#22c55e' }}>{t('incomeCol', lang)}</th>
+                <th className="text-end py-2 text-xs" style={{ color: '#4ADE80' }}>{t('incomeCol', lang)}</th>
                 {activeAssets.map(a => (
                   <th key={a.assetClass} className="text-end py-2 text-xs" style={{ color: a.color }}>
                     {ASSET_META[a.assetClass].label}
@@ -465,7 +465,7 @@ export function SimulationPage() {
             </thead>
             <tbody>
               {simData[activeScenario].filter(r => YEAR_ROWS.includes(r.year)).map(row => {
-                const phaseColor = row.phase === 'red' ? '#ef4444' : row.phase === 'yellow' ? '#eab308' : '#22c55e';
+                const phaseColor = row.phase === 'red' ? '#F87171' : row.phase === 'yellow' ? '#FBBF4A' : '#4ADE80';
                 const phaseDot = row.phase === 'red' ? 'red' as const : row.phase === 'yellow' ? 'yellow' as const : 'green' as const;
                 return (
                   <tr
@@ -480,7 +480,7 @@ export function SimulationPage() {
                     <td className="text-end py-2 font-medium text-gold">{formatCurrency(row.totalValue)}</td>
                     <td className="text-end py-2 text-text-muted">{formatCurrency(row.totalDeposited)}</td>
                     <td className="text-end py-2 text-success">{formatCurrency(row.totalGrowth)}</td>
-                    <td className="text-end py-2 text-xs" style={{ color: row.income ? '#22c55e' : '#444' }}>
+                    <td className="text-end py-2 text-xs" style={{ color: row.income ? '#4ADE80' : '#444' }}>
                       {row.income ? formatCurrency(row.income) : '—'}
                     </td>
                     {activeAssets.map(a => (

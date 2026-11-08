@@ -73,7 +73,7 @@ export function Sidebar({ activeTab, onTabChange, open, onClose }: SidebarProps)
         }}
       >
         {/* Brand */}
-        <div className="px-5 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(212,175,55,0.08)' }}>
+        <div className="px-5 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(94,230,208,0.08)' }}>
           <div>
             <h1 className="text-xl font-bold gold-shimmer tracking-widest leading-none">MGS</h1>
             <p className="text-[9px] tracking-widest uppercase text-text-dim mt-1">Money Growth System</p>
@@ -116,7 +116,7 @@ export function Sidebar({ activeTab, onTabChange, open, onClose }: SidebarProps)
         </nav>
 
         {/* Language */}
-        <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(212,175,55,0.08)' }}>
+        <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(94,230,208,0.08)' }}>
           <button
             onClick={toggleLang}
             className="w-full px-3 py-2 rounded-xl text-[11px] tracking-wider uppercase border text-gold transition-colors hover:bg-gold-muted"

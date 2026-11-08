@@ -92,7 +92,7 @@ export function Onboarding() {
         choices={goalsFor(age)} value={goal} onPick={setGoal} columns={2} />
 
       {preview && age !== null && deposit !== null && (
-        <div className="rounded-xl border border-gold-border p-4" style={{ background: 'rgba(212,175,55,0.05)' }}>
+        <div className="rounded-xl border border-gold-border p-4" style={{ background: 'rgba(94,230,208,0.05)' }}>
           <p className="text-[11px] text-text-muted">
             לפי מה שבחרת — {years} שנות מסלול, {n0(deposit)} ₪ בחודש, בהערכה הזהירה
           </p>

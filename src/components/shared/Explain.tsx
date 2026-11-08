@@ -48,7 +48,7 @@ export function ExplainPanel(
       className={inline
         ? 'rounded-xl border p-3.5 mb-4'
         : 'absolute z-20 mt-6 right-0 w-[290px] rounded-xl border p-3.5 shadow-xl'}
-      style={{ background: '#17181C', borderColor: 'rgba(212,175,55,0.22)' }}
+      style={{ background: '#0B1018', borderColor: 'rgba(94,230,208,0.22)' }}
     >
       <div className="flex items-start gap-2 mb-1.5">
         <h4 className="text-[12px] font-semibold text-gold-light flex-1 leading-snug">{e.title}</h4>
@@ -63,7 +63,7 @@ export function ExplainPanel(
       <p className="text-[11.5px] leading-relaxed text-text-muted font-light">{e.body}</p>
 
       {e.facts && e.facts.length > 0 && (
-        <div className="mt-2.5 pt-2.5 border-t" style={{ borderColor: 'rgba(212,175,55,0.12)' }}>
+        <div className="mt-2.5 pt-2.5 border-t" style={{ borderColor: 'rgba(94,230,208,0.12)' }}>
           {e.facts.map((f, i) => (
             <div key={i} className="flex items-baseline justify-between gap-3 py-[3px]">
               <span className="text-[10.5px] text-text-dim font-light leading-snug">{f.label}</span>

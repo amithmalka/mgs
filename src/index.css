@@ -214,7 +214,7 @@ input:not([type]):focus, textarea:focus, select:focus {
 input::placeholder, textarea::placeholder { color: #3a3a3a; }
 textarea { resize: vertical; }
 select { appearance: none; cursor: pointer; }
-select option { background: #171717; color: #F0F0F0; }
+select option { background: #0B1018; color: #F0F0F0; }
 input[type="checkbox"] { accent-color: #5EE6D0; }
 input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 

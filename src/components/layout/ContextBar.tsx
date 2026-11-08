@@ -58,7 +58,7 @@ export function ContextBar({ onEdit }: { onEdit?: () => void }) {
     <div
       dir={he ? 'rtl' : 'ltr'}
       className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2.5 rounded-xl border mb-2"
-      style={{ background: 'rgba(212,175,55,0.04)', borderColor: 'rgba(212,175,55,0.14)' }}
+      style={{ background: 'rgba(94,230,208,0.04)', borderColor: 'rgba(94,230,208,0.14)' }}
     >
       {items.map((it, i) => (
         <div key={i} className="flex items-baseline gap-1.5 min-w-0">

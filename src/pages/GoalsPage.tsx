@@ -102,10 +102,10 @@ export function GoalsPage() {
                 style={{
                   width: `${Math.max(3, depositConsistency)}%`,
                   background: depositConsistency >= 90
-                    ? 'linear-gradient(90deg,#10b981,#34d399)'
+                    ? 'linear-gradient(90deg,#4ADE80,#34d399)'
                     : depositConsistency >= 60
-                    ? 'linear-gradient(90deg,#f59e0b,#fcd34d)'
-                    : 'linear-gradient(90deg,#ef4444,#f87171)',
+                    ? 'linear-gradient(90deg,#1F9E8C,#5EE6D0)'
+                    : 'linear-gradient(90deg,#F87171,#f87171)',
                 }}
               />
             </div>
@@ -133,7 +133,7 @@ export function GoalsPage() {
         <div className="relative">
           {/* Horizontal connecting line (desktop) */}
           <div className="hidden md:block absolute top-[2.75rem] inset-x-0 h-[2px]"
-            style={{ background: 'linear-gradient(90deg, rgba(212,175,55,0.6), rgba(212,175,55,0.1))' }}
+            style={{ background: 'linear-gradient(90deg, rgba(94,230,208,0.6), rgba(94,230,208,0.1))' }}
           />
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
@@ -152,9 +152,9 @@ export function GoalsPage() {
                   <div
                     className={`relative z-10 w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 transition-all duration-500 mb-3 ${
                       reached
-                        ? 'border-gold bg-gold-muted shadow-[0_0_20px_rgba(212,175,55,0.4)]'
+                        ? 'border-gold bg-gold-muted shadow-[0_0_20px_rgba(94,230,208,0.4)]'
                         : isNext
-                        ? 'border-gold/50 bg-surface-3 shadow-[0_0_10px_rgba(212,175,55,0.15)]'
+                        ? 'border-gold/50 bg-surface-3 shadow-[0_0_10px_rgba(94,230,208,0.15)]'
                         : 'border-surface-4 bg-surface-3 opacity-50'
                     }`}
                   >
@@ -208,7 +208,7 @@ export function GoalsPage() {
                               width: `${Math.max(2, progress)}%`,
                               background: isNext
                                 ? 'linear-gradient(90deg,#1F9E8C,#5EE6D0)'
-                                : 'rgba(212,175,55,0.2)',
+                                : 'rgba(94,230,208,0.2)',
                             }}
                           />
                         </div>

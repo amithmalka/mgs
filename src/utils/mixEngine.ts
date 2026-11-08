@@ -129,7 +129,7 @@ export function runMix(o: MixInput): MixResult {
   const n = keys.length;
   const depYears = o.depYears ?? DEPOSIT_YEARS[o.cohort];
   const months = (depYears + o.drawYears) * 12;
-  const paths = o.paths ?? 300;
+  const paths = o.paths ?? 400;   // כמו שאר הקוראים, כדי שמספר המסלולים יהיה אחיד
   const r = rng(o.seed ?? 20261102);
   const L = cholesky(keys);
   const totW = o.parts.reduce((s, p) => s + p.w, 0) || 1;

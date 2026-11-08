@@ -446,7 +446,7 @@ export function IrishLab() {
                         <td className={f.cagr >= 0 ? 'up' : 'warn'} dir="ltr">
                           {sg(f.cagr)}
                           <Bar v={Math.abs(f.cagr)} max={maxC}
-                            tone={f.cagr >= 0 ? 'var(--up, #3fb950)' : 'var(--dn, #d2504b)'} />
+                            tone={f.cagr >= 0 ? 'var(--up, #4ADE80)' : 'var(--dn, #F87171)'} />
                         </td>
                         <td dir="ltr">{pc(f.vol, 0)}</td>
                         <td dir="ltr" className={f.cagr / f.vol >= 1 ? 'gold' : ''}>
