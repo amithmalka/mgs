@@ -383,10 +383,21 @@ export function buildMonth(
     });
     if (!eligible.length) allBelowAverage = true;
     else {
-      const pool = eligible.reduce((sum, k) => sum + value(k), 0);
-      for (const k of eligible) {
+      // **מוכרים מהעולה ביותר ביחס לעלות שלו.** ראו הנימוק המלא
+      // ב-`withdrawTax.ts`: פרו־רטה לא נוגע בריכוז, ומכירה מהגבוה
+      // ביותר ב-`שווי/עלות` גוזמת את מי שגדל הכי הרבה — איזון
+      // מחדש שמשתמש בכסף שממילא יוצא.
+      const ratio = (k: SleeveId) => value(k) / Math.max(1e-9, lots[k]!.cost);
+      const order = [...eligible].sort((a, b) => ratio(b) - ratio(a));
+      let left = gross;
+      for (const k of order) {
+        // **ויוצאים ברגע שהמשיכה כוסתה.** בלי זה היו נדחפות שורות
+        // משיכה של אפס לכל שאר הרכיבים, והמסך היה מציג מכירה
+        // שלא קרתה.
+        if (left <= 1e-9) break;
         const lot = lots[k]!;
-        const take = gross * (value(k) / pool);
+        const take = Math.min(left, value(k));
+        left -= take;
         const share = Math.min(1, take / value(k));
         // tax on the gain inside the slice being sold, not on the whole slice
         const gain = Math.max(0, take - lot.cost * share);

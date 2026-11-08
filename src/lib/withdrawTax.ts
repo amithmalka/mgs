@@ -147,10 +147,34 @@ export function withdrawTax(
   const pool = sellable.reduce((t, l) => t + l.valueIls, 0);
   const take = Math.min(gross, pool);
 
-  // חלק הרווח הריאלי מתוך מה שנמכר, משוקלל לפי מה שנלקח מכל רכיב
+  // **מוכרים מהעולה ביותר ביחס לעלות שלו, ולא פרו־רטה.**
+  //
+  // עד כאן המשיכה נלקחה פרו־רטה מכל הזכאים, ולכן היא **לא נגעה
+  // בריכוז**: רכיב שתפס 68% מהתיק נשאר 68% אחרי המשיכה. מכירה
+  // מהגבוה ביותר ביחס `שווי/עלות` גוזמת דווקא את מי שגדל הכי
+  // הרבה — וזה **איזון מחדש שמשתמש בכסף שממילא יוצא**, בלי
+  // אירוע מס נוסף.
+  //
+  // **ומה שזה עולה, כי זה לא חינם.** נמדד על 2006–2026, 36 חודשי
+  // צבירה ואז משיכה: הריכוז יורד ב-2 עד 12 נקודות, **והיתרה
+  // קטנה ב-10% עד 27%** — כי נמכר בדיוק מה שהמשיך לעלות.
+  // ‏SPY·XLK הוא היחס הטוב ביותר שנמדד: 12 נקודות ריכוז תמורת 9.6%.
+  const order = [...sellable].sort((a, b) =>
+    (b.valueIls / Math.max(1e-9, b.investedIls)) -
+    (a.valueIls / Math.max(1e-9, a.investedIls)));
+  let left = take;
+  const part0 = new Map<string, number>();
+  for (const l of order) {
+    const p = Math.min(left, l.valueIls);
+    part0.set(l.k, p);
+    left -= p;
+    if (left <= 1e-9) break;
+  }
+
+  // חלק הרווח הריאלי מתוך מה שנמכר, לפי מה שנלקח מכל רכיב בפועל
   let taxable = 0, nominalTaxable = 0;
   for (const l of sellable) {
-    const part = pool > 0 ? (l.valueIls / pool) * take : 0;
+    const part = part0.get(l.k) ?? 0;
     l.sold = part;
     const realFrac = l.valueIls > 0 ? Math.max(0, l.gainReal) / l.valueIls : 0;
     const nomFrac = l.valueIls > 0 ? Math.max(0, l.gainNominal) / l.valueIls : 0;
