@@ -24,6 +24,7 @@ import { thisMonth } from '../../store/planStore';
 import { mix, IRISH, BUY } from '../../constants/irish';
 import { useMarket } from '../../hooks/useMarket';
 import { Card } from '../layout/Card';
+import { Rows } from '../shared/Rows';
 import { NumField } from '../build/NumField';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
@@ -218,30 +219,29 @@ export function WithdrawConfirm() {
         </p>
       </div>
 
-      <div className="ptable bleed mt-3">
-        <table>
-          <thead>
-            <tr>
-              <th>הרכיב</th><th>למכור ₪</th><th>יחידות (אומדן)</th>
-              <th>מחיר</th><th>עלות ממוצעת</th><th>רווח ריאלי ₪</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.k}>
-                <td><b>{IRISH.find(y => y.k === r.k)?.he ?? r.k}</b></td>
-                <td dir="ltr" className="gold"><b>{n0(r.takeIls)}</b></td>
-                <td dir="ltr">{r.units ? n4(r.units) : '—'}</td>
-                <td dir="ltr" className="dim">{r.px ?? '—'} {r.ccy}</td>
-                <td dir="ltr" className="dim">{r.avg ? n4(r.avg) : '—'}</td>
-                <td dir="ltr">{n0(r.gainReal)}</td>
-              </tr>
-            ))}
-            {!rows.length && (
-              <tr><td colSpan={6} className="dim">אין רכיב שאפשר למכור בסכום הזה.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mt-3">
+        <Rows
+          cols={[
+            { k: 'he', label: 'הרכיב', lead: true },
+            { k: 'take', label: 'למכור', ltr: true, big: true },
+            { k: 'units', label: 'יחידות (אומדן)', ltr: true },
+            { k: 'px', label: 'מחיר', ltr: true, dim: true },
+            { k: 'avg', label: 'עלות ממוצעת', ltr: true, dim: true },
+            { k: 'gain', label: 'רווח ריאלי ₪', ltr: true },
+          ]}
+          rows={rows.map(r => ({
+            id: r.k,
+            cells: {
+              he: IRISH.find(y => y.k === r.k)?.he ?? r.k,
+              take: <>{n0(r.takeIls)}₪</>,
+              units: r.units ? n4(r.units) : '—',
+              px: <>{r.px ?? '—'} {r.ccy}</>,
+              avg: r.avg ? n4(r.avg) : '—',
+              gain: n0(r.gainReal),
+            },
+          }))}
+          empty="אין רכיב שאפשר למכור בסכום הזה."
+        />
       </div>
 
       <div className="ptable mt-3">

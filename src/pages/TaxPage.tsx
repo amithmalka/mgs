@@ -6,6 +6,7 @@ import { useMyPortfolio } from '../store/myPortfolio';
 import { useMgsStore, currentPlanMonth } from '../store/mgsStore';
 import { mix } from '../constants/irish';
 import { Card } from '../components/layout/Card';
+import { Rows } from '../components/shared/Rows';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import { NumField } from '../components/build/NumField';
 
@@ -207,36 +208,31 @@ export function TaxPage({ embedded = false }: { embedded?: boolean } = {}) {
             <h3 className="text-[15px] font-bold text-gold-light mb-3">
               הפירוק לפי רכיבי התיק
             </h3>
-            <div className="ptable bleed">
-              <table>
-                <thead>
-                  <tr>
-                    <th>רכיב</th><th>מטבע</th><th>שווי ₪</th><th>הופקד ₪</th>
-                    <th>רווח נומינלי</th><th>אינפלציוני</th><th>רווח ריאלי</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {t.lines.map(l => (
-                    <tr key={l.k}>
-                      <td><b>{l.k}</b></td>
-                      <td dir="ltr">{l.ccy}</td>
-                      <td dir="ltr">{n0(l.valueIls)}</td>
-                      <td dir="ltr">{n0(l.investedIls)}</td>
-                      <td dir="ltr">{n0(l.gainNominal)}</td>
-                      <td dir="ltr" style={{ color: '#9CA3AF' }}>{n0(l.inflation)}</td>
-                      <td dir="ltr" style={{ fontWeight: 600 }}>{n0(l.gainReal)}</td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td><b>סך הכל</b></td><td /><td dir="ltr"><b>{n0(t.value)}</b></td>
-                    <td dir="ltr"><b>{n0(t.invested)}</b></td>
-                    <td dir="ltr"><b>{n0(t.gainNominal)}</b></td>
-                    <td dir="ltr"><b>{n0(t.inflation)}</b></td>
-                    <td dir="ltr"><b>{n0(t.gainReal)}</b></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Rows
+              cols={[
+                { k: 'k', label: 'רכיב', lead: true },
+                { k: 'value', label: 'שווי ₪', ltr: true, big: true },
+                { k: 'invested', label: 'הופקד ₪', ltr: true },
+                { k: 'nominal', label: 'רווח נומינלי', ltr: true },
+                { k: 'infl', label: 'אינפלציוני', ltr: true, dim: true },
+                { k: 'real', label: 'רווח ריאלי', ltr: true },
+                { k: 'ccy', label: 'מטבע', ltr: true, dim: true },
+              ]}
+              rows={t.lines.map(l => ({
+                id: l.k,
+                cells: {
+                  k: <b>{l.k}</b>,
+                  ccy: l.ccy,
+                  value: <>{n0(l.valueIls)}</>,
+                  invested: n0(l.investedIls),
+                  nominal: n0(l.gainNominal),
+                  infl: n0(l.inflation),
+                  real: <b>{n0(l.gainReal)}</b>,
+                },
+              }))}
+              total={{ label: 'סך הכל, שווי התיק', value: `${n0(t.value)}₪` }}
+            />
+
             <p className="note mt-3">
               <b>העמודה ״אינפלציוני״ היא מה שנובע משער החליפין בלבד</b> —
               והיא <b>אינה ממוסה</b>. הרווח הריאלי הוא ההפרש, והוא בסיס

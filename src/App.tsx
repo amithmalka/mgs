@@ -6,7 +6,6 @@ import { AcademyPage } from './pages/AcademyPage';
 import { KidsPage } from './pages/KidsPage';
 import { BuildPage } from './pages/BuildPage';
 import { StudyPage } from './pages/StudyPage';
-import { ContextBar } from './components/layout/ContextBar';
 import { useStore } from './store';
 import { useLangStore } from './store/langStore';
 import { Disclaimer } from './components/shared/Disclaimer';
@@ -121,7 +120,12 @@ function App() {
       <div className={isRtl ? 'lg:pr-[248px]' : 'lg:pl-[248px]'}>
         <TopBar onOpen={() => setMenuOpen(true)} />
         <main className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 py-8">
-          <ContextBar onEdit={() => setActiveTab('mgs')} />
+          {/* **פס ההקשר ירד.** ‏גיל / קבוצה / שלב / שנות הפקדה היו
+              מוצגים בראש **כל** מסך, כולל מסכים שאין להם שום קשר
+              אליהם — והם גם לא ניתנים לעריכה משם אלא דרך כפתור
+              שפתח פאנל נוסף מעל הדף. העריכה עברה ל״התיק שלי״,
+              שהוא המקום שבו המשתמשים ממילא מסתכלים על ההנחות
+              שלהם. ‏`ContextBar` נשאר בקוד ואינו בשימוש. */}
           <ActivePage onNavigate={setActiveTab} />
         </main>
         <footer className="relative z-10 py-6 px-5 max-w-3xl mx-auto">

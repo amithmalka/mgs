@@ -663,3 +663,96 @@ html, body { overflow-x: hidden; }
 .ab-sub { margin: 0; font-size: 11px; line-height: 1.55; color: var(--muted, #8E9CAE); }
 .ab-sub b { color: var(--ink, #E8EEF6); font-weight: 600; }
 .ab-foot { margin-top: 10px; }
+
+/* ─────────────────────────────────────────────────────────────
+   `Rows` — אותן שורות, כשהן מעטות
+   ─────────────────────────────────────────────────────────────
+   הכרטיס נקרא מלמעלה למטה: שם, המספר המוביל, ואז זוגות
+   תווית־ערך. זוגות ולא רשת — ככה ערך לא יכול להידבק לערך
+   שלפניו, וזה מה שקרה ב-`2,400₪XLKS`. */
+.rws { display: flex; flex-direction: column; gap: 8px; }
+
+.rw {
+  border: 1px solid var(--rule, #1E2A3A);
+  border-radius: 10px; padding: 12px 14px;
+  background: var(--surface, #0B1018);
+}
+.rw.is-mark {
+  border-inline-start: 2px solid var(--gold, #5EE6D0);
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 3.5%, var(--surface, #0B1018));
+}
+.rw header { display: flex; align-items: baseline; gap: 8px; }
+.rw h4 {
+  margin: 0; font-size: 13px; font-weight: 600; line-height: 1.4;
+  color: var(--ink, #E8EEF6); min-width: 0;
+}
+.rw-tag {
+  margin-inline-start: auto; flex: 0 0 auto;
+  font-size: 10px; padding: 1px 7px; border-radius: 999px;
+  color: var(--gold, #5EE6D0);
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 26%, transparent);
+}
+
+.rw-big {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin: 8px 0 0;
+  font-size: 19px; font-weight: 700; color: var(--gold, #5EE6D0);
+  font-variant-numeric: tabular-nums;
+}
+.rw-big span {
+  font-size: 11px; font-weight: 400; color: var(--muted, #8E9CAE);
+  font-variant-numeric: normal;
+}
+
+/* **רשת שנושמת, ולא עמודות קבועות.** ‏`auto-fit` עם רוחב מינימום
+   נותן שתי עמודות בטלפון וארבע במסך רחב, בלי media query — ובלי
+   שעמודה תצטמצם לשלוש ספרות. */
+.rw-fields {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 7px 14px; margin: 11px 0 0;
+}
+.rw-fields > div { min-width: 0; }
+.rw-fields dt {
+  margin: 0; font-size: 9.5px; letter-spacing: .4px;
+  color: var(--dim, #5D6878);
+}
+.rw-fields dd {
+  margin: 1px 0 0; font-size: 12.5px; color: var(--ink, #E8EEF6);
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.rw-fields dd.dim { color: var(--muted, #8E9CAE); }
+
+.rw-wide {
+  margin: 10px 0 0; font-size: 11.5px; line-height: 1.6;
+  color: var(--dim, #5D6878);
+}
+
+.rw-total {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 11px 14px; border-radius: 10px;
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 20%, transparent);
+}
+.rw-total span { font-size: 11.5px; color: var(--muted, #8E9CAE); }
+.rw-total b {
+  font-size: 17px; font-weight: 700; color: var(--ink, #E8EEF6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* שורת המטא שמתחת ללוח החם */
+.ab-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 9px; font-size: 10.5px; color: var(--dim, #5D6878);
+}
+/* כפתור העריכה בתוך שורת האופק של ״התיק שלי״ */
+.term .mp-edit {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: inherit; font-size: 10.5px;
+  color: var(--gold, #5EE6D0); background: none;
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 28%, transparent);
+  border-radius: 6px; padding: 1px 7px; cursor: pointer;
+  vertical-align: middle;
+}
+.term .mp-edit:hover { background: color-mix(in srgb, var(--gold, #5EE6D0) 10%, transparent); }
+.term .mp-edit:focus-visible { outline: 2px solid var(--gold, #5EE6D0); outline-offset: 2px; }

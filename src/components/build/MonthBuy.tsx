@@ -14,6 +14,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Stat } from '../shared/Stat';
+import { Rows } from '../shared/Rows';
 import { IRISH, BUY } from '../../constants/irish';
 import { useMyPortfolio } from '../../store/myPortfolio';
 import { ceilingFor } from '../../constants/studyFunds';
@@ -148,46 +149,39 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
 
       {err && <p className="lab-access warn">{err}.</p>}
 
-      <div className="scroll bleed">
-        <table>
-          <thead>
-            <tr>
-              <th className="lead">הרכיב</th>
-              <th>כמה לקנות</th>
-              <th>חלק מההפקדה</th>
-              <th>למה</th>
-              <th>סימול</th>
-              <th>בורסה</th>
-              <th>מטבע</th>
-              <th>ISIN</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plan.map(x => {
-              const f = IRISH.find(y => y.k === x.k);
-              const b = BUY[x.k];
-              if (!f || !b) return null;
-              return (
-                <tr key={x.k} className={x.deepest ? 'cross' : ''}>
-                  <td className="lead">
-                    {f.he}
-                    {x.deepest && <span className="mb-deep">מקבל את השארית</span>}
-                  </td>
-                  <td dir="ltr" className="gold">
-                    <b>{n0(toBroker * x.ask / 100)}₪</b>
-                  </td>
-                  <td dir="ltr">{x.ask.toFixed(0)}%</td>
-                  <td className="dim">{x.why}</td>
-                  <td dir="ltr" className="tk"><b>{b.sym}</b></td>
-                  <td dir="ltr" className="dim">{b.ex === 'LSE' ? 'LSEETF' : b.ex}</td>
-                  <td dir="ltr">{b.cur}</td>
-                  <td dir="ltr" className="dim">{f.isin}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <Rows
+        cols={[
+          { k: 'he', label: 'הרכיב', lead: true },
+          { k: 'amt', label: 'לקנות החודש', ltr: true, big: true },
+          { k: 'ask', label: 'חלק מההפקדה', ltr: true },
+          { k: 'tk', label: 'סימול', ltr: true },
+          { k: 'ex', label: 'בורסה', ltr: true, dim: true },
+          { k: 'cur', label: 'מטבע', ltr: true },
+          { k: 'isin', label: 'ISIN', ltr: true, dim: true },
+          { k: 'why', label: 'למה', wide: true, dim: true },
+        ]}
+        rows={plan.flatMap(x => {
+          const f = IRISH.find(y => y.k === x.k);
+          const b = BUY[x.k];
+          if (!f || !b) return [];
+          return [{
+            id: x.k,
+            mark: x.deepest,
+            tag: x.deepest ? 'מקבל את השארית' : undefined,
+            cells: {
+              he: f.he,
+              amt: <>{n0(toBroker * x.ask / 100)}₪</>,
+              ask: `${x.ask.toFixed(0)}%`,
+              tk: <span className="tk"><b>{b.sym}</b></span>,
+              ex: b.ex === 'LSE' ? 'LSEETF' : b.ex,
+              cur: b.cur,
+              isin: f.isin,
+              why: x.why,
+            },
+          }];
+        })}
+        total={{ label: 'סך הכל לברוקר החודש', value: `${n0(toBroker)}₪` }}
+      />
 
       <div className="cta">
         <button className="opt" type="button" onClick={() => void pull()}>

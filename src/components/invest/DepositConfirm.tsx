@@ -27,6 +27,7 @@ import { thisMonth } from '../../store/planStore';
 import { addDeposits } from '../../lib/deposits';
 import type { NewBuy } from '../../lib/deposits';
 import { Card } from '../layout/Card';
+import { Rows } from '../shared/Rows';
 import { NumField } from '../build/NumField';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
@@ -162,20 +163,24 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
                 החודש.</>}
         </p>
         {d.decision === 'done' && d.lines && (
-          <div className="ptable bleed mt-3">
-            <table>
-              <thead><tr><th>רכיב</th><th>סכום ₪</th><th>יחידות</th><th>מחיר</th></tr></thead>
-              <tbody>
-                {d.lines.filter(l => l.ils >= 1).map(l => (
-                  <tr key={l.k}>
-                    <td><b>{IRISH.find(y => y.k === l.k)?.he ?? l.k}</b></td>
-                    <td dir="ltr">{n0(l.ils)}</td>
-                    <td dir="ltr">{l.units ? n4(l.units) : '—'}</td>
-                    <td dir="ltr" className="dim">{l.px ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-3">
+            <Rows
+              cols={[
+                { k: 'he', label: 'רכיב', lead: true },
+                { k: 'ils', label: 'הופקד', ltr: true, big: true },
+                { k: 'units', label: 'יחידות', ltr: true },
+                { k: 'px', label: 'מחיר', ltr: true, dim: true },
+              ]}
+              rows={d.lines.filter(l => l.ils >= 1).map(l => ({
+                id: l.k,
+                cells: {
+                  he: IRISH.find(y => y.k === l.k)?.he ?? l.k,
+                  ils: <>{n0(l.ils)}₪</>,
+                  units: l.units ? n4(l.units) : '—',
+                  px: l.px ?? '—',
+                },
+              }))}
+            />
           </div>
         )}
         <div className="cta mt-3">

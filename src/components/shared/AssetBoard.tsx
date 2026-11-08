@@ -30,14 +30,20 @@
  *  זהה נראים כמו באג, ולכן הכרטיס הוא המדד והקרנות מופיעות בתוכו.
  *
  *  **המספר המוביל הוא התשואה השנתית**, מהגבוה לנמוך. והשני, השקט,
- *  הוא **הנפילה מהשיא** — כי זה המספר שכלל הקנייה פועל עליו. הם
- *  לא אומרים אותו דבר: מדד יכול לעלות 30% בשנה ולהיות 12% מתחת
- *  לשיא, ואז הוא גם הרץ וגם זה שמקבל את רוב ההפקדה.
+ *  הוא **הנפילה מהשיא שבתוך החלון** — כי זה המספר שכלל הקנייה פועל
+ *  עליו. הם לא אומרים אותו דבר, ו-SMH ב-8.11.2026 הוא הדוגמה:
+ *  **+32% בשנה, ו-29% מתחת לשיא** — הוא פסגה ב-660.81 ביוני וירד
+ *  ל-467.44. כלומר הוא גם הרץ של השנה **וגם** זה שמקבל את רוב
+ *  ההפקדה החודש. מספר אחד לבדו לא היה מספר את זה.
+ *
+ *  **והשיא נמדד על סגירות חודשיות** — שיא תוך־חודשי שלא נסגר בו
+ *  אינו נספר, ולכן הנפילה שמוצגת קטנה ולא גדולה מהאמת.
  *
  *  **ובטעינה הוא לא ריק** — הכרטיסים מוצגים מיד עם השמות ו-״—״
  *  במקום המספר. מסך שמחכה לרשת הוא מסך ריק בצילום ובקישור משותף.
  */
 import { useEffect, useState } from 'react';
+import { Explain } from './Explain';
 
 interface Point { t: string; c: number; a: number }
 interface Series { months?: number; series?: Point[]; last?: string; error?: string }
@@ -55,6 +61,7 @@ const BOARD = [
 interface Row {
   us: string; he: string; funds: string; sub: string;
   y1?: number | null; fromHigh?: number | null;
+  from?: string; to?: string;
 }
 
 const pc1 = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v * 100).toFixed(1)}%`;
@@ -63,14 +70,20 @@ const pc1 = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v * 100).toFixed(1
  *  חודשים; פחות מזה אינו שנה ואין מה לדווח עליו. השיא נמדד על
  *  אותן נקודות — ברזולוציה חודשית, ולכן הוא שמרני: שיא תוך־חודשי
  *  שלא נסגר בו אינו נספר, והנפילה שתוצג קטנה ולא גדולה מהאמת. */
-function fromSeries(s: Series | undefined): { y1: number | null; fromHigh: number | null } {
+function fromSeries(s: Series | undefined): {
+  y1: number | null; fromHigh: number | null; from?: string; to?: string;
+} {
   const pts = s?.series;
   if (!pts || pts.length < 13) return { y1: null, fromHigh: null };
   const win = pts.slice(-13);
   const first = win[0].a, last = win[win.length - 1].a;
   if (!(first > 0) || !(last > 0)) return { y1: null, fromHigh: null };
   const high = Math.max(...win.map(p => p.a));
-  return { y1: last / first - 1, fromHigh: high > 0 ? Math.max(0, 1 - last / high) : null };
+  return {
+    y1: last / first - 1,
+    fromHigh: high > 0 ? Math.max(0, 1 - last / high) : null,
+    from: win[0].t, to: win[win.length - 1].t,
+  };
 }
 
 function AssetCard({ r, dup }: { r: Row; dup?: boolean }) {
@@ -84,7 +97,7 @@ function AssetCard({ r, dup }: { r: Row; dup?: boolean }) {
       </p>
       <p className="ab-sub">
         {has
-          ? <>ב-12 החודשים האחרונים{r.fromHigh != null && (
+          ? <>מאז {new Date(r.from!).toLocaleDateString('he-IL', { month: 'short', year: '2-digit' })}{r.fromHigh != null && (
               r.fromHigh > 0.005
                 ? <> · <b>{(r.fromHigh * 100).toFixed(0)}% מתחת לשיא</b></>
                 : <> · <b>על השיא</b></>
@@ -98,7 +111,11 @@ function AssetCard({ r, dup }: { r: Row; dup?: boolean }) {
 export function AssetBoard() {
   const [rows, setRows] = useState<Row[]>(() => BOARD.map(b => ({ ...b })));
   const [err, setErr] = useState(false);
-  const [asOf, setAsOf] = useState<string | null>(null);
+  /** **החלון שנמדד, ולא ״שנה״.** הסדרה חודשית והנקודה האחרונה היא
+   *  חודש חלקי, ולכן 13 נקודות הן בדרך כלל כאחת עשרה חודשים וחצי
+   *  ולא שנים עשר בדיוק. להציג ״12 החודשים האחרונים״ זה לעגל כלפי
+   *  מעלה; להציג את שני התאריכים זה לומר מה נמדד. */
+  const [win, setWin] = useState<{ from: string; to: string } | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -118,8 +135,8 @@ export function AssetBoard() {
           return b.y1 - a.y1;
         });
         setRows(next);
-        const last = Object.values(j.series).map(v => v.last).filter(Boolean).sort().pop();
-        if (last) setAsOf(last);
+        const w = next.find(x => x.from && x.to);
+        if (w?.from && w.to) setWin({ from: w.from, to: w.to });
       } catch { setErr(true); }
     })();
   }, []);
@@ -135,24 +152,22 @@ export function AssetBoard() {
           </div>
         </div>
       </section>
-      <p className="note ab-foot">
-        <b>המדדים שהקרנות בקטלוג עוקבות אחריהם</b>, לפי התשואה ב-12
-        החודשים האחרונים — <b>כולל דיבידנד</b>, במטבע הנייר ולא בשקלים.
-        {err
-          ? <> <b>הנתונים לא נמשכו הפעם, ולכן אין כאן מספרים.</b></>
-          : asOf
-            ? <> עד {new Date(asOf).toLocaleDateString('he-IL')}.</>
-            : <> נמשכים…</>}
-        {' '}<b>המדידה היא על הקו האמריקאי של כל מדד</b>, כי לקווים
-        האיריים אין כרגע ספק נתונים היסטוריים — והוא משלם מס במקור על
-        דיבידנד בעוד שהקרן האירית לא, <b>ולכן המספר כאן זהיר והקרן
-        גבוהה ממנו במקצת.</b>
-      </p>
-      <p className="note">
-        <b>ותשואת העבר אינה תחזית, וגם אינה כלל הקנייה.</b> ההפקדה
-        מתחלקת לפי <b>הנפילה מהשיא</b> — המספר שבשורה השנייה של כל
-        כרטיס — ולא לפי מי שעלה הכי הרבה.
-      </p>
+      {/* **שתי הפסקאות שהיו כאן ירדו מהדף.** הן היו קיר טקסט מתחת
+          לפס נע, ומי שמגיע לדף רוצה לראות מספרים ולא הסתייגות
+          באורך פסקה. **אבל הן לא נמחקו** — מספר בלי מקור אינו משהו
+          שמותר להציג, ולכן כל מה שנאמר שם יושב ב-״?״ שליד הכותרת:
+          מה נמדד, על איזה קו, למה הוא זהיר, ושתשואת העבר אינה
+          כלל הקנייה. */}
+      <div className="ab-meta">
+        <span>
+          {err
+            ? 'הנתונים לא נמשכו הפעם'
+            : win
+              ? `שנה אחורה · עד ${new Date(win.to).toLocaleDateString('he-IL')}`
+              : 'נמשכים…'}
+        </span>
+        <Explain topic="assetBoard" />
+      </div>
     </>
   );
 }

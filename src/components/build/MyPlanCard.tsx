@@ -8,7 +8,10 @@
  *  לנופל העמוק ביותר) דורש מחירי שיא חיים, ולכן כאן מוצגת **חלוקה
  *  לפי המשקלות שנבחרו**. ההפעלה החודשית של המנגנון היא שלב נפרד.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Rows } from '../shared/Rows';
+import { NumField } from './NumField';
+import { Icon } from '../shared/Icon';
 import { Stat } from '../shared/Stat';
 import { useMgsStore } from '../../store/mgsStore';
 import { IRISH, BUY, TIER_HE, mix, type Tier } from '../../constants/irish';
@@ -23,8 +26,17 @@ const sg = (v: number, d = 1) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(d)}%`;
 const TIER_DOT: Record<Tier, string> = { calm: 'lab-calm', mid: 'lab-mid', hot: 'lab-hot' };
 
 export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
-  const { holdings, deposit, extra, fundStatus, annualSalary, selfIncome } = useMyPortfolio();
+  const { holdings, deposit, extra, fundStatus, annualSalary, selfIncome,
+    setDeposit, setExtra } = useMyPortfolio();
   const age = useMgsStore(st => st.age);
+  const setAge = useMgsStore(st => st.setAge);
+  /** **ההנחות נערכות כאן, ולא בפס שרחף מעל כל מסך.**
+   *
+   *  ‏`ContextBar` הציג גיל / קבוצה / שלב / שנות הפקדה בראש **כל**
+   *  מסך, כולל מסכים שאין להם קשר אליהם, והעריכה שלו פתחה פאנל
+   *  נוסף מעל הדף. ההנחות האלה הן של ״התיק שלי״ — זה המסך שמציג
+   *  אותן ממילא, ולכן זה המסך שמשנה אותן. */
+  const [edit, setEdit] = useState(false);
 
   const tot = totalWeight(holdings);
   const m = useMemo(() => mix(holdings.map(h => ({ k: h.k, w: h.w }))), [holdings]);
@@ -37,10 +49,10 @@ export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
   if (!holdings.length) {
     return (
       <section className="mp-empty">
-        <span className="eyebrow">התיק שלך</span>
-        <h2>עוד לא בחרת רכיבים</h2>
+        <span className="eyebrow">התיק שלכם</span>
+        <h2>עוד לא בחרתם רכיבים</h2>
         <p className="lede">
-          <b>המערכת לא מציעה לך תיק, בכוונה.</b> כל רכיב בקטלוג נמדד —
+          <b>המערכת לא מציעה לכם תיק, בכוונה.</b> כל רכיב בקטלוג נמדד —
           תשואה, תנודתיות, ומה הוא עושה לתיק שלם. <b>קודם מבינים, ואז בוחרים.</b>
         </p>
         <p>
@@ -66,8 +78,8 @@ export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
   return (
     <>
       <section>
-        <span className="eyebrow">התיק שלך</span>
-        <h2>מה שבחרת, וכמה להפקיד החודש</h2>
+        <span className="eyebrow">התיק שלכם</span>
+        <h2>מה שבחרתם, וכמה להפקיד החודש</h2>
 
         {(
           <p className="cm-horizon">
@@ -84,7 +96,31 @@ export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
                 ל<b>משיכות בלבד</b>, ולא לצבירה.
               </>
             )}
+            {' '}
+            <button className="mp-edit" type="button" onClick={() => setEdit(o => !o)}>
+              <Icon name="pencil" size={10} /> {edit ? 'סגירה' : 'עריכה'}
+            </button>
           </p>
+        )}
+
+        {edit && (
+          <div className="term cx-edit">
+            <div className="grp">
+              <span className="glab">גיל</span>
+              <NumField value={age} min={18} max={75} label="גיל" unit="שנים" onCommit={setAge} />
+              <span className="glab">הפקדה חודשית</span>
+              <NumField value={deposit} min={0} max={200000} step={50}
+                label="הפקדה חודשית" unit="₪" onCommit={setDeposit} />
+              <span className="glab">סכום נוסף</span>
+              <NumField value={extra} min={0} max={1000000} step={50}
+                label="סכום נוסף" unit="₪" onCommit={setExtra} />
+            </div>
+            <p className="note">
+              <b>הגיל וההפקדה מסתנכרנים מיד בכל המסכים</b> — קבוצת הגיל,
+              אופק ההפקדות, החלוקה לקרן ההשתלמות, וכמה לקנות מכל רכיב.
+              את <b>הרכיבים עצמם</b> בוחרים בדף ההרכבה.
+            </p>
+          </div>
         )}
 
         <div className="stats">
@@ -113,54 +149,55 @@ export function MyPlanCard({ onBuild }: { onBuild?: () => void }) {
           </div>
         )}
 
-        <div className="scroll bleed">
-          <table>
-            <thead>
-              <tr>
-                <th className="lead">הרכיב</th>
-                <th>רמה</th>
-                <th>משקל</th>
-                {toBroker > 0 && <th>כמה החודש</th>}
-                <th>טיקר</th>
-                <th>בורסה</th>
-                <th>מטבע</th>
-                <th>תשואה</th>
-                <th>תנודתיות</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ h, f }) => {
-                const b = BUY[f.k];
-                const share = tot > 0 ? h.w / tot : 0;
-                return (
-                  <tr key={f.k}>
-                    <td className="lead">{f.he}</td>
-                    <td>
-                      <span className={`lab-dot ${TIER_DOT[f.tier]}`} aria-hidden="true" />
-                      {TIER_HE[f.tier]}
-                    </td>
-                    <td dir="ltr">{pc(share, 0)}</td>
-                    {toBroker > 0 && (
-                      <td dir="ltr" className="gold"><b>{n0(toBroker * share)}₪</b></td>
-                    )}
-                    <td dir="ltr" className="tk">{b ? b.sym : '—'}</td>
-                    <td dir="ltr" className="dim">
-                      {b ? (b.ex === 'LSE' ? 'LSEETF' : b.ex) : '—'}
-                    </td>
-                    <td dir="ltr">{b ? b.cur : '—'}</td>
-                    <td dir="ltr" className={f.cagr >= 0 ? 'up' : 'warn'}>{sg(f.cagr)}</td>
-                    <td dir="ltr">{pc(f.vol, 0)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        {/* **כרטיסים ולא טבלה כשיש עד שלושה רכיבים.** תשע עמודות
+            ושני רכיבים נשברו בעברית: הסכום והטיקר נדבקו
+            (``2,400₪XLKS``) והכותרות לא התיישרו עם התאים. ‏`Rows`
+            מכריע לפי מספר השורות בזמן הריצה, ולכן תיק של חמישה
+            רכיבים יחזור להיות טבלה מעצמו. */}
+        <Rows
+          cols={[
+            { k: 'he', label: 'הרכיב', lead: true },
+            ...(toBroker > 0
+              ? [{ k: 'amt', label: 'כמה החודש', ltr: true, big: true }]
+              : [{ k: 'w', label: 'משקל', ltr: true, big: true }]),
+            ...(toBroker > 0 ? [{ k: 'w', label: 'משקל', ltr: true }] : []),
+            { k: 'tier', label: 'רמה' },
+            { k: 'cagr', label: 'תשואה', ltr: true },
+            { k: 'vol', label: 'תנודתיות', ltr: true },
+            { k: 'tk', label: 'טיקר', ltr: true },
+            { k: 'ex', label: 'בורסה', ltr: true, dim: true },
+            { k: 'cur', label: 'מטבע', ltr: true },
+          ]}
+          rows={rows.map(({ h, f }) => {
+            const b = BUY[f.k];
+            const share = tot > 0 ? h.w / tot : 0;
+            return {
+              id: f.k,
+              cells: {
+                he: f.he,
+                tier: <>
+                  <span className={`lab-dot ${TIER_DOT[f.tier]}`} aria-hidden="true" />
+                  {TIER_HE[f.tier]}
+                </>,
+                w: pc(share, 0),
+                amt: <>{n0(toBroker * share)}₪</>,
+                tk: b ? <span className="tk">{b.sym}</span> : '—',
+                ex: b ? (b.ex === 'LSE' ? 'LSEETF' : b.ex) : '—',
+                cur: b ? b.cur : '—',
+                cagr: <span className={f.cagr >= 0 ? 'up' : 'warn'}>{sg(f.cagr)}</span>,
+                vol: pc(f.vol, 0),
+              },
+            };
+          })}
+          total={toBroker > 0
+            ? { label: 'סך הכל לברוקר החודש', value: `${n0(toBroker)}₪` }
+            : undefined}
+        />
 
         {deposit + extra === 0 && (
           <p className="lab-access warn">
-            <b>עוד לא הזנת הפקדה חודשית</b>, ולכן אין סכומים לכל רכיב.
-            הזינו אותה בדף ההרכבה והיא תופיע כאן.
+            <b>עוד לא הזנתם הפקדה חודשית</b>, ולכן אין סכומים לכל רכיב.
+            לחצו על ״עריכה״ למעלה והזינו אותה.
           </p>
         )}
         {fundStatus === 'none' && deposit > 0 && (
