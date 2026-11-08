@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Money Growth System</title>
+
+    <!-- **מה שפותח התראות באייפון, ולא פחות מזה.**
+
+         אפל תומכת ב-Web Push **רק לאתר שנוסף למסך הבית**, וגם אז רק
+         אם יש manifest עם `display: standalone`. בלי שלושת אלה
+         `Notification.requestPermission` באייפון פשוט נכשל — בשקט,
+         בלי הודעה — ומשתמש אייפון לא היה מקבל תזכורת לעולם.
+
+         `apple-touch-icon` חייב להיות PNG מרובע ואטום: ‏iOS אינו
+         קורא SVG כאייקון מסך בית, ושקיפות הוא ממלא בשחור. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#06080C" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MGS" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">

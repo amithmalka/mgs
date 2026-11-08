@@ -756,3 +756,72 @@ html, body { overflow-x: hidden; }
 }
 .term .mp-edit:hover { background: color-mix(in srgb, var(--gold, #5EE6D0) 10%, transparent); }
 .term .mp-edit:focus-visible { outline: 2px solid var(--gold, #5EE6D0); outline-offset: 2px; }
+
+/* ─────────────────────────────────────────────────────────────
+   ״רישום מספר היחידות״ — מתקפל, וסגור כברירת מחדל
+   ─────────────────────────────────────────────────────────────
+   **ולמה הוא ירד מהשורה.** שדה המחיר היה בתוך כל כרטיס רכיב,
+   ולכן הוא נראה כמו חלק מהפעולה — מישהו שרוצה להפקיד חשב
+   שהוא חייב למלא אותו. הוא לא: ההפקדה היא הסכום בשקלים,
+   והמחיר הוא רישום שמשרת את **המשיכה העתידית**. מקטע סגור
+   אומר את זה בלי מילה אחת. */
+.term .dep-more {
+  margin-top: 14px;
+  border: 1px dashed var(--rule, #1E2A3A);
+  border-radius: 10px;
+  padding: 0 14px;
+}
+.term .dep-more > summary {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 0; cursor: pointer;
+  font-size: 12px; color: var(--muted, #8E9CAE);
+  list-style: none;
+}
+.term .dep-more > summary::-webkit-details-marker { display: none; }
+/* חץ שמסתובב — הסימן היחיד שיש כאן עוד משהו */
+.term .dep-more > summary::before {
+  content: '›'; font-size: 15px; line-height: 1;
+  color: var(--gold, #5EE6D0);
+  transition: transform .18s ease;
+}
+[dir="rtl"] .term .dep-more > summary::before { content: '‹'; }
+.term .dep-more[open] > summary::before { transform: rotate(-90deg); }
+.term .dep-more > summary span {
+  font-size: 10px; padding: 1px 7px; border-radius: 999px;
+  color: var(--dim, #5D6878);
+  border: 1px solid var(--rule, #1E2A3A);
+}
+.term .dep-more > summary:focus-visible { outline: 2px solid var(--gold, #5EE6D0); outline-offset: 2px; }
+.term .dep-more[open] { padding-bottom: 12px; }
+.term .dep-more .dep-px { margin-top: 8px; }
+.term .dep-more .dep-px label span { min-width: 9rem; }
+@media (prefers-reduced-motion: reduce) {
+  .term .dep-more > summary::before { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ההוראה לאייפון — לפני הלחיצה, לא אחרי הכשל
+   ─────────────────────────────────────────────────────────────
+   אפל פותחת Web Push רק לאתר שנוסף למסך הבית. ב-Safari רגיל
+   `PushManager` כן קיים, ולכן הכפתור נראה זמין והלחיצה פשוט
+   לא עושה כלום. הגוש הזה מופיע **במקום** הכפתור הפעיל, כדי
+   שהמשתמש ידע מה לעשות ולא ינסה שוב. */
+.term .dr-ios {
+  margin-top: 14px; padding: 14px 16px; border-radius: 10px;
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 24%, transparent);
+}
+.term .dr-ios h3 {
+  margin: 0 0 7px; font-size: 13.5px; font-weight: 700;
+  color: var(--gold, #5EE6D0);
+}
+.term .dr-ios p { margin: 0; font-size: 12px; line-height: 1.65; color: var(--muted, #8E9CAE); }
+.term .dr-ios p b { color: var(--ink, #E8EEF6); font-weight: 600; }
+/* מספור אמיתי, כי זה באמת רצף של ארבעה צעדים בסדר קבוע */
+.term .dr-ios ol {
+  margin: 10px 0 0; padding-inline-start: 1.35rem;
+  font-size: 12px; line-height: 1.9; color: var(--muted, #8E9CAE);
+}
+.term .dr-ios ol::marker, .term .dr-ios li::marker { color: var(--gold, #5EE6D0); }
+.term .dr-ios ol b { color: var(--ink, #E8EEF6); font-weight: 600; }
+.term .dr-ios .dr-ios-note { margin-top: 10px; font-size: 11.5px; }

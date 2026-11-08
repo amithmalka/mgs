@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Stat } from '../shared/Stat';
 import { supabase } from '../../lib/supabase';
 import {
-  pushSupported, pushStatus, subscribeToPush, unsubscribeFromPush,
+  pushSupported, pushStatus, subscribeToPush, unsubscribeFromPush, iosNeedsInstall,
 } from '../../lib/push';
 import { useMyPortfolio } from '../../store/myPortfolio';
 import { NumField } from './NumField';
@@ -77,6 +77,10 @@ export function DepositReminder({ toBroker }: { toBroker: number }) {
     }
   }, [on, userId]);
 
+  // **נבדק פעם אחת ברנדור, כי זה לא משתנה בתוך הדף.** מי שמוסיף
+  // למסך הבית פותח חלון חדש ממילא.
+  const needsInstall = iosNeedsInstall();
+
   return (
     <section className="dr">
       <span className="eyebrow">תזכורת</span>
@@ -94,14 +98,15 @@ export function DepositReminder({ toBroker }: { toBroker: number }) {
         <NumField value={deposit} min={0} max={200000} label="הפקדה חודשית"
           unit="₪" onCommit={setDeposit} width={100} />
         <button className={`opt ${on ? '' : 'mp-go'}`} type="button"
-          disabled={busy || perm === 'unsupported'} onClick={() => void toggle()}>
+          disabled={busy || perm === 'unsupported' || needsInstall}
+          onClick={() => void toggle()}>
           {busy ? 'רגע…' : on ? 'לכבות את התזכורת' : 'להפעיל תזכורת'}
         </button>
       </div>
 
       <div className="stats">
         <Stat label="מצב" value={on ? 'פעילה' : 'כבויה'}
-          sub={on ? `ב-${day} לכל חודש, 06:00` : 'לא תישלח התראה'}
+          sub={on ? `ב-${day} לכל חודש, בבוקר` : 'לא תישלח התראה'}
           tone={on ? 'up' : undefined} />
         <Stat label="לברוקר כל חודש" value={`${n0(toBroker)}₪`}
           sub="אחרי תקרת קרן ההשתלמות" tone="gold" />
@@ -109,11 +114,29 @@ export function DepositReminder({ toBroker }: { toBroker: number }) {
 
       {msg && <p className={`lab-access ${on ? '' : 'warn'}`}>{msg}</p>}
 
-      {perm === 'unsupported' && (
+      {needsInstall && (
+        <div className="dr-ios">
+          <h3>באייפון צריך צעד אחד קודם</h3>
+          <p>
+            אפל מאפשרת התראות <b>רק לאתר שנוסף למסך הבית</b> — לא
+            מתוך הדפדפן. זה לוקח חצי דקה, פעם אחת:
+          </p>
+          <ol>
+            <li>לוחצים על <b>שיתוף</b> — הריבוע עם החץ למעלה, בתחתית Safari</li>
+            <li>גוללים ובוחרים <b>הוספה למסך הבית</b></li>
+            <li>לוחצים <b>הוספה</b></li>
+            <li>פותחים את <b>MGS</b> מהאייקון החדש, וחוזרים לכאן</li>
+          </ol>
+          <p className="dr-ios-note">
+            <b>ומשם זה עובד כמו אפליקציה</b> — ההתראה מגיעה גם
+            כשהמערכת סגורה לגמרי.
+          </p>
+        </div>
+      )}
+      {!needsInstall && perm === 'unsupported' && (
         <p className="lab-access warn">
-          <b>הדפדפן הזה אינו תומך בהתראות דחיפה.</b> באייפון זה עובד רק
-          אחרי <b>הוספה למסך הבית</b> — שיתוף ← הוספה למסך הבית, ואז
-          לפתוח את MGS משם.
+          <b>הדפדפן הזה אינו תומך בהתראות דחיפה.</b> נסו מ-Chrome
+          באנדרואיד או במחשב.
         </p>
       )}
       {perm === 'denied' && (

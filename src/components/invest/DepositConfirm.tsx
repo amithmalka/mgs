@@ -110,11 +110,26 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  /** **האישור עובד גם בלי מחירים — וזה העיקר.**
+   *
+   *  מה שהיה כאן דרש מחיר לכל רכיב, ובלעדיו הכפתור לא עשה כלום.
+   *  כלומר מי שאין לו גישה למחירים **לא היה יכול לאשר את החודש** —
+   *  והחודש היה נספר כמפוספס אף שההפקדה בוצעה.
+   *
+   *  עכשיו שני דברים נפרדים:
+   *  · **ההכרעה החודשית** נשמרת תמיד. זה מה שעוצר את התזכורת.
+   *  · **שורות היומן** נכתבות רק לרכיבים שיש להם מחיר, כי הטבלה
+   *    דורשת יחידות (`units > 0`) ובלי מחיר אין יחידות. מה שחסר
+   *    אפשר להשלים אחר כך ביומן, ואז העלות הממוצעת תתעדכן. */
   const save = async () => {
     setBusy(true); setMsg(null);
-    const buys: NewBuy[] = rows
-      .filter(r => r.ils >= 1 && !r.orphan && r.price && r.units)
-      .map(r => ({
+    const priced = rows.filter(r => r.ils >= 1 && !r.orphan && r.price && r.units);
+    const lines = rows.map(r => ({
+      k: r.k, ils: Math.round(r.ils), units: r.units, px: r.price,
+    }));
+
+    if (priced.length) {
+      const buys: NewBuy[] = priced.map(r => ({
         fund_key: r.k, symbol: r.sym, deposited_on: today(),
         amount_ils: Math.round(r.ils * 100) / 100,
         units: Math.round(r.units! * 1e6) / 1e6,
@@ -123,14 +138,11 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
         fx_rate: market.rates[r.cur ?? 'USD'] ?? 1,
         note: `אושר במסך ההפקדות · ${month}`,
       }));
-    if (!buys.length) {
-      setMsg('אין מה לרשום — צריך מחיר לכל רכיב, אחרת אין יחידות ואין מחיר עלות.');
-      setBusy(false); return;
+      const res = await addDeposits(buys);
+      if (!res.ok) { setMsg(res.reason); setBusy(false); return; }
     }
-    const res = await addDeposits(buys);
-    if (!res.ok) { setMsg(res.reason); setBusy(false); return; }
-    confirmDeposit(month, useAmount,
-      rows.map(r => ({ k: r.k, ils: Math.round(r.ils), units: r.units, px: r.price })));
+
+    confirmDeposit(month, useAmount, lines);
     market.refresh();
     setBusy(false);
   };
@@ -212,7 +224,6 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
 
   // ───────── לפני ההכרעה ─────────
   const totalIls = rows.reduce((t, r) => t + r.ils, 0);
-  const noPrice = rows.filter(r => !r.orphan && !r.price).length;
 
   return (
     <Card glow id="deposit">
@@ -234,10 +245,9 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
         </p>
       </div>
 
-      {/* **כרטיס לכל רכיב, ולא טבלה של שבע עמודות.** שבע עמודות
-          בעברית מימין לשמאל נשברות כבר במסך של טלפון: הסימול נופל
-          לשורה משלו, עמודת ״למה״ גולשת, והשורות מתערבבות. כאן כל
-          רכיב הוא גוש אחד שנקרא מלמעלה למטה בכל רוחב. */}
+      {/* **כרטיס לכל רכיב: מה לקנות, בכמה, ולמה. וזה הכל.**
+          שדה המחיר ירד מכאן אל מקטע מתקפל למטה — הוא לא חלק
+          מהפעולה, הוא רישום שאפשר לעשות אחר כך. */}
       <div className="dep mt-3">
         {rows.map(r => (
           <article key={r.k} className={`dep-row${r.deepest ? ' is-deep' : ''}${r.orphan ? ' is-orphan' : ''}`}>
@@ -252,42 +262,12 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
               {r.deepest && <span className="dep-flag">מקבל את השארית</span>}
             </div>
 
-            {r.orphan ? (
-              <p className="dep-why dep-warn">
-                <b>הרכיב הזה אינו בקטלוג.</b> הוא נשמר בתיק שלכם
-                מגרסה קודמת, ואין לנו בשבילו סימול או מטבע — ולכן
-                אי אפשר לרשום אותו. <b>הסירו אותו בדף ההרכבה</b>, או
-                בחרו תמהיל מחדש.
-              </p>
-            ) : (
-              <>
-                <div className="dep-px">
-                  <label>
-                    <span>מחיר יחידה{r.cur ? ` · ${r.cur}` : ''}</span>
-                    <input type="number" step="0.01" min="0" inputMode="decimal"
-                      id={`px-${r.k}`} dir="ltr"
-                      value={r.price ?? ''}
-                      placeholder="מהברוקר"
-                      readOnly={r.live}
-                      onChange={e => {
-                        const v = Number(e.target.value);
-                        setPx(o => {
-                          const next = { ...o, [r.k]: Number.isFinite(v) && v > 0 ? v : 0 };
-                          saveLastPx(next);
-                          return next;
-                        });
-                      }} />
-                  </label>
-                  <span className="dep-units">
-                    {r.units
-                      ? <>≈ <b dir="ltr">{n4(r.units)}</b> יחידות</>
-                      : 'כמה יחידות — יופיע כאן אחרי שתזינו מחיר'}
-                  </span>
-                  {r.live && <span className="dep-live">ציטוט</span>}
-                </div>
-                <p className="dep-why">{r.why}</p>
-              </>
-            )}
+            <p className={`dep-why${r.orphan ? ' dep-warn' : ''}`}>
+              {r.orphan
+                ? <><b>הרכיב הזה אינו בקטלוג</b> ולכן אי אפשר לקנות אותו.
+                    בחרו תמהיל מחדש בדף ההרכבה.</>
+                : r.why}
+            </p>
           </article>
         ))}
 
@@ -297,29 +277,11 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
         </div>
       </div>
 
-      {noPrice > 0 && (
-        <p className="note mt-3">
-          <b>מה לעשות עם שדה המחיר.</b> ספק המחירים של הקרנות האיריות
-          לא זמין כרגע, ולכן אנחנו לא יודעים כמה עולה יחידה אחת.
-          <b> הסכומים בשקלים למעלה נכונים ואפשר לבצע אותם בברוקר כמו
-          שהם</b> — השדה הוא רק כדי לדעת <b>כמה יחידות</b> הסכום קנה.
-        </p>
-      )}
-      {noPrice > 0 && (
-        <p className="note">
-          <b>ולמה אנחנו בכלל צריכים את זה.</b> מכמות היחידות נגזר
-          <b> מחיר הקנייה הממוצע</b> שלכם, והוא זה שקובע מה יהיה מותר
-          למשוך: המערכת מוכרת רק רכיב שמחירו <b>מעל</b> העלות הממוצעת,
-          וזה מה שמונע ממשיכה לנעול הפסד. אפשר גם לדלג ולהזין את
-          המחיר אחר כך ביומן.
-        </p>
-      )}
-      {market.ratesSource === 'fallback' && (
-        <p className="note mt-3">
-          <b>שער המטבע כאן הוא ברירת מחדל</b> — דולר {market.rates.USD}₪ —
-          ולא שער חי. הוא משנה את מספר היחידות, לא את הסכום.
-        </p>
-      )}
+      <p className="note mt-3">
+        <b>זה מה שצריך לעשות:</b> להעביר את הסכומים האלה בברוקר, ואז
+        ללחוץ ״אישור הפקדה״. <b>זה הכל.</b>
+      </p>
+
       {msg && <p className="lab-access warn mt-3">{msg}</p>}
       {market.ledger === 'missing' && (
         <p className="note mt-3">
@@ -330,7 +292,7 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
       )}
 
       <div className="cta mt-3">
-        <button className="opt" type="button" disabled={busy || market.ledger !== 'ok'}
+        <button className="opt" type="button" disabled={busy}
           onClick={() => void save()}>
           {busy ? 'רושם…' : 'אישור הפקדה'}
         </button>
@@ -338,10 +300,52 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
           onClick={() => skipDeposit(month)}>
           לא הפקדתי החודש
         </button>
-        <button className="opt" type="button" onClick={market.refresh}>
-          רענון מחירים ושערים
-        </button>
       </div>
+
+      {/* ───────── הרישום המדויק — מתקפל, ולא חובה ───────── */}
+      <details className="dep-more">
+        <summary>
+          רישום מספר היחידות <span>לא חובה</span>
+        </summary>
+        <p className="note">
+          <b>אפשר לדלג על זה לגמרי.</b> אם תכתבו כמה עלתה{' '}
+          <b>יחידה אחת</b> מכל רכיב — המחיר שמופיע אצל הברוקר ליד
+          הנייר — המערכת תדע כמה יחידות קניתם, ומזה את מחיר הקנייה
+          הממוצע שלכם. <b>זה מה שיאפשר לה בעתיד לומר לכם מה כבר
+          אפשר למשוך בלי להפסיד.</b> בלי זה ההפקדה נרשמת, פשוט בלי
+          הפירוט הזה.
+        </p>
+        {rows.filter(r => !r.orphan).map(r => (
+          <div key={r.k} className="dep-px">
+            <label htmlFor={`px-${r.k}`}>
+              <span>{r.he ?? r.k}{r.cur ? ` · ${r.cur}` : ''}</span>
+              <input type="number" step="0.01" min="0" inputMode="decimal"
+                id={`px-${r.k}`} dir="ltr"
+                value={r.price ?? ''}
+                placeholder="מחיר יחידה"
+                readOnly={r.live}
+                onChange={e => {
+                  const v = Number(e.target.value);
+                  setPx(o => {
+                    const next = { ...o, [r.k]: Number.isFinite(v) && v > 0 ? v : 0 };
+                    saveLastPx(next);
+                    return next;
+                  });
+                }} />
+            </label>
+            <span className="dep-units">
+              {r.units ? <>≈ <b dir="ltr">{n4(r.units)}</b> יחידות</> : ' '}
+            </span>
+            {r.live && <span className="dep-live">ציטוט</span>}
+          </div>
+        ))}
+        {market.ratesSource === 'fallback' && (
+          <p className="note">
+            שער הדולר כאן הוא <b>{market.rates.USD}₪</b> — ברירת מחדל ולא
+            שער חי. הוא משנה את מספר היחידות, לא את הסכום.
+          </p>
+        )}
+      </details>
 
       <p className="note">
         <b>כלל החלוקה.</b> קונים לכיוון המשקלות שבחרתם, ומטים לנופלים

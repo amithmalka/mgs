@@ -41,6 +41,30 @@ export function pushSupported(): boolean {
   );
 }
 
+/** **באייפון זה לא עובד בטאב — רק מהמסך הבית. וזה לא באג שלנו.**
+ *
+ *  אפל פתחה Web Push ב-iOS 16.4, **אבל רק לאתר שנוסף למסך הבית**
+ *  ורץ כאפליקציה עומדת בעצמה. ב-Safari רגיל `PushManager` כן קיים
+ *  על `window` — ולכן `pushSupported()` מחזיר `true` — אבל ההרשמה
+ *  נכשלת. כלומר המשתמש לוחץ ״להפעיל תזכורת״, לא קורה כלום, ואין לו
+ *  שום דרך לדעת למה.
+ *
+ *  לכן הבדיקה הזאת, **לפני** שהוא לוחץ: אם זה iOS ואנחנו לא במצב
+ *  עומד — אומרים לו מה לעשות במקום לתת לו להיכשל.
+ *
+ *  ‏`maxTouchPoints` נבדק גם עבור אייפד, ש**מדווח על עצמו כ-macOS**
+ *  מאז iPadOS 13 ואחרת לא היה מזוהה. */
+export function iosNeedsInstall(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isIOS) return false;
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches === true
+    || (navigator as unknown as { standalone?: boolean }).standalone === true;
+  return !standalone;
+}
+
 /**
  * VAPID keys travel as base64url text, but PushManager wants raw bytes.
  * Pad back to a multiple of 4 and swap the URL-safe alphabet before atob.
