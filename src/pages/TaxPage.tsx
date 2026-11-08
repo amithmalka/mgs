@@ -88,9 +88,9 @@ export function TaxPage({ embedded = false }: { embedded?: boolean } = {}) {
       {setupNeeded && (
         <div className="term">
           <p className="note">
-            <b>יומן ההפקדות עוד לא הותקן.</b> המחשבון עובד על ההפקדות
-            שרשמתם בטאב ״התיק שלי״. עד שהיומן קיים אין מה לחשב —
-            צריך להריץ את <code>supabase/deposits-setup.sql</code>.
+            <b>יומן ההפקדות אינו זמין כרגע, ולכן אין על מה לחשב.</b>{' '}
+            המחשבון עובד על ההפקדות שרשמתם — <b>טיפלנו בזה</b>, ואפשר
+            לנסות שוב בהמשך.
           </p>
         </div>
       )}

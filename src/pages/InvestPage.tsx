@@ -28,6 +28,7 @@ import { RemindPopup } from '../components/invest/RemindPopup';
 import { DepositConfirm } from '../components/invest/DepositConfirm';
 import { WithdrawConfirm } from '../components/invest/WithdrawConfirm';
 import { DepositReminder } from '../components/build/DepositReminder';
+import { DepositLog } from '../components/build/DepositLog';
 import { Card } from '../components/layout/Card';
 import { Disclaimer } from '../components/shared/Disclaimer';
 import { TaxPage } from './TaxPage';
@@ -60,7 +61,8 @@ export function InvestPage({ onNavigate }: { onNavigate?: (t: 'build') => void }
 
   return (
     <div className="space-y-6" dir="rtl">
-      <RemindPopup amount={toBroker} />
+      <RemindPopup amount={toBroker} deposit={deposit + extra}
+        toFund={Math.max(0, (deposit + extra) - toBroker)} />
 
       <Card glow>
         <h2 className="text-xl font-bold text-gold-gradient">הפקדות ומשיכות</h2>
@@ -94,6 +96,13 @@ export function InvestPage({ onNavigate }: { onNavigate?: (t: 'build') => void }
       <div className="term"><DepositConfirm onBuild={() => onNavigate?.('build')} /></div>
 
       <div className="term"><WithdrawConfirm /></div>
+
+      {/* **היומן המלא — עבר לכאן מ״התיק שלי״.** שם הוא היה טבלאות
+          של הפקדות ומשיכות בטאב שעוסק במה שמחזיקים; כאן הוא יושב
+          ליד כפתורי האישור, ושם הוא מתקן שורה שנרשמה לא מדויק. */}
+      <div className="term">
+        <DepositLog toBroker={toBroker} onBuild={() => onNavigate?.('build')} />
+      </div>
 
       <div className="term">
         <DepositReminder toBroker={toBroker} />

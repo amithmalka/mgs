@@ -64,14 +64,24 @@ export interface Position {
 
 export type Err = { ok: false; reason: string; setupNeeded?: boolean };
 
-/** הטבלאות עוד לא נוצרו — צריך להריץ supabase/deposits-setup.sql פעם אחת.
- *  ההודעה הגולמית של Postgres אינה משהו שמשתמש אמור לראות. */
+/** **הטבלאות עוד לא נוצרו — וזו תקלה שלנו, לא משהו שהמשתמש יתקן.**
+ *
+ *  ההודעה שהוחזרה כאן עד כה אמרה למשתמש ״להריץ את
+ *  `supabase/deposits-setup.sql`״. **זו הודעת מפתח שדלפה למסך.**
+ *  משתמש לא יודע מה זה SQL Editor, אין לו גישה לבסיס הנתונים,
+ *  ושם קובץ פנימי אינו משהו שמותר להציג לו — הוא גם חושף את מבנה
+ *  המערכת לכל מי שרואה את המסך.
+ *
+ *  לכן: המשתמש מקבל מה שרלוונטי לו — **מה לא עובד ומה כן אפשר
+ *  לעשות** — והפרט הטכני נכתב לקונסול, שם הוא שימושי למי שמתחזק. */
 const MISSING = /relation .* does not exist|could not find the table|schema cache/i;
 function wrap(msg: string): Err {
-  return MISSING.test(msg)
-    ? { ok: false, setupNeeded: true,
-        reason: 'יומן ההפקדות עוד לא הוקם בבסיס הנתונים. צריך להריץ פעם אחת את supabase/deposits-setup.sql.' }
-    : { ok: false, reason: msg };
+  if (!MISSING.test(msg)) return { ok: false, reason: msg };
+  console.error('[mgs] deposits ledger tables are missing — run supabase/deposits-setup.sql once. Postgres said:', msg);
+  return {
+    ok: false, setupNeeded: true,
+    reason: 'יומן ההפקדות אינו זמין כרגע. טיפלנו בזה — נסו שוב בהמשך.',
+  };
 }
 export type Ok<T> = { ok: true; data: T };
 

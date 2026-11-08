@@ -328,7 +328,7 @@ export const translations = {
   noStocksAdmin: { en: 'Add the first stock to the shared list.', he: 'הוסיפו את המניה הראשונה לרשימה המשותפת.' },
   confirmDeleteStock: { en: 'Remove {ticker} from the shared list?', he: 'להסיר את {ticker} מהרשימה המשותפת?' },
   stockListSetupNeeded: { en: 'One-time setup needed', he: 'נדרשת הגדרה חד-פעמית' },
-  stockListUnavailable: { en: 'Run supabase/custom-stocks-setup.sql once in the Supabase SQL Editor, then reload.', he: 'הריצו פעם אחת את supabase/custom-stocks-setup.sql ב-SQL Editor של Supabase, ואז רעננו.' },
+  stockListUnavailable: { en: 'The stock list is not available right now. We are on it — please try again later.', he: 'רשימת המניות אינה זמינה כרגע. טיפלנו בזה — נסו שוב בהמשך.' },
 
   projectionTitle: { en: 'Projection', he: 'תחזית' },
   projectionSub: { en: 'Each stock compounds at its own expected return over {years} years.', he: 'כל מניה צוברת לפי התשואה הצפויה שלה על פני {years} שנים.' },
@@ -388,7 +388,7 @@ export const translations = {
   saving: { en: 'Saving…', he: 'שומר…' },
   loading: { en: 'Loading…', he: 'טוען…' },
   setupNeededTitle: { en: 'One-time setup needed', he: 'נדרשת הגדרה חד-פעמית' },
-  setupNeededBody: { en: 'The Academy tables are missing in Supabase. Run supabase/academy-setup.sql once in the Supabase SQL Editor, then reload.', he: 'טבלאות האקדמיה חסרות ב-Supabase. הרץ פעם אחת את supabase/academy-setup.sql ב-SQL Editor של Supabase, ואז רענן.' },
+  setupNeededBody: { en: 'The Academy is not available right now. We are on it — please try again later.', he: 'האקדמיה אינה זמינה כרגע. טיפלנו בזה — נסו שוב בהמשך.' },
   required: { en: 'Title and video URL are required', he: 'כותרת וקישור וידאו הם שדות חובה' },
 } as const;
 

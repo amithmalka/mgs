@@ -2,16 +2,13 @@ import { useMemo } from 'react';
 import { useMyPortfolio } from '../store/myPortfolio';
 import { MyPlanCard } from '../components/build/MyPlanCard';
 import { MonthBuy } from '../components/build/MonthBuy';
-import { DepositLog } from '../components/build/DepositLog';
-import { DepositReminder } from '../components/build/DepositReminder';
-import { ceilingFor } from '../constants/studyFunds';
 import { useLangStore } from '../store/langStore';
 import { useMgsStore } from '../store/mgsStore';
 import { Card } from '../components/layout/Card';
 import { Icon } from '../components/shared/Icon';
 import type { IconName } from '../components/shared/Icon';
 import { Disclaimer } from '../components/shared/Disclaimer';
-import { GoalsMarquee } from '../components/shared/GoalsMarquee';
+import { AssetBoard } from '../components/shared/AssetBoard';
 
 import { cohortFor, milestonesFor } from '../constants/mgsScenarios';
 import { projectTrack } from '../utils/trackProject';
@@ -66,16 +63,6 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
   const deposit = useMyPortfolio(st => st.deposit + st.extra);
   // **החלק שמגיע לברוקר בלבד** — קרן ההשתלמות קיבלה את התקרה שלה,
   // ואין טעם לספור אותה פעמיים ברישום הקניות.
-  const grossDep = useMyPortfolio(st => st.deposit);
-  const extraDep = useMyPortfolio(st => st.extra);
-  const fundStatus = useMyPortfolio(st => st.fundStatus);
-  const annualSalary = useMyPortfolio(st => st.annualSalary);
-  const selfIncome = useMyPortfolio(st => st.selfIncome);
-  const toBroker = useMemo(() => {
-    const ceil = fundStatus === 'none'
-      ? 0 : ceilingFor(fundStatus, annualSalary, selfIncome).year / 12;
-    return Math.max(0, grossDep - Math.min(grossDep, ceil)) + extraDep;
-  }, [grossDep, extraDep, fundStatus, annualSalary, selfIncome]);
   const { shiftAtAge, withdrawAtAge } = milestonesFor(age);
 
   // the conservative case on the doors: the landing page should under-promise
@@ -84,21 +71,20 @@ export function HomePage({ onNavigate }: { onNavigate?: (tab: Tab) => void }) {
 
   return (
     <div className="space-y-6" dir={he ? 'rtl' : 'ltr'}>
-      {/* **מה המערכת עושה — ראשון על הדף.** לא ההבטחות מדף המכירה:
-          מי שמגיע לכאן כבר נכנס. חמישה כללים ומספרים, כל אחד נגזר
-          מהקוד ומהקטלוג. */}
+      {/* **הלוח החם — ראשון על הדף.** לא ההבטחות מדף המכירה: מי
+          שמגיע לכאן כבר נכנס. הנכסים שהמערכת עובדת איתם, ומה הם
+          עשו בשנה. */}
       <div className="term">
-        <GoalsMarquee />
+        <AssetBoard />
       </div>
 
-      {/* התיק שהמשקיע בחר — ואם לא בחר, הזמנה לבחור. אין ברירת מחדל. */}
+      {/* **התיק שהמשקיע בחר, ומה לקנות החודש. וזה הכל.**
+          יומן ההפקדות והתזכורת **עברו לטאב ההפקדות והמשיכות** —
+          הם לא ״התיק שלי״ אלא פעולות חודשיות, ומקומם שם ליד
+          כפתורי האישור. */}
       <div className="term">
         <MyPlanCard onBuild={() => onNavigate?.('build')} />
         <MonthBuy onBuild={() => onNavigate?.('build')} />
-        {/* **המעגל נסגר כאן.** למעלה ״כמה לקנות״, כאן ״מה קניתי
-            בפועל״ ומה המחיר הממוצע שיצא — ומתחת התזכורת לחודש הבא. */}
-        <DepositLog toBroker={toBroker} onBuild={() => onNavigate?.('build')} />
-        <DepositReminder toBroker={toBroker} />
       </div>
 
       <Card glow>

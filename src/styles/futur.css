@@ -558,3 +558,108 @@ html, body { overflow-x: hidden; }
   margin: 12px 0 0; font-size: 11px; line-height: 1.6;
   color: var(--warn, #FBBF4A);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   שורות ההפקדה — כרטיס לכל רכיב, במקום טבלה של שבע עמודות
+   ─────────────────────────────────────────────────────────────
+   **למה לא טבלה.** שבע עמודות בעברית מימין לשמאל נשברות כבר
+   ברוחב של טלפון: הסימול נופל לשורה משלו, עמודת ״למה״ גולשת,
+   והעין מאבדת איזו שורה שייכת לאיזה רכיב. כאן כל רכיב הוא
+   גוש אחד שנקרא מלמעלה למטה — שם, סכום, מחיר, נימוק — ובכל
+   רוחב מסך זה אותו סדר. */
+.dep { display: flex; flex-direction: column; gap: 8px; }
+
+.dep-row {
+  border: 1px solid var(--rule, #1E2A3A);
+  border-radius: 10px; padding: 12px 14px;
+  background: var(--surface, #0B1018);
+}
+/* הנופל העמוק מסומן בפס בצד, לא ברקע — רקע צבעוני על גוש שלם
+   מתחרה עם המספרים שבתוכו */
+.dep-row.is-deep {
+  border-inline-start: 2px solid var(--gold, #5EE6D0);
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 3.5%, var(--surface, #0B1018));
+}
+.dep-row.is-orphan { border-color: color-mix(in srgb, var(--warn, #FBBF4A) 40%, var(--rule, #1E2A3A)); }
+
+.dep-row header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.dep-row h4 {
+  margin: 0; font-size: 13px; font-weight: 600; line-height: 1.4;
+  color: var(--ink, #E8EEF6); min-width: 0;
+}
+.dep-tick {
+  margin-inline-start: auto; flex: 0 0 auto;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10.5px; letter-spacing: .5px;
+  color: var(--muted, #8E9CAE);
+  border: 1px solid var(--rule, #1E2A3A); border-radius: 5px;
+  padding: 1px 6px;
+}
+
+.dep-money { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.dep-money b {
+  font-size: 19px; font-weight: 700; color: var(--gold, #5EE6D0);
+  font-variant-numeric: tabular-nums;
+}
+.dep-money span { font-size: 11.5px; color: var(--muted, #8E9CAE); }
+.dep-flag {
+  font-size: 10px; padding: 1px 7px; border-radius: 999px;
+  color: var(--gold, #5EE6D0);
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 26%, transparent);
+}
+
+/* שדה המחיר — נערם מתחת למספר ולא לצידו, כדי שבטלפון
+   הוא לא יצמצם ל-3 ספרות */
+.dep-px { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; }
+.dep-px label { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.dep-px label span { font-size: 10.5px; color: var(--dim, #5D6878); white-space: nowrap; }
+.dep-px input {
+  width: 7.5rem; min-width: 0;
+  font: inherit; font-size: 12.5px; font-variant-numeric: tabular-nums;
+  color: var(--ink, #E8EEF6); background: var(--sunk, #06080C);
+  border: 1px solid var(--rule, #1E2A3A); border-radius: 6px;
+  padding: 5px 8px;
+}
+.dep-px input:focus-visible { outline: 2px solid var(--gold, #5EE6D0); outline-offset: 1px; }
+.dep-px input:read-only { color: var(--muted, #8E9CAE); background: transparent; }
+.dep-px input::placeholder { color: var(--dim, #5D6878); }
+.dep-units { font-size: 11.5px; color: var(--muted, #8E9CAE); }
+.dep-units b { color: var(--ink, #E8EEF6); font-variant-numeric: tabular-nums; }
+.dep-live {
+  font-size: 9.5px; letter-spacing: .6px; padding: 1px 6px; border-radius: 4px;
+  color: var(--up, #4ADE80);
+  background: color-mix(in srgb, var(--up, #4ADE80) 11%, transparent);
+}
+
+.dep-why { margin: 9px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--dim, #5D6878); }
+.dep-why.dep-warn { color: var(--muted, #8E9CAE); }
+.dep-why.dep-warn b { color: var(--warn, #FBBF4A); }
+
+.dep-sum {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 11px 14px; border-radius: 10px;
+  background: color-mix(in srgb, var(--gold, #5EE6D0) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold, #5EE6D0) 20%, transparent);
+}
+.dep-sum span { font-size: 11.5px; color: var(--muted, #8E9CAE); }
+.dep-sum b {
+  font-size: 17px; font-weight: 700; color: var(--ink, #E8EEF6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   הלוח החם — כרטיסי הנכסים בפס הנע
+   ───────────────────────────────────────────────────────────── */
+.ab-card { display: flex; flex-direction: column; }
+.ab-n {
+  margin: 8px 0 2px;
+  font-size: 27px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums; letter-spacing: -.5px;
+}
+.ab-up { color: var(--up, #4ADE80); }
+.ab-dn { color: var(--down, #F87171); }
+.ab-skip { color: var(--dim, #5D6878); }
+.ab-sub { margin: 0; font-size: 11px; line-height: 1.55; color: var(--muted, #8E9CAE); }
+.ab-sub b { color: var(--ink, #E8EEF6); font-weight: 600; }
+.ab-foot { margin-top: 10px; }

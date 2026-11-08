@@ -11,6 +11,11 @@
  *    בשרת**: בלי `snoozePush` לא תישלח תזכורת חוזרת וה״בעוד חמישה
  *    ימים״ היה נשאר הבטחה ריקה.
  *
+ *  **והטקסט מחזיר אותם להחלטה שלהם.** לא ״התוכנית אומרת 4,000₪״,
+ *  שנשמע כאילו מישהו אחר קבע — אלא ״בחרתם מסלול שבו אתם מפקידים
+ *  4,000₪ בחודש״. וכשחלק מההפקדה נכנס לקרן ההשתלמות, הפיצול נאמר
+ *  במפורש: אחרת המספר שעל המסך אינו הסכום שהם זוכרים שבחרו.
+ *
  *  **ולמה הוא לא נפתח כל פעם.** `shouldAsk` דורש שלושה תנאים
  *  יחד — החודש עוד לא הוכרע, התאריך הגיע (או שבאנו מהתזכורת), ואין
  *  דחייה בתוקף. בלעדיהם זה נדנוד, ומסך שמנדנד נסגר ולא נקרא.
@@ -22,6 +27,7 @@ import { snoozePush } from '../../lib/push';
 import { supabase } from '../../lib/supabase';
 
 const DAY_KEY = 'mgs-deposit-day';
+const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
 
 function depositDay(): number {
   try {
@@ -41,11 +47,20 @@ function cameFromPush(): boolean {
   return hit;
 }
 
-export function RemindPopup({ amount }: { amount: number }) {
+export function RemindPopup({ amount, deposit, toFund }: {
+  /** מה שמגיע לברוקר החודש */
+  amount: number;
+  /** **ההפקדה החודשית שהמשתמשים עצמם בחרו** — זה המספר שמחזיר אותם
+   *  להחלטה שלהם, ולא מספר שהמערכת ממציאה להם */
+  deposit: number;
+  /** ומה מתוכה נכנס לקרן ההשתלמות, אם יש */
+  toFund: number;
+}) {
   const month = thisMonth();
   const entry = useMonthLog(s => s.entries[month]);
   const snooze = useMonthLog(s => s.snooze);
   const skipDeposit = useMonthLog(s => s.skipDeposit);
+  const markAsked = useMonthLog(s => s.markAsked);
 
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -56,7 +71,12 @@ export function RemindPopup({ amount }: { amount: number }) {
     // שההפקדה שלו כולה נכנסת לקרן ההשתלמות, יקבל פופאפ על אפס שקלים
     // — וזה בדיוק הנדנוד שהמסך הזה אמור להימנע ממנו.
     if (amount <= 0) return;
-    if (shouldAsk(entry, depositDay(), fromPush)) setOpen(true);
+    if (shouldAsk(entry, depositDay(), fromPush)) {
+      setOpen(true);
+      // **נרשם ברגע הפתיחה ולא בסגירה.** מי שמרענן את הדף במקום
+      // לענות לא אמור לקבל אותו שוב — זו אותה שאלה, לא שאלה חדשה.
+      markAsked(month);
+    }
     // פעם אחת בטעינה. שינוי בהכרעה סוגר דרך הענף שלמטה, לא דרך כאן.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -85,8 +105,12 @@ export function RemindPopup({ amount }: { amount: number }) {
         <span className="eyebrow">תזכורת ההפקדה</span>
         <h3 id="rp-h">זה החודש להפקיד</h3>
         <p>
-          התוכנית אומרת <b>{Math.round(amount).toLocaleString('en-US')}₪</b> החודש.
-          אפשר לאשר עכשיו, או שנזכיר שוב בעוד כמה ימים —{' '}
+          <b>בחרתם מסלול שבו אתם מפקידים {n0(deposit)}₪ בחודש.</b>{' '}
+          {toFund > 0
+            ? <>מתוכם <b>{n0(toFund)}₪</b> נכנסים לקרן ההשתלמות,
+                ו<b>{n0(amount)}₪</b> מגיעים לברוקר החודש.</>
+            : <>זה הסכום שמגיע לברוקר החודש.</>}
+          {' '}אפשר לאשר עכשיו, או שנזכיר שוב בעוד כמה ימים —{' '}
           <b>והחודש לא ייחשב כמפוספס</b> עד שתכריעו.
         </p>
         <div className="rp-btns">

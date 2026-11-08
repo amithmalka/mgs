@@ -126,11 +126,13 @@ export function WithdrawConfirm() {
     return (
       <Card id="withdraw">
         <span className="eyebrow">המשיכה של החודש</span>
-        <h3 className="text-[15px] font-bold text-gold-light mb-2">היומן עוד לא הותקן</h3>
+        <h3 className="text-[15px] font-bold text-gold-light mb-2">
+          היומן אינו זמין כרגע
+        </h3>
         <p className="note">
           <b>אי אפשר למשוך ממה שלא נרשם.</b> המשיכה נגזרת מהיחידות
-          ומהעלות הממוצעת שביומן ההפקדות, וצריך להריץ פעם אחת את{' '}
-          <code>supabase/deposits-setup.sql</code>.
+          ומהעלות הממוצעת שביומן ההפקדות. <b>טיפלנו בזה</b> — אפשר
+          לנסות שוב בהמשך.
         </p>
       </Card>
     );

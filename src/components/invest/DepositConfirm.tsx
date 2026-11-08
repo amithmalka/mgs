@@ -57,6 +57,19 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
   const [amount, setAmount] = useState<number | null>(null);
   const useAmount = amount ?? suggested;
 
+  /** **מחיר שהוקלד ביד, לכל רכיב — וזה לא נוחות אלא הכרח.**
+   *
+   *  ‏`/api/lse` הוא פרוקסי ל-Yahoo, ו-Yahoo **מחזיר 429 לכל הבקשות**
+   *  (נבדק 8.11.2026 גם משרת Vercel וגם ממכונה מקומית). המנוי
+   *  ל-Twelve Data אינו כולל קרנות LSE בתוכנית החינמית. כלומר **אין
+   *  כרגע מקור מחיר חי לקווים האיריים** — ובלי מחיר אין יחידות, ואין
+   *  מחיר עלות ממוצע, ואין על מה להפעיל את כלל המשיכה.
+   *
+   *  לכן המחיר הוא שדה: מתמלא מהציטוט כשהוא קיים, ומוקלד כשלא.
+   *  **הסכום בשקלים לא זז ממילא** — הוא מה שמחייב, והמחיר רק קובע
+   *  כמה יחידות הוא קנה. */
+  const [px, setPx] = useState<Record<string, number>>({});
+
   const split = useMemo(() => buySplit({
     holdings, quotes: market.quotes, peaks: market.peaks, held: market.held,
     amount: useAmount, track,
@@ -64,9 +77,21 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
 
   const rows = useMemo(() => split.lines.map(l => {
     const b = BUY[l.k];
-    const units = unitsFor(l.ils, l.px, b?.cur ?? null, market.rates);
-    return { ...l, sym: b?.sym ?? null, cur: b?.cur ?? null, units };
-  }), [split, market.rates]);
+    const f = IRISH.find(y => y.k === l.k);
+    // הציטוט החי אם יש, ואחרת מה שהוקלד
+    const price = l.px ?? px[l.k] ?? null;
+    const units = unitsFor(l.ils, price, b?.cur ?? null, market.rates);
+    return {
+      ...l, price, units,
+      sym: b?.sym ?? null, cur: b?.cur ?? null,
+      // **רכיב שאינו בקטלוג.** תיק שנשמר בדפדפן יכול להחזיק מפתח
+      // שהקטלוג כבר לא מכיר — קרן שהוסרה. בלי הדגל הזה הכרטיס היה
+      // מציג מפתח עירום בלי שם, בלי מטבע ובלי דרך לקנות אותו.
+      he: f?.he ?? null, orphan: !f || !b,
+      live: l.px != null,
+    };
+  }), [split, market.rates, px]);
+
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -74,24 +99,24 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
   const save = async () => {
     setBusy(true); setMsg(null);
     const buys: NewBuy[] = rows
-      .filter(r => r.ils >= 1 && r.px && r.units)
+      .filter(r => r.ils >= 1 && !r.orphan && r.price && r.units)
       .map(r => ({
         fund_key: r.k, symbol: r.sym, deposited_on: today(),
         amount_ils: Math.round(r.ils * 100) / 100,
         units: Math.round(r.units! * 1e6) / 1e6,
-        unit_price: r.px!,
+        unit_price: r.price!,
         currency: r.cur ?? 'USD',
         fx_rate: market.rates[r.cur ?? 'USD'] ?? 1,
         note: `אושר במסך ההפקדות · ${month}`,
       }));
     if (!buys.length) {
-      setMsg('אין מה לרשום — אין מחירים לרכיבים, ולכן אי אפשר לגזור יחידות.');
+      setMsg('אין מה לרשום — צריך מחיר לכל רכיב, אחרת אין יחידות ואין מחיר עלות.');
       setBusy(false); return;
     }
     const res = await addDeposits(buys);
     if (!res.ok) { setMsg(res.reason); setBusy(false); return; }
     confirmDeposit(month, useAmount,
-      rows.map(r => ({ k: r.k, ils: Math.round(r.ils), units: r.units, px: r.px })));
+      rows.map(r => ({ k: r.k, ils: Math.round(r.ils), units: r.units, px: r.price })));
     market.refresh();
     setBusy(false);
   };
@@ -169,7 +194,7 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
 
   // ───────── לפני ההכרעה ─────────
   const totalIls = rows.reduce((t, r) => t + r.ils, 0);
-  const missing = rows.filter(r => !r.px).length;
+  const noPrice = rows.filter(r => !r.orphan && !r.price).length;
 
   return (
     <Card glow id="deposit">
@@ -177,17 +202,6 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
       <h3 className="text-[15px] font-bold text-gold-light mb-1">
         לאן הולך הכסף החודש
       </h3>
-      <p className="note">
-        <b>על המחירים של הרגע הזה.</b> {market.at
-          ? <>הציטוטים נמשכו ב-{market.at.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })},
-              והם <b>מחירי סוף יום</b> ולא זמן אמת — ולכן מספר היחידות הוא
-              אומדן. <b>הסכום בשקלים הוא מה שמחייב.</b></>
-          : <>מחירים עוד לא נמשכו.</>}
-        {market.ratesSource === 'fallback' && (
-          <> <b>ושערי המטבע כאן הם ברירת מחדל</b> (דולר {market.rates.USD}₪) ולא
-            שער חי — שער שגוי מזיז את מספר היחידות, לא את הסכום.</>
-        )}
-      </p>
 
       <div className="term cx-edit mt-3">
         <div className="grp">
@@ -196,51 +210,89 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
             label="סכום ההפקדה" unit="₪" onCommit={v => setAmount(Math.round(v))} />
         </div>
         <p className="note">
-          התוכנית אומרת <b>{n0(suggested)}₪</b> החודש
-          {fundStatus !== 'none' && <> — אחרי מה שנכנס לקרן ההשתלמות</>}.
-          {useAmount !== suggested && <> <b>הזנתם {n0(useAmount)}₪</b>, והחלוקה
+          <b>בחרתם מסלול שבו אתם מפקידים {n0(suggested)}₪ לברוקר בחודש.</b>
+          {useAmount !== suggested && <> הזנתם <b>{n0(useAmount)}₪</b>, והחלוקה
             שלמטה כבר על הסכום הזה.</>}
         </p>
       </div>
 
-      {market.err && <p className="lab-access warn mt-3">{market.err}.</p>}
+      {/* **כרטיס לכל רכיב, ולא טבלה של שבע עמודות.** שבע עמודות
+          בעברית מימין לשמאל נשברות כבר במסך של טלפון: הסימול נופל
+          לשורה משלו, עמודת ״למה״ גולשת, והשורות מתערבבות. כאן כל
+          רכיב הוא גוש אחד שנקרא מלמעלה למטה בכל רוחב. */}
+      <div className="dep mt-3">
+        {rows.map(r => (
+          <article key={r.k} className={`dep-row${r.deepest ? ' is-deep' : ''}${r.orphan ? ' is-orphan' : ''}`}>
+            <header>
+              <h4>{r.he ?? r.k}</h4>
+              {r.sym && <span className="dep-tick" dir="ltr">{r.sym}</span>}
+            </header>
 
-      <div className="ptable bleed mt-3">
-        <table>
-          <thead>
-            <tr>
-              <th>הרכיב</th><th>כמה ₪</th><th>חלק</th><th>יחידות (אומדן)</th>
-              <th>מחיר</th><th>סימול</th><th>למה</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.k} className={r.deepest ? 'cross' : ''}>
-                <td><b>{IRISH.find(y => y.k === r.k)?.he ?? r.k}</b></td>
-                <td dir="ltr" className="gold"><b>{n0(r.ils)}</b></td>
-                <td dir="ltr">{r.ask.toFixed(0)}%</td>
-                <td dir="ltr">{r.units ? n4(r.units) : '—'}</td>
-                <td dir="ltr" className="dim">{r.px ?? '—'} {r.cur}</td>
-                <td dir="ltr" className="tk"><b>{r.sym}</b></td>
-                <td className="dim">{r.why}</td>
-              </tr>
-            ))}
-            <tr>
-              <td><b>סך הכל</b></td>
-              <td dir="ltr"><b>{n0(totalIls)}</b></td>
-              <td colSpan={5} />
-            </tr>
-          </tbody>
-        </table>
+            <div className="dep-money">
+              <b dir="ltr">{n0(r.ils)}₪</b>
+              <span>{r.ask.toFixed(0)}% מההפקדה</span>
+              {r.deepest && <span className="dep-flag">מקבל את השארית</span>}
+            </div>
+
+            {r.orphan ? (
+              <p className="dep-why dep-warn">
+                <b>הרכיב הזה אינו בקטלוג.</b> הוא נשמר בתיק שלכם
+                מגרסה קודמת, ואין לנו בשבילו סימול או מטבע — ולכן
+                אי אפשר לרשום אותו. <b>הסירו אותו בדף ההרכבה</b>, או
+                בחרו תמהיל מחדש.
+              </p>
+            ) : (
+              <>
+                <div className="dep-px">
+                  <label>
+                    <span>מחיר יחידה{r.cur ? ` · ${r.cur}` : ''}</span>
+                    <input type="number" step="0.01" min="0" inputMode="decimal"
+                      id={`px-${r.k}`} dir="ltr"
+                      value={r.price ?? ''}
+                      placeholder="הקלידו מחיר"
+                      readOnly={r.live}
+                      onChange={e => {
+                        const v = Number(e.target.value);
+                        setPx(o => ({ ...o, [r.k]: Number.isFinite(v) && v > 0 ? v : 0 }));
+                      }} />
+                  </label>
+                  <span className="dep-units">
+                    {r.units ? <>≈ <b dir="ltr">{n4(r.units)}</b> יחידות</> : 'בלי מחיר אין יחידות'}
+                  </span>
+                  {r.live && <span className="dep-live">ציטוט</span>}
+                </div>
+                <p className="dep-why">{r.why}</p>
+              </>
+            )}
+          </article>
+        ))}
+
+        <div className="dep-sum">
+          <span>סך הכל להפקדה החודש</span>
+          <b dir="ltr">{n0(totalIls)}₪</b>
+        </div>
       </div>
 
+      {noPrice > 0 && (
+        <p className="note mt-3">
+          <b>אין כרגע מחירים חיים לקווים האיריים</b>, ולכן המחיר הוא
+          שדה שממלאים. פתחו את הנייר אצל הברוקר, העתיקו את מחיר
+          היחידה, והיחידות יחושבו. <b>הסכום בשקלים הוא מה שמחייב</b> —
+          המחיר רק קובע כמה יחידות הוא קנה, ואפשר לתקן אותו אחר כך.
+        </p>
+      )}
+      {market.ratesSource === 'fallback' && (
+        <p className="note mt-3">
+          <b>שער המטבע כאן הוא ברירת מחדל</b> — דולר {market.rates.USD}₪ —
+          ולא שער חי. הוא משנה את מספר היחידות, לא את הסכום.
+        </p>
+      )}
       {msg && <p className="lab-access warn mt-3">{msg}</p>}
       {market.ledger === 'missing' && (
         <p className="note mt-3">
-          <b>יומן ההפקדות עוד לא הותקן, ולכן אין לאן לרשום.</b> צריך
-          להריץ פעם אחת את <code>supabase/deposits-setup.sql</code>.
-          עד אז החלוקה למעלה נכונה ואפשר לבצע אותה בברוקר — רק
-          האישור כאן לא יישמר.
+          <b>יומן ההפקדות אינו זמין כרגע, ולכן האישור כאן לא יישמר.</b>{' '}
+          החלוקה למעלה נכונה ואפשר לבצע אותה בברוקר — טיפלנו בזה,
+          ואפשר לרשום את ההפקדה בהמשך.
         </p>
       )}
 
@@ -263,8 +315,6 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
         בתוך הגבול הזה: רכיב שנפל הוא תת-משקל ולכן מקבל יותר,{' '}
         <b>וברגע שהוא חוזר למשקל שבחרתם הוא נעצר.</b> אף רכיב לא מקבל
         מעל פי שלושה ממשקל היעד שלו בהפקדה אחת.
-        {missing > 0 && <> <b>ל-{missing} רכיבים אין מחיר</b>, ולכן החלוקה
-          שלמעלה היא לפי המשקלות בלבד.</>}
       </p>
       <p className="note">
         <b>התמהיל זז בהפקדות ולא במכירות</b>, ולכן אין בדרך הזאת אף
