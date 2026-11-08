@@ -34,6 +34,19 @@ const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
 const n4 = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 4 });
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** **המחיר שהוזן בחודש שעבר, זכור.** בלי זה היה צריך להקליד מחיר
+ *  לכל רכיב בכל חודש מחדש — ומחיר של קרן זזה אחוזים בחודש, לא
+ *  סדרי גודל, ולכן המחיר של החודש הקודם הוא נקודת פתיחה טובה
+ *  שאפשר לתקן. נשמר בדפדפן בלבד. */
+const LAST_PX = 'mgs-last-px';
+function loadLastPx(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(LAST_PX) ?? '{}') as Record<string, number>; }
+  catch { return {}; }
+}
+function saveLastPx(p: Record<string, number>) {
+  try { localStorage.setItem(LAST_PX, JSON.stringify(p)); } catch { /* פרטי או חסום */ }
+}
+
 export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
   const { holdings, deposit, extra, fundStatus, annualSalary, selfIncome } = useMyPortfolio();
   const market = useMarket(holdings);
@@ -69,7 +82,7 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
    *  לכן המחיר הוא שדה: מתמלא מהציטוט כשהוא קיים, ומוקלד כשלא.
    *  **הסכום בשקלים לא זז ממילא** — הוא מה שמחייב, והמחיר רק קובע
    *  כמה יחידות הוא קנה. */
-  const [px, setPx] = useState<Record<string, number>>({});
+  const [px, setPx] = useState<Record<string, number>>(loadLastPx);
 
   const split = useMemo(() => buySplit({
     holdings, quotes: market.quotes, peaks: market.peaks, held: market.held,
@@ -254,15 +267,21 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
                     <input type="number" step="0.01" min="0" inputMode="decimal"
                       id={`px-${r.k}`} dir="ltr"
                       value={r.price ?? ''}
-                      placeholder="הקלידו מחיר"
+                      placeholder="מהברוקר"
                       readOnly={r.live}
                       onChange={e => {
                         const v = Number(e.target.value);
-                        setPx(o => ({ ...o, [r.k]: Number.isFinite(v) && v > 0 ? v : 0 }));
+                        setPx(o => {
+                          const next = { ...o, [r.k]: Number.isFinite(v) && v > 0 ? v : 0 };
+                          saveLastPx(next);
+                          return next;
+                        });
                       }} />
                   </label>
                   <span className="dep-units">
-                    {r.units ? <>≈ <b dir="ltr">{n4(r.units)}</b> יחידות</> : 'בלי מחיר אין יחידות'}
+                    {r.units
+                      ? <>≈ <b dir="ltr">{n4(r.units)}</b> יחידות</>
+                      : 'כמה יחידות — יופיע כאן אחרי שתזינו מחיר'}
                   </span>
                   {r.live && <span className="dep-live">ציטוט</span>}
                 </div>
@@ -280,10 +299,19 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
 
       {noPrice > 0 && (
         <p className="note mt-3">
-          <b>אין כרגע מחירים חיים לקווים האיריים</b>, ולכן המחיר הוא
-          שדה שממלאים. פתחו את הנייר אצל הברוקר, העתיקו את מחיר
-          היחידה, והיחידות יחושבו. <b>הסכום בשקלים הוא מה שמחייב</b> —
-          המחיר רק קובע כמה יחידות הוא קנה, ואפשר לתקן אותו אחר כך.
+          <b>מה לעשות עם שדה המחיר.</b> ספק המחירים של הקרנות האיריות
+          לא זמין כרגע, ולכן אנחנו לא יודעים כמה עולה יחידה אחת.
+          <b> הסכומים בשקלים למעלה נכונים ואפשר לבצע אותם בברוקר כמו
+          שהם</b> — השדה הוא רק כדי לדעת <b>כמה יחידות</b> הסכום קנה.
+        </p>
+      )}
+      {noPrice > 0 && (
+        <p className="note">
+          <b>ולמה אנחנו בכלל צריכים את זה.</b> מכמות היחידות נגזר
+          <b> מחיר הקנייה הממוצע</b> שלכם, והוא זה שקובע מה יהיה מותר
+          למשוך: המערכת מוכרת רק רכיב שמחירו <b>מעל</b> העלות הממוצעת,
+          וזה מה שמונע ממשיכה לנעול הפסד. אפשר גם לדלג ולהזין את
+          המחיר אחר כך ביומן.
         </p>
       )}
       {market.ratesSource === 'fallback' && (

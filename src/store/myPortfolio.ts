@@ -9,6 +9,25 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { IRISH, BUY } from '../constants/irish';
+
+/** **הרכיבים שאפשר להחזיק בפועל** — יש להם גם מקום בקטלוג וגם שורת
+ *  קנייה. מי שאין לו את שניהם אינו ניתן לקנייה, ולכן אין משמעות
+ *  להחזיק אותו. */
+const BUYABLE = new Set(IRISH.filter(f => BUY[f.k]).map(f => f.k));
+
+/** **מנקה מהתיק הנשמר רכיבים שהקטלוג כבר לא מכיר.**
+ *
+ *  התיק נשמר ב-localStorage, והקטלוג מצטמצם עם הזמן: קרנות שהוסרו
+ *  (למשל GDX, שירדה כשהקטלוג ירד לשמונה קרנות) **נשארו בתיק של מי
+ *  שבחר אותן פעם.** מה שראינו על המסך היה שורה עם מפתח עירום, בלי
+ *  שם בעברית, בלי סימול ובלי מטבע — ושום מחיר, כי אין לה שורת קנייה.
+ *
+ *  הניקוי כאן ולא במסך: המשקלות מנורמלות בשימוש (`totalWeight`),
+ *  ולכן הסרת רכיב **מחלקת מחדש את המשקל שלו בין השאר באופן יחסי**
+ *  מעצמה — תיק של 60/20/20 שאיבד את ה-20 הופך ל-60/20 ומחולק
+ *  75/25. לא נדרשת שום פעולה מהמשתמשים. */
+const prune = (h: Holding[]): Holding[] => h.filter(x => BUYABLE.has(x.k));
 
 /** מעמד לעניין קרן השתלמות. 'none' = אין קרן, הכל לברוקר. */
 export type FundStatus = 'none' | 'employee' | 'self' | 'both';
@@ -87,7 +106,33 @@ export const useMyPortfolio = create<MyPortfolioState>()(
       setSelfIncome: (selfIncome) => set({ selfIncome: Math.max(0, selfIncome) }),
       setFundProvider: (fundProvider) => set({ fundProvider }),
     }),
-    { name: 'mgs-my-portfolio' },
+    {
+      name: 'mgs-my-portfolio',
+      version: 2,
+      // גרסה 2: ניקוי רכיבים שאינם בקטלוג
+      migrate: (state) => {
+        const s = state as Partial<MyPortfolioState> | undefined;
+        if (!s?.holdings?.length) return s as MyPortfolioState;
+        const kept = prune(s.holdings);
+        if (kept.length !== s.holdings.length) {
+          const gone = s.holdings.filter(x => !BUYABLE.has(x.k)).map(x => x.k);
+          console.info('[mgs] dropped holdings no longer in the catalogue:', gone.join(', '));
+        }
+        // **ואם לא נשאר כלום — התיק חוזר להיות ״לא נבחר״.** להשאיר
+        // `chosen: true` עם רשימה ריקה היה מציג ״התיק שלכם״ ריק
+        // במקום ההזמנה לבחור.
+        return { ...s, holdings: kept, chosen: kept.length > 0 && s.chosen } as MyPortfolioState;
+      },
+      // ומי שכבר עבר את המיגרציה ובינתיים הקטלוג השתנה שוב
+      onRehydrateStorage: () => (st) => {
+        if (!st?.holdings?.length) return;
+        const kept = prune(st.holdings);
+        if (kept.length !== st.holdings.length) {
+          st.setHoldings(kept);
+          if (!kept.length) st.clear?.();
+        }
+      },
+    },
   ),
 );
 
