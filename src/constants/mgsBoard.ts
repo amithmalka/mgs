@@ -23,10 +23,8 @@ export const BOARD: BoardAsset[] = [
   // ביטקוין הוסר: רגולציית UCITS אוסרת קריפטו בקרן אירית, ולכן כל
   // חשיפה אליו יוצאת מהמבנה האירי ונכנסת לבסיס מס העיזבון האמריקאי.
   { symbol: 'SMH',     he: 'שבבים',        en: 'Semiconductors', sub: 'SMH · אירית',         color: '#F87171', roleHe: 'תוספת תנודתיות' },
-  { symbol: 'GDX',     he: 'כורות זהב',    en: 'Gold Miners',    sub: 'GDX · אירית',         color: '#E3BE45', roleHe: 'המפזר · מתאם 0.06' },
-  { symbol: 'XLK',     he: 'טכנולוגיה',    en: 'Technology',     sub: 'IUIT · אירית',        color: '#5EE6D0', roleHe: 'מנוע הצמיחה' },
+  { symbol: 'XLK',     he: 'טכנולוגיה',    en: 'Technology',     sub: 'XLKS · אירית',        color: '#5EE6D0', roleHe: 'מנוע הצמיחה' },
   { symbol: 'SPY',     he: 'S&P 500',      en: 'S&P 500',        sub: 'CSPX · אירית',        color: '#4ADE80', roleHe: 'הגרעין' },
-  { symbol: 'QQQ',     he: 'נאסד״ק 100',   en: 'Nasdaq 100',     sub: 'CNDX · אירית',        color: '#8193FA', roleHe: 'מנוע הצמיחה' },
   { symbol: 'URTH',    he: 'מדד עולמי',    en: 'MSCI World',     sub: 'IWDA · אירית',        color: '#4ADE80', roleHe: 'הגרעין' },
 ];
 

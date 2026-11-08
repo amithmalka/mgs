@@ -93,7 +93,12 @@ export const useMonthLog = create<MonthLogState>()(
         // הדחייה מאפסת את ״כבר נשאל״, כי זו בדיוק הבקשה לשאול שוב
         askedAt: undefined,
       })),
-      markAsked: (month) => set(s => patch(s, month, { askedAt: new Date().toISOString() })),
+      // **ומנקה את הדחייה.** דחייה שהגיע תאריכה היא בקשה חד־פעמית
+      // לשאול שוב; אם היא נשארת בשורה, היא ממשיכה להחזיר ״שאל״ בכל
+      // טעינה מכאן והלאה — וזה היה הנדנוד.
+      markAsked: (month) => set(s => patch(s, month, {
+        askedAt: new Date().toISOString(), snoozeUntil: undefined,
+      })),
       clearMonth: (month) => set(s => {
         const next = { ...s.entries };
         delete next[month];
@@ -110,31 +115,52 @@ export const isoDay = (d: Date) =>
 export const addDays = (d: Date, n: number) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 
-/** **האם לשאול על ההפקדה עכשיו — וכמה פעמים.**
+/** **האם לשאול על ההפקדה עכשיו — ופעם אחת בחודש.**
  *
- *  **הוכרע ⇒ לא שואלים, נקודה.** מי שאמר ״הפקדתי״ או ״לא אפקיד
- *  החודש״ ענה, והשאלה סגורה עד החודש הבא.
+ *  **הכלל שנדרש, במילים:** פעם אחת בחודש. ואם ביקשו תזכורת — להזכיר.
+ *  אם לא ביקשו — לא.
  *
- *  **ואם לא הוכרע — פעם אחת בחודש.** ‏`askedAt` חוסם את הפתיחות
- *  הבאות, כי פופאפ שחוזר בכל טעינה נסגר אוטומטית בעין ולא נקרא.
+ *  **והבאג שהיה כאן, כי הוא מסביר את המבנה.** הענף של הדחייה היה:
  *
- *  **ושוב רק כשביקשו:** לחיצה על התזכורת (`fromPush`) או דחייה
- *  שהגיע תאריכה — שתיהן **בקשה מפורשת** לשאול שוב, ולכן הן עוקפות
- *  את `askedAt`. ‏`fromPush` גם עוקף את תאריך ההפקדה, כי התזכורת
- *  עשויה להיפתח למחרת. */
+ *      if (entry.snoozeUntil) {
+ *        if (today < entry.snoozeUntil) return false;
+ *        return true;                       // ← כל טעינה, לנצח
+ *      }
+ *
+ *  כלומר ברגע שתאריך ה״הזכר לי בעוד חמישה ימים״ **עבר**, השורה הזאת
+ *  החזירה ״שאל״ בכל כניסה לטאב — היא יצאה מהפונקציה **לפני** הבדיקה
+ *  של ״כבר נשאלנו החודש״. מי שלחץ ״בעוד 5 ימים״ פעם אחת קיבל פופאפ
+ *  בכל פתיחה מאותו יום והלאה.
+ *
+ *  **התיקון בשתי שכבות, בכוונה.** ‏`markAsked` מנקה את הדחייה ברגע
+ *  שהיא מומשה, **וגם** הבדיקה כאן מתעלמת מדחייה שכבר נשאלו אחריה —
+ *  כדי שמי שכבר יש לו דחייה תקועה בדפדפן ייצא מזה מעצמו, בלי
+ *  שיצטרך לנקות אחסון.
+ */
 export function shouldAsk(
   entry: MonthEntry | undefined, depositDay: number,
   fromPush: boolean, ref = new Date(),
 ): boolean {
+  // הוכרע — הופקד או דווח שלא. השאלה סגורה עד החודש הבא.
   if (entry?.deposit) return false;
 
   const today = isoDay(ref);
-  // דחייה שעוד בתוקף משתיקה הכל; דחייה שתאריכה הגיע היא הבקשה עצמה
+
   if (entry?.snoozeUntil) {
+    // עוד לא הגיע התאריך — שקט מוחלט, גם מול דחיפה
     if (today < entry.snoozeUntil) return false;
-    return true;
+    // הגיע. זו בקשה מפורשת, אבל **פעם אחת** — ואם כבר נשאלנו
+    // אחרי התאריך הזה, זה כבר קרה.
+    const askedOn = entry.askedAt ? isoDay(new Date(entry.askedAt)) : null;
+    return !(askedOn && askedOn >= entry.snoozeUntil);
   }
+
+  // לחיצה על התזכורת עצמה — תמיד נענית, וגם לפני יום ההפקדה,
+  // כי הדחיפה עשויה להיפתח למחרת
   if (fromPush) return true;
+
+  // וזו ההגבלה שנדרשה: פעם אחת בחודש
   if (entry?.askedAt) return false;
+
   return ref.getDate() >= Math.min(28, Math.max(1, depositDay));
 }

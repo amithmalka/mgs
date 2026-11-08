@@ -281,6 +281,19 @@ export function DepositConfirm({ onBuild }: { onBuild?: () => void }) {
         <b>זה מה שצריך לעשות:</b> להעביר את הסכומים האלה בברוקר, ואז
         ללחוץ ״אישור הפקדה״. <b>זה הכל.</b>
       </p>
+      {/* **מאיפה המחירים, ומתי.** מספר שמוצג בלי לומר ממה הוא נגזר
+          אינו משהו שמותר להציג — והציטוט כאן הוא סגירה, מזירה
+          שעשויה להיות לונדון או פרנקפורט לפי מה שזמין ל-ISIN. */}
+      {market.quoteDate && (
+        <p className="note">
+          <b>החלוקה נמדדה על סגירת{' '}
+          {new Date(market.quoteDate).toLocaleDateString('he-IL')}</b>
+          {market.venues.length > 0 && <> ({market.venues.join(' · ')})</>} —
+          לפי ה-ISIN של כל קרן. זו אותה קרן בדיוק, אבל{' '}
+          <b>לא בהכרח אותה אגורה</b> כמו אצל הברוקר שלכם, ולכן מספר
+          היחידות הוא אומדן. <b>הסכום בשקלים הוא מה שמחייב.</b>
+        </p>
+      )}
 
       {msg && <p className="lab-access warn mt-3">{msg}</p>}
       {market.ledger === 'missing' && (
