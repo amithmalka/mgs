@@ -12,7 +12,7 @@
  *  **התמהיל זז בהפקדות ולא במכירות** — ולכן אין בדרך הזאת אף אירוע
  *  מס. **והשיאים נשמרים מקומית**; בלעדיהם אי אפשר לדעת מה ירד ובכמה.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Stat } from '../shared/Stat';
 import { Rows } from '../shared/Rows';
 import { IRISH, BUY } from '../../constants/irish';
@@ -21,21 +21,9 @@ import { ceilingFor } from '../../constants/studyFunds';
 import { mix } from '../../constants/irish';
 import { buySplit } from '../../utils/buySplit';
 import type { TrackKey } from '../../utils/buySplit';
-import { listDeposits, listMarks, listWithdrawals, positionsNet } from '../../lib/deposits';
+import { useMarket } from '../../hooks/useMarket';
 
 const n0 = (v: number) => Math.round(v).toLocaleString('en-US');
-
-const PEAKS_KEY = 'mgs-peaks';
-
-interface Quote { price: number | null; currency: string | null; change: number | null }
-
-function loadPeaks(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(PEAKS_KEY) ?? '{}'); }
-  catch { return {}; }
-}
-function savePeaks(p: Record<string, number>) {
-  try { localStorage.setItem(PEAKS_KEY, JSON.stringify(p)); } catch { /* נפרטי או חסום */ }
-}
 
 export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
   const { holdings, deposit, extra, fundStatus, annualSalary, selfIncome } = useMyPortfolio();
@@ -47,60 +35,20 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
     const v = mix(holdings).vol;
     return v < 0.145 ? 'flow' : v < 0.225 ? 'both' : 'growth';
   }, [holdings]);
-  // **מה שמוחזק בפועל**, מתוך יומן ההפקדות. בלי זה אין ״תת-משקל״
-  // ואי אפשר לקנות לכיוון היעד — אפשר רק לקנות לפי הנפילה, וזו
-  // בדיוק התקלה שתוקנה.
-  const [held, setHeld] = useState<Record<string, number>>({});
-  useEffect(() => {
-    // **אם היומן עוד לא מותקן, held נשאר ריק — וזה תקין.** אז כל
-    // הרכיבים הם תת-משקל באותה מידה, ההטיה לנופלים עובדת, והגבול
-    // של משקל היעד נשמר. ברגע שיש היסטוריית הפקדות, הקנייה מכוונת
-    // למשקל האמיתי בתיק ולא למשקל המשוער.
-    void (async () => {
-      const [d, m, w] = await Promise.all([listDeposits(), listMarks(), listWithdrawals()]);
-      if (!d.ok || !m.ok || !w.ok) return;
-      const next: Record<string, number> = {};
-      for (const q of positionsNet(d.data, m.data, w.data)) next[q.k] = q.units;
-      setHeld(next);
-    })();
-  }, []);
-  const [quotes, setQuotes] = useState<Record<string, Quote>>({});
-  const [peaks, setPeaks] = useState<Record<string, number>>(loadPeaks);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const pull = useCallback(async () => {
-    if (!holdings.length) return;
-    setLoading(true);
-    try {
-      const syms = holdings.map(h => BUY[h.k]?.sym).filter(Boolean).join(',');
-      const r = await fetch(`/api/lse?symbols=${encodeURIComponent(syms)}`);
-      if (!r.ok) throw new Error(String(r.status));
-      const j = await r.json();
-      if (!j.quotes || !Object.keys(j.quotes).length) throw new Error('empty');
-      setQuotes(j.quotes); setErr(null);
-      // מעדכנים שיאים
-      setPeaks(prev => {
-        const next = { ...prev };
-        for (const h of holdings) {
-          const sym = BUY[h.k]?.sym;
-          const px = sym ? j.quotes[sym]?.price : null;
-          if (px) next[h.k] = Math.max(next[h.k] ?? 0, px);
-        }
-        savePeaks(next);
-        return next;
-      });
-    } catch {
-      setErr('לא הצלחנו למשוך מחירים — החלוקה מוצגת לפי המשקלות');
-    } finally { setLoading(false); }
-  }, [holdings]);
-
-  useEffect(() => { void pull(); }, [pull]);
+  // **מחירים, שיאים ומה שמוחזק — מהוק אחד.**
+  //
+  // עד כאן הקובץ הזה משך בעצמו מ-`/api/lse`, החזיק שיאים משלו
+  // ב-localStorage, וקרא את היומן בנפרד — **עותק שני של אותה
+  // לוגיקה**, שנשאר מאחור כש-Yahoo הפסיק להחזיר מחירים ומסך
+  // האישור עבר ל-`/api/etf`. עכשיו שניהם על אותו מקור, ולכן גם על
+  // אותם מספרים.
+  const market = useMarket(holdings);
 
   const toBroker = useMemo(() => {
     const ceil = fundStatus === 'none' ? 0 : ceilingFor(fundStatus, annualSalary, selfIncome).year / 12;
     return Math.max(0, deposit - Math.min(deposit, ceil)) + extra;
-  }, [deposit, extra, fundStatus]);
+  }, [deposit, extra, fundStatus, annualSalary, selfIncome]);
 
   /** **כלל החלוקה — ב-`buySplit`, ולא כאן.**
    *
@@ -108,8 +56,9 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
    *  **בדיוק את אותה חלוקה**; שני עתקים של אותו חישוב נפרדים
    *  בעדכון הראשון, והמשתמש יאשר סכומים שאינם מה שראה. */
   const plan = useMemo(() => buySplit({
-    holdings, quotes, peaks, held, amount: toBroker, track,
-  }).lines, [holdings, quotes, peaks, held, toBroker, track]);
+    holdings, quotes: market.quotes, peaks: market.peaks, held: market.held,
+    amount: toBroker, track,
+  }).lines, [holdings, market.quotes, market.peaks, market.held, toBroker, track]);
 
   if (!holdings.length) {
     return (
@@ -142,12 +91,13 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
           sub={fundStatus === 'none' ? 'אין קרן השתלמות' : 'אחרי תקרת הקרן'} tone="gold" />
         <Stat label="רכיבים" value={String(holdings.length)} sub="בתיק שלכם" />
         <Stat label="מצב מחירים"
-          value={err ? 'אין' : loading ? 'נמשך' : 'חי'}
-          sub={err ? 'חלוקה לפי משקלות' : 'מחירי הקווים שבחרתם'}
-          tone={err ? undefined : 'up'} />
+          value={market.err ? 'אין' : market.loading ? 'נמשך' : 'חי'}
+          sub={market.err ? 'חלוקה לפי משקלות'
+            : market.quoteDate ? `סגירת ${new Date(market.quoteDate).toLocaleDateString('he-IL')}` : 'לפי ISIN'}
+          tone={market.err ? undefined : 'up'} />
       </div>
 
-      {err && <p className="lab-access warn">{err}.</p>}
+      {market.err && <p className="lab-access warn">{market.err}.</p>}
 
       <Rows
         cols={[
@@ -184,7 +134,7 @@ export function MonthBuy({ onBuild }: { onBuild?: () => void }) {
       />
 
       <div className="cta">
-        <button className="opt" type="button" onClick={() => void pull()}>
+        <button className="opt" type="button" onClick={market.refresh}>
           רענון מחירים ושיאים
         </button>
       </div>

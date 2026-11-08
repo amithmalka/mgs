@@ -7,7 +7,7 @@
 //
 // NOTE: LSE/Euronext ETF symbols may need an exchange suffix in Twelve Data
 // (e.g. "I500:LSE"). Forex is "USD/ILS" here and FMP's adapter drops the slash.
-import { fmpSeries } from './fmp.js';
+import { fmpSeries } from './_fmp.js';
 
 /** Batch size kept under the free-tier per-minute credit budget. */
 const MAX_SYMBOLS = 12;
